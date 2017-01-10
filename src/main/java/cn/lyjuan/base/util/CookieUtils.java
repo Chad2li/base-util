@@ -1,13 +1,9 @@
 package cn.lyjuan.base.util;
 
 
-import cn.lyjuan.base.cst.ProjectCst;
-
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.net.MalformedURLException;
-import java.net.URL;
 
 
 /**
@@ -91,20 +87,7 @@ public class CookieUtils
     public static void addCookie(HttpServletResponse response, String name, String value,
                                  String path, String domain, int timeout)
     {
-
         Cookie cookie = new Cookie(name, value);
-
-        if (domain == null)
-        {
-            URL url = null;
-            try
-            {
-                url = new URL(ProjectCst.$_LOCAL_URL);
-            } catch (MalformedURLException e)
-            {
-            }
-            domain = url.getHost();
-        }
 
         if (path == null)
             path = "/";

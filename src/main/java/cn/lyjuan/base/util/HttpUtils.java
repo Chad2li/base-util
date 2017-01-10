@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 
 /**
  * HTTP 工具类
- *
+ * @deprecated 请使用HttpClient或RestTemplate
  * @author chad
  */
 public class HttpUtils
