@@ -11,12 +11,12 @@ public class RandomUtils
     /**
      * 随机工具
      */
-    public static final Random RDM = new Random();
+    private static final Random RDM = new Random();
 
     /**
      * 随机工具锁
      */
-    public static final String LOCK_RDM = "#L_LOCK_RDM_L#";
+    private static final String LOCK_RDM = "#L_LOCK_RDM_L#";
 
     /**
      * <p>使用UUID生成随机字符串，去掉UUID中的“-”</p>
