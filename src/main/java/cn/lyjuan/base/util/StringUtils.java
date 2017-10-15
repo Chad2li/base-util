@@ -2,6 +2,9 @@ package cn.lyjuan.base.util;
 
 import java.lang.reflect.Field;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 
 public class StringUtils
@@ -333,11 +336,11 @@ public class StringUtils
      */
     public static String toStr(Object obj, Class currCls, Class stopCls)
     {
-        if (null == obj) return "null";
+        if (null == obj) return "";
 
         // 基本类型直接输出
         if (null == obj)
-            return "null";
+            return "";
         else if (obj.getClass() == String.class
                 || obj.getClass() == Integer.class
                 || obj.getClass() == Byte.class
@@ -352,6 +355,40 @@ public class StringUtils
         } else if (obj.getClass() == Date.class)
             return DateUtils.format((Date) obj, "yyyy-MM-dd HH:mm:ss");
 
+        StringBuilder sb = new StringBuilder();
+
+        if (List.class.isInstance(obj))
+        {
+            List list = (List) obj;
+
+            if (list.isEmpty()) return "[]";
+            sb.append("[");
+            for (Object listo : list)
+                sb.append(toStr(listo)).append(",");
+            sb.delete(sb.length() - 1, sb.length());
+            sb.append("]");
+
+            return sb.toString();
+        }
+
+        if (Map.class.isInstance(obj))
+        {
+            Map mapo = (Map) obj;
+            if (mapo.isEmpty()) return "[]";
+
+            sb.append("[");
+            for (Iterator<Map.Entry<Object, Object>> it = mapo.entrySet().iterator(); it.hasNext(); )
+            {
+                Map.Entry<Object, Object> keyo = it.next();
+                sb.append(toStr(keyo.getKey())).append("=").append(toStr(keyo.getValue()));
+                sb.append(",");
+            }
+            sb.delete(sb.length() - 1, sb.length());
+            sb.append("]");
+
+            return sb.toString();
+        }
+
         currCls = null == currCls ? obj.getClass() : currCls;// 默认打印当前类
         stopCls = null == stopCls ? obj.getClass() : stopCls;// 默认仅打印当前类
         // 指定的Class为Object或当前对象为Object，则简单输出Object.toString
@@ -359,9 +396,9 @@ public class StringUtils
 
         Field[] fs = currCls.getDeclaredFields();
 
-        if (null == fs || fs.length < 1) return "empty attributes";
+        if (null == fs || fs.length < 1) return "";
 
-        StringBuilder sb = new StringBuilder();
+
         sb.append(currCls.getSimpleName()).append("{");
         // 当前类
         for (Field f : fs)

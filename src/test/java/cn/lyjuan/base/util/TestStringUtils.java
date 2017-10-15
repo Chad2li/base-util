@@ -3,7 +3,7 @@ package cn.lyjuan.base.util;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Date;
+import java.util.*;
 
 /**
  * Created by chad on 2016/7/12.
@@ -25,7 +25,7 @@ public class TestStringUtils
         Object obj = null;
         String objToStr = StringUtils.toStr(obj);
 
-        Assert.assertEquals("null", objToStr);
+        Assert.assertEquals("", objToStr);
     }
 
     @Test
@@ -101,6 +101,34 @@ public class TestStringUtils
         String result = "TestToStrInner{base=TestToStrParent{name="+obj.base.name+"}, age="+obj.age+"}";
 
         Assert.assertEquals(result, objToStr);
+    }
+
+    @Test
+    public void testToStrMap()
+    {
+        Map<String, String> map = new HashMap<>();
+        map.put("name", "张三");
+        map.put("age", "18");
+
+        String result = StringUtils.toStr(map);
+        String expect = "[name=张三,age=18]";
+
+        Assert.assertEquals(expect, result);
+    }
+
+    @Test
+    public void testToStrList()
+    {
+        List<String> list = new ArrayList<>();
+
+        list.add("1");
+        list.add("2");
+        list.add("3");
+
+        String result = StringUtils.toStr(list);
+        String expect = "[1,2,3]";
+
+        Assert.assertEquals(expect, result);
     }
 
     public static class TestToStrParent

@@ -1,8 +1,6 @@
 package cn.lyjuan.base.util;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -101,6 +99,37 @@ public class ReflectUtils
     }
 
     /**
+     * 获取方法，如果获取失败，返回 null替代报错
+     * @param obj
+     * @param memberName
+     * @return
+     */
+    public static Object getValueNoThrow(Object obj, String memberName)
+    {
+        try
+        {
+            Field f = obj.getClass().getDeclaredField(memberName);
+
+            // getter 方法名
+            String getName = genMemberGetSetName(memberName, true);
+
+            boolean hasGet = hasMethod(obj.getClass(), memberName, f.getType());
+
+            if (hasGet)
+                return obj.getClass().getMethod(getName, null).invoke(obj, null);
+
+            boolean isAcce = f.isAccessible();
+            f.setAccessible(true);
+            Object val = f.get(obj);
+            f.setAccessible(isAcce);
+            return val;
+        } catch (Exception e)
+        {
+            return null;
+        }
+    }
+
+    /**
      * 通过 Setter 方法设置属性值
      * @param obj           设置对象
      * @param memberName    属性名称
@@ -175,5 +204,32 @@ public class ReflectUtils
         }
 
         return f.getType();
+    }
+
+    /**
+     * 获取泛型有实际使用中的类型
+     * @param cls       使用泛型的类
+     * @param index     第几个泛型
+     * @return
+     */
+    public static Class<Object> getGenericityClass(Class cls, int index)
+    {
+        //返回表示此 Class 所表示的实体（类、接口、基本类型或 void）的直接超类的 Type。
+        Type genType = cls.getGenericSuperclass();
+
+        if (!(genType instanceof ParameterizedType)) {
+            return Object.class;
+        }
+        //返回表示此类型实际类型参数的 Type 对象的数组。
+        Type[] params = ((ParameterizedType) genType).getActualTypeArguments();
+
+        if (index >= params.length || index < 0) {
+            return Object.class;
+        }
+        if (!(params[index] instanceof Class)) {
+            return Object.class;
+        }
+
+        return (Class) params[index];
     }
 }
