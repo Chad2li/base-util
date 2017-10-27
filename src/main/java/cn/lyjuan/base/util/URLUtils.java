@@ -23,6 +23,7 @@ public class URLUtils
 
     /**
      * URL 编码、解码 List
+     *
      * @param list
      * @param charset
      * @param isEnc
@@ -47,6 +48,7 @@ public class URLUtils
 
     /**
      * URL 编码、解码 Array
+     *
      * @param array
      * @param charset
      * @param isEnc
@@ -71,6 +73,7 @@ public class URLUtils
 
     /**
      * URL编码、解码 Map
+     *
      * @param map
      * @param charset
      * @param isEnc
@@ -89,7 +92,7 @@ public class URLUtils
 
         Object obj = null;
         Object val = null;
-        for (Iterator it = map.keySet().iterator(); it.hasNext();)
+        for (Iterator it = map.keySet().iterator(); it.hasNext(); )
         {
             obj = it.next();
             val = map.get(obj);
@@ -102,6 +105,7 @@ public class URLUtils
 
     /**
      * URL编码、解码 Set
+     *
      * @param set
      * @param charset
      * @param isEnc
@@ -128,6 +132,7 @@ public class URLUtils
 
     /**
      * URL编码、解码 Bean
+     *
      * @param obj
      * @param charset
      * @param isEnc
@@ -153,7 +158,7 @@ public class URLUtils
             val = ReflectUtils.getValue(obj, m);
             valType = ReflectUtils.returnMemberType(clazz, m);
             val = urlCode(val, charset, isEnc);
-            ReflectUtils.setValue(obj, m, valType, val);
+            ReflectUtils.setValue(obj, m, val);
             log.fine("parseMember >> " + m + " val >> " + val);
         }
 
@@ -164,10 +169,11 @@ public class URLUtils
 
     /**
      * URL编码、解码
-     * @param obj       编码、解码对象
-     * @param charset   编码字符集
-     * @param isEnc     为 true 表示编码；为 false 表示解码
-     * @param <T>       泛型
+     *
+     * @param obj     编码、解码对象
+     * @param charset 编码字符集
+     * @param isEnc   为 true 表示编码；为 false 表示解码
+     * @param <T>     泛型
      * @return
      * @throws java.io.UnsupportedEncodingException
      * @throws IllegalAccessException
@@ -203,7 +209,7 @@ public class URLUtils
             return (T) urlEncodeMap((Map) obj, charset, isEnc);
 
         if (obj instanceof Set)
-            return (T) urlEncodeSet((Set)obj, charset, isEnc);
+            return (T) urlEncodeSet((Set) obj, charset, isEnc);
 
         // 当obj 为 java 内置其它对象时，不解析
         if (obj.getClass().getName().startsWith("java.")
@@ -215,13 +221,14 @@ public class URLUtils
 
     /**
      * URL编码、解码
-     * @param obj       编码、解码对象
-     * @param charset   编码字符集
-     * @param isEnc     为 true 表示编码；为 false 表示解码
-     * @param <T>       泛型
+     *
+     * @param obj     编码、解码对象
+     * @param charset 编码字符集
+     * @param isEnc   为 true 表示编码；为 false 表示解码
+     * @param <T>     泛型
      * @return
      */
-    public static<T> T code(T obj, String charset, boolean isEnc)
+    public static <T> T code(T obj, String charset, boolean isEnc)
     {
         try
         {

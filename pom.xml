@@ -6,7 +6,7 @@
 
     <groupId>cn.lyjuan</groupId>
     <artifactId>base-util</artifactId>
-    <version>2.1-RELEASE</version>
+    <version>2.1.2-RELEASE</version>
     <packaging>jar</packaging>
 
     <!-- 配置 -->

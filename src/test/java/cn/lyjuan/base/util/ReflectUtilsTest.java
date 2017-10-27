@@ -10,6 +10,19 @@ import static org.junit.Assert.*;
 public class ReflectUtilsTest
 {
     @Test
+    public void setValue()
+    {
+        User user = new User();
+
+        ReflectUtils.setValue(user, "name", "张三");
+        Assert.assertEquals("张三", user.getName());
+
+        user.setName("李四");
+        ReflectUtils.setValue(user, "name", null);
+        Assert.assertNull(user.getName());
+    }
+
+    @Test
     public void getValueNoThrow() throws Exception
     {
         User user = new User("张三", 18, 183);
@@ -79,6 +92,10 @@ public class ReflectUtilsTest
         private Integer age;
 
         private int height;
+
+        public User()
+        {
+        }
 
         public User(String name, Integer age, int height)
         {

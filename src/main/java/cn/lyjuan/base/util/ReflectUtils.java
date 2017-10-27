@@ -138,15 +138,18 @@ public class ReflectUtils
      * @throws java.lang.reflect.InvocationTargetException
      * @throws IllegalAccessException
      */
-    public static void setValue(Object obj, String memberName, Class<?> valueType, Object value)
+    public static void setValue(Object obj, String memberName, Object value)
     {
-        // setter 方法名
-        memberName = genMemberGetSetName(memberName, false);
-
-        Method setter = null;
         try
         {
-            setter = obj.getClass().getMethod(memberName, valueType);
+            Field field = obj.getClass().getDeclaredField(memberName);
+
+            // setter 方法名
+            memberName = genMemberGetSetName(memberName, false);
+
+            Method setter = null;
+
+            setter = obj.getClass().getMethod(memberName, field.getType());
             setter.invoke(obj, value);
         } catch (NoSuchMethodException e)
         {
@@ -160,9 +163,10 @@ public class ReflectUtils
         {
             // this method parameters error
             throw new RuntimeException(e);
+        } catch (NoSuchFieldException e)
+        {
+            e.printStackTrace();
         }
-
-
     }
 
     /**
