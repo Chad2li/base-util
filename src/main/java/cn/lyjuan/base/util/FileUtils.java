@@ -29,7 +29,7 @@ public class FileUtils
      */
     public static String getRealPath(String subPath)
     {
-        String path = FileUtils.class.getClassLoader().getResource("/").getPath();
+        String path = FileUtils.class.getClassLoader().getResource("PinyinUtils.java/").getPath();
 
         path = path.substring(0, path.length() - 1);
 

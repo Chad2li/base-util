@@ -3,6 +3,8 @@ package cn.lyjuan.base.util;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -14,7 +16,7 @@ import java.util.Map;
 public class FileTypeUtils
 {
 
-    public final static Map<String, String> FILE_TYPE_MAP = new HashMap();
+    private final static Map<String, String> FILE_TYPE_MAP = new HashMap();
 
     private FileTypeUtils()
     {
@@ -113,6 +115,47 @@ public class FileTypeUtils
         return stringBuilder.toString();
     }
 
+    public static String getFileType(InputStream in)
+    {
+        byte[] b = new byte[10];
+        int len = -1;
+        try
+        {
+            len = in.read(b);
+        } catch (IOException e)
+        {
+            throw new RuntimeException(e);
+        }
+
+        if (len < 10)
+            return null;
+
+        return getFileType(b);
+    }
+
+    public static String getFileType(byte[] content)
+    {
+        String res = null;
+
+        byte[] b = Arrays.copyOf(content, 10);
+
+        String fileCode = bytesToHexString(b);
+
+        //这种方法在字典的头代码不够位数的时候可以用但是速度相对慢一点
+        Iterator<String> keyIter = FILE_TYPE_MAP.keySet().iterator();
+        while (keyIter.hasNext())
+        {
+            String key = keyIter.next();
+            if (key.toLowerCase().startsWith(fileCode.toLowerCase()) || fileCode.toLowerCase().startsWith(key.toLowerCase()))
+            {
+                res = FILE_TYPE_MAP.get(key);
+                break;
+            }
+        }
+
+        return res;
+    }
+
     /**
      * 根据指定文件的文件头判断其文件类型
      *
@@ -121,28 +164,13 @@ public class FileTypeUtils
      */
     public static String getFileType(String filePath)
     {
-        String res = null;
         try
         {
             FileInputStream is = new FileInputStream(filePath);
             byte[] b = new byte[10];
             is.read(b, 0, b.length);
-            String fileCode = bytesToHexString(b);
 
-            System.out.println(fileCode);
-
-
-            //这种方法在字典的头代码不够位数的时候可以用但是速度相对慢一点
-            Iterator<String> keyIter = FILE_TYPE_MAP.keySet().iterator();
-            while (keyIter.hasNext())
-            {
-                String key = keyIter.next();
-                if (key.toLowerCase().startsWith(fileCode.toLowerCase()) || fileCode.toLowerCase().startsWith(key.toLowerCase()))
-                {
-                    res = FILE_TYPE_MAP.get(key);
-                    break;
-                }
-            }
+            return getFileType(b);
         } catch (FileNotFoundException e)
         {
             throw new RuntimeException(e);
@@ -150,10 +178,9 @@ public class FileTypeUtils
         {
             throw new RuntimeException(e);
         }
-        return res;
     }
 
-    public static void main(String[] args) throws Exception
+    private static void main(String[] args) throws Exception
     {
         String type = getFileType("/Users/Chad/Downloads/123.xlsx");
         System.out.println("123.xlsx : " + type);
