@@ -1,8 +1,7 @@
 package cn.lyjuan.base.util;
 
 import java.lang.reflect.*;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by ly on 2014/12/23.
@@ -106,17 +105,22 @@ public class ReflectUtils
             if (null == getter && null == isAcc)
                 getter.setAccessible(isAcc);
         }
+    }
 
+    public static <T> Object getValueNoThrow(T obj, String memeberName)
+    {
+        return getValueNoThrow(obj, (Class<? super T>) obj.getClass(), memeberName);
     }
 
     /**
      * 获取方法，如果获取失败，返回 null替代报错
      *
      * @param obj
+     * @param fromClass  属性所属的类
      * @param memberName
      * @return
      */
-    public static Object getValueNoThrow(Object obj, String memberName)
+    public static <T> Object getValueNoThrow(T obj, Class<? super T> fromClass, String memberName)
     {
         Method getter = null;
         Boolean isAccMethod = null;
@@ -125,7 +129,7 @@ public class ReflectUtils
 
         try
         {
-            field = obj.getClass().getDeclaredField(memberName);
+            field = fromClass.getDeclaredField(memberName);
 
             // getter 方法名
             String getName = genMemberGetSetName(memberName, true);
@@ -134,7 +138,7 @@ public class ReflectUtils
 
             if (hasGet)
             {
-                getter = obj.getClass().getMethod(getName, null);
+                getter = fromClass.getMethod(getName, null);
                 isAccMethod = getter.isAccessible();
                 getter.setAccessible(true);
 
@@ -282,5 +286,103 @@ public class ReflectUtils
         }
 
         return (Class) params[index];
+    }
+
+    public static Map<String, Object> membersToMap(Object from)
+    {
+        return membersToMap(from, null == from ? null : from.getClass(), Object.class);
+    }
+
+    /**
+     * 反射获取对象的所有属性和值封装成Map
+     *
+     * @param from        属性来源
+     * @param fromClass   属性所在的目标类
+     * @param targetClass 递归到该类则结束，该类的属性不返回
+     * @return 包含该类及其父类的所有属性。如果对象为空，则返回包含0个元素的Map
+     */
+    public static Map<String, Object> membersToMap(Object from, Class fromClass, Class targetClass)
+    {
+        if (null == from || null == fromClass) return new HashMap<>(0);
+
+        if (null != targetClass)
+        {
+            if (from.getClass().isAssignableFrom(targetClass)
+                    || fromClass == targetClass)
+                return new HashMap<>(0);
+        }
+
+        Map<String, Object> map = new HashMap<>();
+
+        Field[] fs = fromClass.getDeclaredFields();
+
+        String name = null;
+        for (Field f : fs)
+        {
+            name = f.getName();
+
+            map.put(name, getValueNoThrow(from, fromClass, name));
+        }
+
+        map.putAll(membersToMap(from, fromClass.getSuperclass(), targetClass));
+
+        return map;
+    }
+
+    /**
+     * 在父类迭代获取field
+     *
+     * @param cls
+     * @param name
+     * @return
+     */
+    public static Field field(Class cls, String name)
+    {
+        Field f = null;
+
+        try
+        {
+            if (null == cls)
+                throw new NoSuchFieldException("no such field " + name);
+            f = cls.getDeclaredField(name);
+        } catch (NoSuchFieldException e)
+        {
+            // ignore
+        }
+
+        if (null == f && null != cls)
+        {
+            f = field(cls.getSuperclass(), name);
+        }
+
+        return f;
+    }
+
+    /**
+     * 在父类迭代获取method
+     *
+     * @param cls
+     * @param name
+     * @return
+     */
+    public static Method method(Class cls, String name, Class... types)
+    {
+        Method m = null;
+
+        try
+        {
+            if (null == cls)
+                throw new NoSuchMethodException("no such method " + name + " with parameters: " + Arrays.toString(types));
+
+            m = cls.getDeclaredMethod(name, types);
+        } catch (NoSuchMethodException e)
+        {
+            // ignore
+        }
+
+        if (null == m && null != cls)
+            m = method(cls.getSuperclass(), name, types);
+
+        return m;
     }
 }
