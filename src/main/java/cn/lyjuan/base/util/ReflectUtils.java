@@ -44,24 +44,20 @@ public class ReflectUtils
      * @param clazz  类名
      * @param method 方法名
      * @param types  方法参数值
-     * @return
+     * @return true有该方法，false无该方法
      */
     public static boolean hasMethod(Class<?> clazz, String method, Class<?>... types)
     {
         try
         {
-            if (null == types)
-                clazz.getMethod(method);
-            else
-                clazz.getMethod(method, types);
-            return true;
-        } catch (NoSuchMethodException e)
-        {
-            // do not have this method
-            // drop this throw
-        }
+            Method m = method(clazz, method, types);
 
-        return false;
+            return null != m;
+
+        } catch (Throwable e)
+        {
+            return false;
+        }
     }
 
     /**
@@ -175,42 +171,40 @@ public class ReflectUtils
     public static void setValue(Object obj, String memberName, Object value)
     {
         Field field = null;
-        Boolean isAccAttribute = null;
         Method setter = null;
-        Boolean isAccMethod = null;
+        Boolean isAcc = null;
         try
         {
-            field = obj.getClass().getDeclaredField(memberName);
+            field = field(obj.getClass(), memberName);
+            if (null == field)
+                throw new RuntimeException("not " + memberName + " in " + obj.getClass().getName());
 
             // setter 方法名
-            memberName = genMemberGetSetName(memberName, false);
-
-            setter = null;
-            setter = obj.getClass().getMethod(memberName, field.getType());
-            isAccMethod = setter.isAccessible();
-            setter.setAccessible(true);
-
-            setter.invoke(obj, value);
-        } catch (NoSuchMethodException e)
+            String methodName = genMemberGetSetName(memberName, false);
+            setter = method(obj.getClass(), methodName, field.getType());
+            if (null != setter)// setter 方法
+            {
+                isAcc = setter.isAccessible();
+                setter.setAccessible(true);
+                setter.invoke(obj, value);
+            } else // 直接设置属性
+            {
+                isAcc = field.isAccessible();
+                field.setAccessible(true);
+                field.set(obj, value);
+            }
+        } catch (Throwable e)
         {
-            // do not has this method
-            throw new RuntimeException(e);
-        } catch (InvocationTargetException e)
-        {
-            // this method invoke error
-            throw new RuntimeException(e);
-        } catch (IllegalAccessException e)
-        {
-            // this method parameters error
-            throw new RuntimeException(e);
-        } catch (NoSuchFieldException e)
-        {
-            // not such field
             throw new RuntimeException(e);
         } finally
         {
-            if (null != setter && null != isAccMethod)
-                setter.setAccessible(isAccMethod);
+            if (null != isAcc)
+            {
+                if (null != setter)
+                    setter.setAccessible(isAcc);
+                else if (null != field)
+                    field.setAccessible(isAcc);
+            }
         }
     }
 
@@ -232,29 +226,6 @@ public class ReflectUtils
             return "get" + memberName;
 
         return "set" + memberName;
-    }
-
-    /**
-     * 返回类属性的类型
-     *
-     * @param clazz  类
-     * @param member 属性名
-     * @return
-     * @throws NoSuchFieldException
-     */
-    public static Class<?> returnMemberType(Class<?> clazz, String member)
-    {
-        Field f = null;
-        try
-        {
-            f = clazz.getDeclaredField(member);
-        } catch (NoSuchFieldException e)
-        {
-            // do not has this member
-            throw new RuntimeException(e);
-        }
-
-        return f.getType();
     }
 
     /**
@@ -288,20 +259,27 @@ public class ReflectUtils
         return (Class) params[index];
     }
 
+    /**
+     * 调用{@link ReflectUtils#membersToMap(Object, Class, Class, boolean)}，并且跳过{@code transient}属性
+     *
+     * @param from
+     * @return
+     */
     public static Map<String, Object> membersToMap(Object from)
     {
-        return membersToMap(from, null == from ? null : from.getClass(), Object.class);
+        return membersToMap(from, null == from ? null : from.getClass(), Object.class, true);
     }
 
     /**
      * 反射获取对象的所有属性和值封装成Map
      *
-     * @param from        属性来源
-     * @param fromClass   属性所在的目标类
-     * @param targetClass 递归到该类则结束，该类的属性不返回
+     * @param from          属性来源
+     * @param fromClass     属性所在的目标类
+     * @param targetClass   递归到该类则结束，该类的属性不返回
+     * @param skipTransient 是否跳过{@code transient修饰的属性}
      * @return 包含该类及其父类的所有属性。如果对象为空，则返回包含0个元素的Map
      */
-    public static Map<String, Object> membersToMap(Object from, Class fromClass, Class targetClass)
+    public static Map<String, Object> membersToMap(Object from, Class fromClass, Class targetClass, boolean skipTransient)
     {
         if (null == from || null == fromClass) return new HashMap<>(0);
 
@@ -321,10 +299,13 @@ public class ReflectUtils
         {
             name = f.getName();
 
+            if (skipTransient && Modifier.isTransient(f.getModifiers()))
+                continue;
+
             map.put(name, getValueNoThrow(from, fromClass, name));
         }
 
-        map.putAll(membersToMap(from, fromClass.getSuperclass(), targetClass));
+        map.putAll(membersToMap(from, fromClass.getSuperclass(), targetClass, skipTransient));
 
         return map;
     }
@@ -343,7 +324,7 @@ public class ReflectUtils
         try
         {
             if (null == cls)
-                throw new NoSuchFieldException("no such field " + name);
+                return null;
             f = cls.getDeclaredField(name);
         } catch (NoSuchFieldException e)
         {
@@ -356,6 +337,27 @@ public class ReflectUtils
         }
 
         return f;
+    }
+
+    /**
+     * 迭代获取父子类的所有属性
+     * @param cls
+     * @return
+     */
+    public static Map<String, Field> fields(Class cls)
+    {
+        Map<String, Field> fields = new HashMap();
+
+        Field[] tmp = cls.getDeclaredFields();
+        for (Field f : tmp)
+        {
+            fields.put(f.getName(), f);
+        }
+
+        if (null != cls.getSuperclass())
+            fields.putAll(fields(cls.getSuperclass()));
+
+        return fields;
     }
 
     /**

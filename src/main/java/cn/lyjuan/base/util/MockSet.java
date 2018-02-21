@@ -1,6 +1,9 @@
 package cn.lyjuan.base.util;
 
+import javax.print.DocFlavor;
 import java.lang.reflect.Field;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Created by chad on 2016/8/11.
@@ -8,53 +11,38 @@ import java.lang.reflect.Field;
 public class MockSet
 {
     /**
-     * 给对象设置相应类型的属性
+     * 根据{@code memberValues}的类型，对{@code target}对象设置属性
+     * NOTE: 如果有多个属性的Class相同，则会被{@code memberValues}中最后一个对应类型值覆盖
      *
-     * @param obj     类的实例，在该实例上设置属性
-     * @param memeber 属性
+     * @param target        类的实例，在该实例上设置属性
+     * @param memeberValues 属性
      */
-    public static void set(Object obj, Object memeber)
+    public static void set(Object target, Object... memeberValues)
     {
-        set(null, obj, memeber);
-    }
+        Map<String, Field> fs = ReflectUtils.fields(target.getClass());
 
-    /**
-     * 给对象设置相应类型的属性
-     *
-     * @param cls     属性所在的类
-     * @param obj     类的实例，在该实例上设置属性
-     * @param memeber 属性
-     */
-    public static void set(Class<?> cls, Object obj, Object memeber)
-    {
-        if (null == obj)
-            throw new RuntimeException("object not null");
-        if (null == memeber)
-            throw new RuntimeException("member not null");
-        cls = null == cls ? obj.getClass() : cls;
-
-        Field[] fs = cls.getDeclaredFields();
-
-        if (null == fs)
-            throw new RuntimeException(obj.getClass().getSimpleName() + "have no any field");
-
-        boolean setSucc = false;
-        for (Field f : fs)
+        Map.Entry<String, Field> entry = null;
+        for (Object m : memeberValues)
         {
-            try
+            for (Iterator<Map.Entry<String, Field>> it = fs.entrySet().iterator(); it.hasNext(); )
             {
-                f.setAccessible(true);
-                f.set(obj, memeber);
-                setSucc = true;// 不抛异常就是成功
-                break;
-            } catch (Exception e)
-            {
-                // 压制
+                entry = it.next();
+
+                if (entry.getValue().getType().isInstance(m))
+                    ReflectUtils.setValue(target, entry.getKey(), m);
             }
         }
+    }
 
-        if (!setSucc)
-            throw new RuntimeException(obj.getClass().getSimpleName() + " have no field of "
-                + memeber.getClass().getSimpleName() + " type");
+    public static void set(Object target, String memberName, Object memberVal)
+    {
+        if (null == target)
+            throw new RuntimeException("target cannot null");
+        if (StringUtils.isNull(memberName))
+            throw new RuntimeException("member name cannot be null");
+        if (null == memberVal)
+            throw new RuntimeException("member value cannot null");
+
+        ReflectUtils.setValue(target, memberName, memberName);
     }
 }
