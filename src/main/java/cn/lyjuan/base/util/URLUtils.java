@@ -156,7 +156,7 @@ public class URLUtils
         {
             log.fine("parseMember >> " + m);
             val = ReflectUtils.getValue(obj, m);
-            valType = ReflectUtils.returnMemberType(clazz, m);
+            valType = ReflectUtils.field(clazz, m).getType();
             val = urlCode(val, charset, isEnc);
             ReflectUtils.setValue(obj, m, val);
             log.fine("parseMember >> " + m + " val >> " + val);

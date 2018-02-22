@@ -1,6 +1,5 @@
 package cn.lyjuan.base.util;
 
-import javax.print.DocFlavor;
 import java.lang.reflect.Field;
 import java.util.Iterator;
 import java.util.Map;
@@ -43,6 +42,6 @@ public class MockSet
         if (null == memberVal)
             throw new RuntimeException("member value cannot null");
 
-        ReflectUtils.setValue(target, memberName, memberName);
+        ReflectUtils.setValue(target, memberName, memberVal);
     }
 }

@@ -331,16 +331,15 @@ public class ReflectUtils
             // ignore
         }
 
-        if (null == f && null != cls)
-        {
+        if (null == f && null != cls.getSuperclass())
             f = field(cls.getSuperclass(), name);
-        }
 
         return f;
     }
 
     /**
      * 迭代获取父子类的所有属性
+     *
      * @param cls
      * @return
      */
