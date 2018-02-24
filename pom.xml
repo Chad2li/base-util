@@ -198,6 +198,20 @@
             <version>2.2.0</version>
             <scope>test</scope>
         </dependency>
+        
+        <!-- Common MyBatis -->
+        <dependency>
+            <groupId>tk.mybatis</groupId>
+            <artifactId>mapper</artifactId>
+            <version>3.4.3</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis</artifactId>
+            <version>3.4.5</version>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
     
     
