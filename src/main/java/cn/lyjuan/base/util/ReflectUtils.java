@@ -247,7 +247,7 @@ public class ReflectUtils
         //返回表示此类型实际类型参数的 Type 对象的数组。
         Type[] params = ((ParameterizedType) genType).getActualTypeArguments();
 
-        if (index >= params.length || index < 0)
+        if (index > params.length || index < 0)
         {
             return Object.class;
         }
