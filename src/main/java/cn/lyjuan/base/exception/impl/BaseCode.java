@@ -8,17 +8,19 @@ public enum BaseCode implements IAppCode
     /**
      * 业务执行成功
      */
-    SUCC("0001", "SUCC")
+    SUCC("0000", "succ")
     /**
      * 业务执行失败
      */
-    , FAILED("0002", "FAILED")
+    , FAILED("0002", "failed")
+    /**
+     * 参数无效
+     */
+    , PARAM_INVALID("0003", "param_invalid")
     /**
      * 异常
      */
-    , ERROR("0003", "ERROR");
-
-    private static final IAppModuleEnum MODULE = BaseModule.BASE_COMMON;
+    , ERROR("0004", "error");
 
     private String code;
 
@@ -27,19 +29,19 @@ public enum BaseCode implements IAppCode
     @Override
     public IAppModuleEnum module()
     {
-        return MODULE;
+        return BaseModule.BASE_COMMON;
     }
 
     @Override
     public String code()
     {
-        return this.module() + code;
+        return this.code;
     }
 
     @Override
     public String msg()
     {
-        return msg;
+        return this.msg;
     }
 
     BaseCode(String code, String msg)

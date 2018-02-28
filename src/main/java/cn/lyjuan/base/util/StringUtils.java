@@ -349,7 +349,8 @@ public class StringUtils
                 || obj.getClass() == Double.class
                 || obj.getClass() == Character.class
                 || obj.getClass() == Long.class
-                || obj.getClass() == Short.class)
+                || obj.getClass() == Short.class
+                || obj.getClass() == Enum.class)
         {
             return String.valueOf(obj);
         } else if (obj.getClass() == Date.class)

@@ -1,4 +1,4 @@
-package cn.lyjuan.base.http;
+package cn.lyjuan.base.http.vo.res;
 
 import cn.lyjuan.base.exception.impl.BaseCode;
 import cn.lyjuan.base.exception.IAppCode;
@@ -7,7 +7,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 @ApiModel
-public class BaseResp<T>
+public class BaseRes<T>
 {
     /**
      * 状态码
@@ -31,7 +31,7 @@ public class BaseResp<T>
      * 返回不带数据的成功消息
      * @return
      */
-    public static <T> PagerResp<T> resp()
+    public static <T> PagerRes<T> resp()
     {
         return resp(BaseCode.SUCC, "succ", null);
     }
@@ -41,7 +41,7 @@ public class BaseResp<T>
      * @param code
      * @return
      */
-    public static <T> PagerResp<T> resp(IAppCode code)
+    public static <T> PagerRes<T> resp(IAppCode code)
     {
         return resp(code, "", null);
     }
@@ -52,7 +52,7 @@ public class BaseResp<T>
      * @param msg
      * @return
      */
-    public static <T> PagerResp<T> resp(IAppCode code, String msg)
+    public static <T> PagerRes<T> resp(IAppCode code, String msg)
     {
         return resp(code, msg, null);
     }
@@ -63,7 +63,7 @@ public class BaseResp<T>
      * @param <T>
      * @return
      */
-    public static <T> PagerResp<T> resp(T t)
+    public static <T> PagerRes<T> resp(T t)
     {
         return resp(BaseCode.SUCC, "succ", t);
     }
@@ -76,24 +76,24 @@ public class BaseResp<T>
      * @param <T>
      * @return
      */
-    public static <T> PagerResp<T> resp(IAppCode code, String msg, T t)
+    public static <T> PagerRes<T> resp(IAppCode code, String msg, T t)
     {
-        PagerResp<T> base = null;
+        PagerRes<T> base = null;
         if (null != t && t instanceof Page)
         {
             Page p = (Page) t;
-            base = PagerResp.page(p.getPageNum(), p.getPageSize(), p.getTotal());
+            base = PagerRes.page(p.getPageNum(), p.getPageSize(), p.getTotal());
         }
 
         if (null == base)
-            base = new PagerResp<>();
+            base = new PagerRes<>();
 
-        base.setCode(code.code()).setMsg(msg).setData(t);
+        base.setCode(IAppCode.fullCode(code)).setMsg(msg).setData(t);
 
         return base;
     }
 
-    public BaseResp()
+    public BaseRes()
     {
     }
 
@@ -102,7 +102,7 @@ public class BaseResp<T>
         return data;
     }
 
-    public BaseResp<T> setData(T data)
+    public BaseRes<T> setData(T data)
     {
         this.data = data;
         return this;
@@ -113,7 +113,7 @@ public class BaseResp<T>
         return code;
     }
 
-    public BaseResp<T> setCode(String code)
+    public BaseRes<T> setCode(String code)
     {
         this.code = code;
         return this;
@@ -124,7 +124,7 @@ public class BaseResp<T>
         return msg;
     }
 
-    public BaseResp<T> setMsg(String msg)
+    public BaseRes<T> setMsg(String msg)
     {
         this.msg = msg;
         return this;
@@ -133,7 +133,7 @@ public class BaseResp<T>
     @Override
     public String toString()
     {
-        return "BaseResp{" +
+        return "BaseRes{" +
                 "code=" + code +
                 ", msg='" + msg + '\'' +
                 ", data=" + data +

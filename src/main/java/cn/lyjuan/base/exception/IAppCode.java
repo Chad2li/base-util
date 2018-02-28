@@ -7,6 +7,7 @@ public interface IAppCode
 {
     /**
      * 状态码所属模块
+     *
      * @return
      */
     IAppModuleEnum module();
@@ -25,4 +26,9 @@ public interface IAppCode
      * @return
      */
     String msg();
+
+    static String fullCode(IAppCode code)
+    {
+        return code.module().module() + code.code();
+    }
 }

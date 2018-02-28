@@ -14,7 +14,7 @@ public class MyMapperProvider extends ExampleProvider
     /**
      * 根据Example条件进行查询，并仅返回一条记录，如果有多条记录则抛异常
      *
-     * @param example
+     * @param ms
      * @return
      */
     public String selectOneByExample(MappedStatement ms)
