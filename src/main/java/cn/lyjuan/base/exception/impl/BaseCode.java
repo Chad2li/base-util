@@ -18,9 +18,13 @@ public enum BaseCode implements IAppCode
      */
     , PARAM_INVALID("0003", "param_invalid")
     /**
+     * 不支持的请求方法
+     */
+    , REQ_METHOD_UNSUPPORTED("0004", "req_method_unsupported")
+    /**
      * 异常
      */
-    , ERROR("0004", "error");
+    , ERROR("0005", "error");
 
     private String code;
 

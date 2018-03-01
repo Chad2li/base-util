@@ -7,12 +7,17 @@ import cn.lyjuan.base.http.vo.res.BaseRes;
 import cn.lyjuan.base.util.SpringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.omg.PortableInterceptor.SUCCESSFUL;
 import org.springframework.validation.BindException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.ServletRequestBindingException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * Created by ly on 2015/1/11.
@@ -53,6 +58,10 @@ public class ExceptionResolver
         {
             base.setCode(IAppCode.fullCode(BaseCode.PARAM_INVALID));
             base.setMsg(BaseCode.PARAM_INVALID.msg());
+        } else if (e instanceof HttpRequestMethodNotSupportedException)// 不支付的请求方法
+        {
+            base.setCode(IAppCode.fullCode(BaseCode.REQ_METHOD_UNSUPPORTED));
+            base.setMsg(BaseCode.REQ_METHOD_UNSUPPORTED.msg());
         } else
         {
             base.setCode(IAppCode.fullCode(BaseCode.ERROR));
@@ -76,10 +85,14 @@ public class ExceptionResolver
         {
             AppException info = (AppException) e;
 
-            log.error("Error: " + info.getCode() + "-" + info.getLog(), info.getThrowable());
+            log.error("WARN: " + info.getCode() + "-" + info.getLog(), info.getThrowable());
         } else if (isParamErr(e))// 缺少参数
         {
-            log.error("Error: " + SpringUtils.getRequest().getRequestURI() + ": " + e.getMessage());
+            log.error("WARN: " + SpringUtils.getRequest().getRequestURI() + ": " + e.getMessage());
+        } else if (e instanceof HttpRequestMethodNotSupportedException)// 不支付的请求方法
+        {
+            HttpServletRequest req = SpringUtils.getRequest();
+            log.warn("WARN: [{}] not supported [{}] method", req.getRequestURI(), req.getMethod());
         } else
         {
             log.error("Error: " + e.getMessage(), e);
@@ -88,14 +101,16 @@ public class ExceptionResolver
 
     /**
      * 是否为参数错误
+     *
      * @param e
-     * @return      true参数错误
+     * @return true参数错误
      */
     private boolean isParamErr(Exception e)
     {
         return e instanceof MissingServletRequestParameterException
                 || e instanceof ServletRequestBindingException
                 || e instanceof BindException
+                || e instanceof MethodArgumentTypeMismatchException
 
                 ;
     }

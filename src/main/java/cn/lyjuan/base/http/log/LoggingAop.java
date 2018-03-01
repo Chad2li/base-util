@@ -1,15 +1,16 @@
 package cn.lyjuan.base.http.log;
 
 import cn.lyjuan.base.util.HttpUtils;
-import cn.lyjuan.base.util.JsonUtils;
 import cn.lyjuan.base.util.SpringUtils;
 import cn.lyjuan.base.util.StringUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -28,6 +29,23 @@ public class LoggingAop
 {
     private static Logger log;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    /**
+     * 打印最大长度
+     */
+    private int maxLen = 255;
+
+    /**
+     * 超出长度后截取前多少个
+     */
+    private int preLen = 100;
+    /**
+     * 超出长度后截后多少个
+     */
+    private int sufLe = 10;
+
     public LoggingAop()
     {
         this(null);
@@ -44,6 +62,7 @@ public class LoggingAop
             }
         }
     }
+
 
     /**
      * 拦截带{@link org.springframework.web.bind.annotation.RestController}
@@ -64,17 +83,56 @@ public class LoggingAop
      * @param point
      */
     @Around("pointcut()")
-    public void logging(ProceedingJoinPoint point) throws Throwable
+    public Object logging(ProceedingJoinPoint point) throws Throwable
     {
-        logging(log, point);
+        return logging(log, point);
     }
 
     /**
      * 打印日志
      */
-    public static Object logging(Logger log, ProceedingJoinPoint point) throws Throwable
+    public Object logging(Logger log, ProceedingJoinPoint point) throws Throwable
     {
         HttpServletRequest req = SpringUtils.getRequest();
+
+        // 打印请求信息
+        logReq(req);
+
+        // 记录处理时间
+        long begin = System.currentTimeMillis();
+        // 执行
+        Object result = point.proceed();
+        // 处理时间
+        long divide = System.currentTimeMillis() - begin;
+
+        // 打印响应信息
+        logRes(result, divide);
+
+        // 返回响应
+        return result;
+    }
+
+    /**
+     * 打印响应信息
+     *
+     * @param result 响应数据
+     * @param divide 处理时间，毫秒
+     */
+    private void logRes(Object result, long divide)
+    {
+        // 转化响应
+        String resultJson = jsonResp(result);
+
+        if (log.isDebugEnabled())
+        {
+            log.debug("--resp {} [{}]", resultJson, divide);
+            log.debug("=========== REQ-END ===========");
+        } else
+            log.info("RES: {} [{}]", resultJson, divide);
+    }
+
+    private void logReq(HttpServletRequest req)
+    {
         // 注意隐藏用户的pwd、token等信息
         // 忽略文件上传内容（易内存溢出）
 
@@ -121,40 +179,38 @@ public class LoggingAop
             }
         } else
             log.info("REQ-{}: {}:{}", method, clientHost, url);
-        // 记录处理时间
-        long begin = System.currentTimeMillis();
-        String resultJson = null;
-        Object result = null;
-        try
-        {
-            result = point.proceed();
-            InputStream in = null;
-            // 将结果保存为JSON
-            resultJson = result2json(result);
-        } catch (Throwable t)
-        {
-//            ByteArrayOutputStream out = new ByteArrayOutputStream();
-//            Writer w = new B
-//            t.printStackTrace(out);
-            // 记录异常
-            throw t;
-        }
-
-        // 处理时间
-        long divide = System.currentTimeMillis() - begin;
-
-        if (log.isDebugEnabled())
-        {
-            log.debug("--resp {} [{}]", result, divide);
-            log.debug("=========== REQ-END ===========");
-        } else
-            log.info("RES: {} [{}]", result, divide);
-
-        // 获取响应
-        return result;
     }
 
-    private static String pkgReqBody(HttpServletRequest req)
+    private String jsonResp(Object result)
+    {
+        // 将结果保存为JSON
+        if (null == result) return "";
+
+        String resultJson = null;
+        try
+        {
+            resultJson = result2json(result);
+            int len = resultJson.length();
+            // 限制打印长度
+            if (len > maxLen)
+            {
+                // prefix
+                String pre = resultJson.substring(0, preLen);
+                // suffix
+                String suf = resultJson.substring(len - sufLe - 1);
+                resultJson = pre + "...(IGNORE " + (len - preLen - sufLe) + ")..." + suf;
+            }
+
+        } catch (Throwable t)
+        {
+            resultJson = "parse response error";
+            log.warn(resultJson, t);
+        }
+
+        return resultJson;
+    }
+
+    private String pkgReqBody(HttpServletRequest req)
     {
         InputStream in = null;
         String str = null;
@@ -184,7 +240,7 @@ public class LoggingAop
      * @param request
      * @return
      */
-    private static Map<String, String> pkgHeader(HttpServletRequest request)
+    private Map<String, String> pkgHeader(HttpServletRequest request)
     {
         Map<String, String> header = new HashMap<>();
 
@@ -202,14 +258,54 @@ public class LoggingAop
         return header;
     }
 
-    private static String result2json(Object result)
+    private String result2json(Object result)
     {
         try
         {
-            return JsonUtils.to(result);
+            return objectMapper.writeValueAsString(result);
         } catch (Throwable t)
         {
-            return "{\"err\":\"" + t.getMessage() + "\"}";
+            return "{\"result to json err\":\"" + t.getMessage() + "\"}";
         }
+    }
+
+    public ObjectMapper getObjectMapper()
+    {
+        return objectMapper;
+    }
+
+    public void setObjectMapper(ObjectMapper objectMapper)
+    {
+        this.objectMapper = objectMapper;
+    }
+
+    public int getMaxLen()
+    {
+        return maxLen;
+    }
+
+    public void setMaxLen(int maxLen)
+    {
+        this.maxLen = maxLen;
+    }
+
+    public int getPreLen()
+    {
+        return preLen;
+    }
+
+    public void setPreLen(int preLen)
+    {
+        this.preLen = preLen;
+    }
+
+    public int getSufLe()
+    {
+        return sufLe;
+    }
+
+    public void setSufLe(int sufLe)
+    {
+        this.sufLe = sufLe;
     }
 }
