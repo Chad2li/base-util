@@ -24,7 +24,11 @@ public enum BaseCode implements IAppCode
     /**
      * 异常
      */
-    , ERROR("0005", "error");
+    , ERROR("0005", "error")
+    /**
+     * 路径不存在
+     */
+    , PATH_NOT_FOUND("0006", "path_not_found");
 
     private String code;
 

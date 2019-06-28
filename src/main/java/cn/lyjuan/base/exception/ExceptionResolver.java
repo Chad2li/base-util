@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -62,6 +63,10 @@ public class ExceptionResolver
         {
             base.setCode(IAppCode.fullCode(BaseCode.REQ_METHOD_UNSUPPORTED));
             base.setMsg(BaseCode.REQ_METHOD_UNSUPPORTED.msg());
+        } else if (e instanceof NoHandlerFoundException)// 404
+        {
+            base.setCode(IAppCode.fullCode(BaseCode.PATH_NOT_FOUND));
+            base.setMsg(BaseCode.PATH_NOT_FOUND.msg());
         } else
         {
             base.setCode(IAppCode.fullCode(BaseCode.ERROR));
@@ -91,8 +96,10 @@ public class ExceptionResolver
             log.error("WARN: " + SpringUtils.getRequest().getRequestURI() + ": " + e.getMessage());
         } else if (e instanceof HttpRequestMethodNotSupportedException)// 不支付的请求方法
         {
-            HttpServletRequest req = SpringUtils.getRequest();
-            log.warn("WARN: [{}] not supported [{}] method", req.getRequestURI(), req.getMethod());
+            log.warn("WARN: [{}] not supported [{}] method", SpringUtils.getRequest().getRequestURI(), SpringUtils.getRequest().getMethod());
+        } else if (e instanceof NoHandlerFoundException)
+        {
+            log.warn("WARN: [[]] not found", SpringUtils.getRequest().getRequestURI());
         } else
         {
             log.error("Error: " + e.getMessage(), e);
