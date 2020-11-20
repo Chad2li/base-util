@@ -3,6 +3,7 @@ package cn.lyjuan.base.util;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.time.LocalDate;
 import java.util.*;
 
 /**
@@ -64,11 +65,11 @@ public class TestStringUtils
         TestToStrChild obj = new TestToStrChild();
         obj.name = "张三";
         obj.age = 18;
-        obj.birthday = new Date();
+        obj.birthday = LocalDate.now();
         String objToStr = StringUtils.toStr(obj);
 
         String result = "TestToStrChild{age=" + obj.age
-                + ", birthday="+DateUtils.format(obj.birthday, "yyyy-MM-dd HH:mm:ss") + "}";
+                + ", birthday="+DateUtils.format(obj.birthday, "yyyy-MM-dd") + "}";
 
         Assert.assertEquals(result, objToStr);
     }
@@ -79,11 +80,11 @@ public class TestStringUtils
         TestToStrChild obj = new TestToStrChild();
         obj.name = "张三";
         obj.age = 18;
-        obj.birthday = new Date();
+        obj.birthday = LocalDate.now();
         String objToStr = StringUtils.toStr(obj, null, TestToStrParent.class);
 
         String result = "TestToStrChild{age=" + obj.age
-                + ", birthday="+DateUtils.format(obj.birthday, "yyyy-MM-dd HH:mm:ss")
+                + ", birthday="+DateUtils.format(obj.birthday, "yyyy-MM-dd")
                 +" Parent_TestToStrParent{name="+obj.name+"}}";
 
         Assert.assertEquals(result, objToStr);
@@ -139,7 +140,7 @@ public class TestStringUtils
     public static class TestToStrChild extends TestToStrParent
     {
         public int age;
-        public Date birthday;
+        public LocalDate birthday;
     }
 
     public static class TestToStrInner

@@ -64,7 +64,7 @@ public class MobileUtils
         list = new ArrayList<>(4);
         list.add(ApiName.API_IP_138);
         list.add(ApiName.API_TEN_PAY);
-        list.add(ApiName.API_SHOW_JI);
+//        list.add(ApiName.API_SHOW_JI);
         list.add(ApiName.API_XP_CHA);
     }
 
@@ -118,6 +118,10 @@ public class MobileUtils
         return info;
     }
 
+    /**
+     * 不可用
+     */
+    @Deprecated
     static class ShowJiMobile extends AMobile
     {
         /**
@@ -254,7 +258,7 @@ public class MobileUtils
         private IP138Mobile()
         {
             name = "IP138";
-            url = "http://wap.ip138.com/sim_search138.asp?mobile=#MOBILE#";
+            url = "https://m.ip138.com/sj.asp?mobile=#MOBILE#";
             available = true;
             charset = "UTF-8";
         }
@@ -278,7 +282,7 @@ public class MobileUtils
         @Override
         public MobileInfo req(String mobile)
         {
-            String mUlr = urlWithMobile(mobile.substring(0, 7));
+            String mUlr = urlWithMobile(mobile);
 
             String result = httpReq(mUlr);
 
@@ -291,14 +295,16 @@ public class MobileUtils
             {
                 Document doc = Jsoup.parse(result);
 
-                Element elt = doc.getElementsByTag("div").get(0).getElementsByTag("div").get(2);
+                Element elt = doc.getElementsByTag("tbody").get(0);
 
-                String[] infos = elt.html().split("<br>");
-                if (null == infos || infos.length < 2)
-                    infos = elt.html().split("<br />");
+//                String[] infos = elt.html().split("</tr>");
+//                if (null == infos || infos.length < 2)
+//                    infos = elt.html().split("<br />");
 
-                String[] citys = infos[1].replace("归属地：", "").trim().split(" ");
-                String oper = infos[2].replace("卡类型：", "").trim();
+                String[] citys = elt.getElementsByTag("tr").get(1).getElementsByTag("td").get(1)
+                        .getElementsByTag("span").html().split(" ");
+                String oper = elt.getElementsByTag("tr").get(2).getElementsByTag("td").get(1)
+                        .getElementsByTag("span").html();
 
                 MobileInfo info = new MobileInfo();
                 info.mobile = mobile;

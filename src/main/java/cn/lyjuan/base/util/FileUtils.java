@@ -1,6 +1,7 @@
 package cn.lyjuan.base.util;
 
 import java.io.*;
+import java.time.LocalDate;
 import java.util.Date;
 
 public class FileUtils
@@ -16,7 +17,7 @@ public class FileUtils
     {
         fatherPath = StringUtils.isNull(fatherPath) ? "" : fatherPath;
 
-        String subPath = DateUtils.format(new Date(), "/yyyy/MM/");
+        String subPath = DateUtils.format(LocalDate.now(), "/yyyy/MM/");
 
         return fatherPath + subPath;
     }

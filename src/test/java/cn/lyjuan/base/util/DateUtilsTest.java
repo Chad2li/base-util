@@ -3,45 +3,68 @@ package cn.lyjuan.base.util;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Date;
-import java.util.Locale;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * Created by chad on 2017/1/9.
  */
+
 public class DateUtilsTest
 {
+    String date = "1991-10-12";
+    String dateMonday = "1991-10-07";
+    String dateFirstDayOfMonth = "1991-10-01";
+    String datePattern = "yyyy-MM-dd";
+    String time = "1991-10-13 14:58:59";
+    String time1 = "1991-10-13 14:59:59";
+    String timePattern = "yyyy-MM-dd HH:mm:ss";
+
     @Test
-    public void monday()
-    {
-        String pattern = "yyyy-MM-dd";
+    public void testParseDate() {
+        LocalDate ld = DateUtils.parseDate(date, datePattern);
+        String the = DateUtils.format(ld, datePattern);
+        Assert.assertEquals(the, date);
 
-        // 周一为 2017-01-09
-        String expect = "2017-01-09";
-        Date   now    = DateUtils.parse("2017-01-12", pattern);
-        Date   monday = DateUtils.monday(now, Locale.CHINA);
-        Assert.assertEquals(expect, DateUtils.format(monday, pattern));
-
-        expect = "2017-01-08";
-        now    = DateUtils.parse("2017-01-12", pattern);
-        monday = DateUtils.monday(now, Locale.US);
-        Assert.assertEquals(expect, DateUtils.format(monday, pattern));
-
-        // 临界
-        expect = "2017-01-09";
-        now = DateUtils.parse(expect, pattern);
-        monday = DateUtils.monday(now, Locale.CHINA);
-        Assert.assertEquals(expect, DateUtils.format(monday, pattern));
-
-        // 临界
-        expect = "2017-01-30";
-        now = DateUtils.parse("2017-02-02", pattern);
-        monday = DateUtils.monday(now, Locale.CHINA);
-        Assert.assertEquals(expect, DateUtils.format(monday, pattern));
     }
 
-    public void firstDayOfMonth()
-    {
+    @Test
+    public void testParseTime() {
+        LocalDateTime ldt = DateUtils.parseTime(time, timePattern);
+        String the = DateUtils.format(ldt, timePattern);
+        Assert.assertEquals(the, time);
+    }
 
+    @Test
+    public void testLong2Time() {
+        LocalDateTime ldt = DateUtils.parseTime(time, timePattern);
+        long first = DateUtils.time2long(ldt);
+        LocalDateTime ldt2 = DateUtils.long2Time(first);
+
+        Assert.assertEquals(time, DateUtils.format(ldt2, timePattern));
+    }
+
+    @Test
+    public void testAddLong() {
+        LocalDateTime ldt = DateUtils.parseTime(time, timePattern);
+        ldt = DateUtils.addLong(ldt, 60 * 1000);//加10分钟
+
+        Assert.assertEquals(time1, DateUtils.format(ldt, timePattern));
+    }
+
+    @Test
+    public void testMonday() {
+        LocalDate ld = DateUtils.parseDate(date, datePattern);
+        ld = DateUtils.monday(ld);
+
+        Assert.assertEquals(dateMonday, DateUtils.format(ld, datePattern));
+    }
+
+    @Test
+    public void testFirstDayOfMonth() {
+        LocalDate ld = DateUtils.parseDate(date, datePattern);
+        ld = DateUtils.firstDayOfMonth(ld);
+
+        Assert.assertEquals(dateFirstDayOfMonth, DateUtils.format(ld, datePattern));
     }
 }

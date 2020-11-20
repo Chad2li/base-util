@@ -257,7 +257,7 @@ public class HttpUtils
      */
     public static String sendGet(String url, String encode)
     {
-        log.info(HTTP_METHOD_GET + "请求 URL >> " + url);
+        log.severe(HTTP_METHOD_GET + "请求 URL >> " + url);
         StringBuilder result = new StringBuilder();
         try
         {
@@ -271,6 +271,8 @@ public class HttpUtils
             conn.setReadTimeout(READ_TIMEOUT);
             conn.setUseCaches(false); // 不使用缓存
             conn.setRequestProperty("Content-type", "text/html;charset=" + encode); // 设置请求头属性
+            conn.setRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+            conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Safari/605.1.15");
             conn.connect();
 
             String line = null;
@@ -287,7 +289,7 @@ public class HttpUtils
             log.severe("网络异常 url >> " + url + " error >> " + e.getMessage());
             throw new RuntimeException(e);
         }
-        log.info("result >> " + result.toString());
+        log.severe("result >> " + result.toString());
         return result.toString();
     }
 

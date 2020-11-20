@@ -1,17 +1,46 @@
 package cn.lyjuan.base.util;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.gson.*;
 
 import java.lang.reflect.Type;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class JsonUtils
 {
 	private static Gson gson;
 
+	private static DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+	private static DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
 	static
 	{
-		gson = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
+//		gson = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
+
+		gson = new GsonBuilder().registerTypeAdapter(LocalDateTime.class, new JsonSerializer<LocalDateTime>() {
+			@Override
+			public JsonElement serialize(LocalDateTime localDateTime, Type type, JsonSerializationContext jsonSerializationContext) {
+				return new JsonPrimitive(localDateTime.format(timeFormatter));
+			}
+
+
+		}).registerTypeAdapter(LocalDate.class, new JsonSerializer<LocalDate>() {
+			@Override
+			public JsonElement serialize(LocalDate localDate, Type type, JsonSerializationContext jsonSerializationContext) {
+				return new JsonPrimitive(localDate.format(dateFormatter));
+			}
+		}).registerTypeAdapter(LocalDateTime.class, new JsonDeserializer<LocalDateTime>() {
+			@Override
+			public LocalDateTime deserialize(JsonElement json, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
+				return LocalDateTime.parse(json.getAsJsonPrimitive().getAsString(), timeFormatter);
+			}
+		}).registerTypeAdapter(LocalDate.class, new JsonDeserializer<LocalDate>() {
+			@Override
+			public LocalDate deserialize(JsonElement json, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
+				return LocalDate.parse(json.getAsJsonPrimitive().getAsString(), dateFormatter);
+			}
+		}).create();
 	}
 
 	/**

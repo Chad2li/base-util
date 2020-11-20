@@ -84,6 +84,7 @@ public class TestMobileUtils
     }
 
     @Test
+    @Ignore
     public void testSendGetMobileInfoForAPI_SHOW_JI()
     {
         MobileUtils.MobileInfo info = MobileUtils.sendGetMobileInfo(MobileUtils.ApiName.API_SHOW_JI, mobile);
@@ -92,6 +93,7 @@ public class TestMobileUtils
     }
 
     @Test
+    @Ignore
     public void testSendGetMobileInfoForAPI_SHOW_JI_Null()
     {
         String mobile = "1300003";

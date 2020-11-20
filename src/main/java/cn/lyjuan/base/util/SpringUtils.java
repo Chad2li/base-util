@@ -13,6 +13,8 @@ import javax.imageio.stream.ImageInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -29,7 +31,7 @@ public class SpringUtils
      */
     public static String getDateRealPath(String subPath, String suf)
     {
-        Date now = new Date();
+        LocalDate now = LocalDate.now();
 
         String path = DateUtils.format(now, "yyyy/MM");
 
@@ -84,10 +86,10 @@ public class SpringUtils
                 oriFileName.substring(oriFileName.lastIndexOf(".")) : suf;// 文件后缀名
 
         // 生成文件名称
-        String name     = disPath + "/" + DateUtils.format(new Date(), "yyyy/MM/yyyyMMddHHmmssSSS") + suf;
+        String name     = disPath + "/" + DateUtils.format(LocalDateTime.now(), "yyyy/MM/yyyyMMddHHmmssSSS") + suf;
         File   saveFile = new File(realPath, name);
         while (saveFile.isFile())
-            saveFile = new File(realPath, name = disPath + "/" + DateUtils.format(new Date(), "yyyy/MM/yyyyMMddHHmmssSSS") + suf);
+            saveFile = new File(realPath, name = disPath + "/" + DateUtils.format(LocalDateTime.now(), "yyyy/MM/yyyyMMddHHmmssSSS") + suf);
 
         if (!saveFile.getParentFile().isDirectory())
             saveFile.getParentFile().mkdirs();

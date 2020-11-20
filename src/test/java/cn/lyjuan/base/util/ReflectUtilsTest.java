@@ -159,7 +159,7 @@ public class ReflectUtilsTest
         }
     }
 
-    public static class ExtendClass<User> extends BaseGenericity<User>
+    public static class ExtendClass extends BaseGenericity<User>
     {
         @Override
         public String toString()
@@ -175,7 +175,7 @@ public class ReflectUtilsTest
         public T obj;
     }
 
-    public static class ExtendMultClass<User, Address> extends BaseMultGenericity<User, Address>
+    public static class ExtendMultClass extends BaseMultGenericity<User, Address>
     {
 
     }

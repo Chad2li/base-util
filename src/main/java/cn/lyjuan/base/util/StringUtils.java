@@ -1,6 +1,9 @@
 package cn.lyjuan.base.util;
 
 import java.lang.reflect.Field;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -247,7 +250,7 @@ public class StringUtils
      */
     public static boolean isDate(Object obj, String pattern)
     {
-        Date date = parseDate(obj, pattern);
+        LocalDate date = parseDate(obj, pattern);
 
         return !isNull(date);
     }
@@ -259,12 +262,12 @@ public class StringUtils
      * @param pattern 时间解析模式
      * @return 成功解析返回时间{@code Date}，解析失败或{@code obj}参数为空， 返回{@code null}
      */
-    public static Date parseDate(Object obj, String pattern)
+    public static LocalDate parseDate(Object obj, String pattern)
     {
         if (isNull(obj))
             return null;
 
-        return DateUtils.parse(obj.toString(), pattern);
+        return DateUtils.parseDate(obj.toString(), pattern);
     }
 
     /**
@@ -341,19 +344,25 @@ public class StringUtils
         // 基本类型直接输出
         if (null == obj)
             return "";
-        else if (obj.getClass() == String.class
-                || obj.getClass() == Integer.class
-                || obj.getClass() == Byte.class
-                || obj.getClass() == Boolean.class
-                || obj.getClass() == Float.class
-                || obj.getClass() == Double.class
-                || obj.getClass() == Character.class
-                || obj.getClass() == Long.class
-                || obj.getClass() == Short.class)
+
+        Class objCls = obj.getClass();
+        if (objCls == String.class
+                || objCls == Integer.class
+                || objCls == Byte.class
+                || objCls == Boolean.class
+                || objCls == Float.class
+                || objCls == Double.class
+                || objCls == Character.class
+                || objCls == Long.class
+                || objCls == Short.class)
         {
             return String.valueOf(obj);
-        } else if (obj.getClass() == Date.class)
-            return DateUtils.format((Date) obj, "yyyy-MM-dd HH:mm:ss");
+        } else if (objCls == Date.class)
+            return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format((Date) obj);
+        else if (objCls == LocalDate.class)
+            return DateUtils.format((LocalDate) obj, "yyyy-MM-dd");
+        else if (objCls == LocalDateTime.class)
+            return DateUtils.format((LocalDateTime) obj, "yyyy-MM-dd HH:mm:ss");
 
         StringBuilder sb = new StringBuilder();
 
@@ -407,6 +416,10 @@ public class StringUtils
             Object sub = null;
             try {
                 sub = f.get(obj);
+                if (sub == obj){
+                    sb.append(obj.toString()).append(", ");
+                    break;
+                }
             } catch (IllegalAccessException e)
             {// 已处理访问控制，不会有此异常
             }

@@ -1,10 +1,10 @@
 package cn.lyjuan.base.util.test;
 
 import cn.lyjuan.base.util.JsonUtilsTest;
-import com.google.gson.internal.$Gson$Types;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Created by chad on 2016/8/12.
@@ -18,13 +18,10 @@ public class TestJsonType
 
     public static <T> void printType(T c)
     {
-        Type superclass = c.getClass().getGenericSuperclass();
-        if (superclass instanceof Class) {
-            throw new RuntimeException("Missing type parameter.");
-        }
-        ParameterizedType parameterized = (ParameterizedType) superclass;
+        LocalDate date = LocalDate.parse("1991-10-12", DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        System.out.println(date);
 
-        System.out.println(parameterized);
-        $Gson$Types.canonicalize(parameterized.getActualTypeArguments()[0]);
+        LocalDateTime time = LocalDateTime.parse("1991-10-12 14:58:59", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        System.out.println(time.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
     }
 }
