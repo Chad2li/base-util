@@ -128,4 +128,12 @@ public class DateUtils {
         return firstDayOfMonth(LocalDate.now());
     }
 
+    /**
+     * 多少毫秒之后的时间，可以为负数
+     * @param millis
+     * @return
+     */
+    public static LocalDateTime afterTime(long millis){
+        return addLong(LocalDateTime.now(), millis);
+    }
 }
