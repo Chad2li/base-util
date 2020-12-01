@@ -1,8 +1,14 @@
 package cn.lyjuan.base.util;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.lang.reflect.Field;
-import java.util.Iterator;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.*;
 
 public class XmlUtils
 {
@@ -147,30 +153,157 @@ public class XmlUtils
 	}
 
 	/**
-	 * 将对象转化为XML
+	 * 给生成XML的结果增加 Root 标签
+	 * @param root
 	 * @param obj
 	 * @return
 	 */
-	public static String genXml(Object obj)
-	{
-		if (null == obj) return "";
+	public static String genXml(String root, Object obj) {
+		if (StringUtils.isNull(root)) {
+			return genXml(obj);
+		}
 
 		StringBuilder sb = new StringBuilder();
+		sb.append("<").append(root).append(">")
+				.append(genXml(obj))
+				.append("</").append(root).append(">");
 
-		Class c = obj.getClass();
+		return sb.toString();
+	}
 
-		Field[] fs = c.getDeclaredFields();
+	/**
+	 * 将对象转换为XML文档
+	 * @param obj
+	 * @return
+	 */
+	public static String genXml(Object obj){
+		return genXml(obj, null);
+	}
+
+	/**
+	 * 将对象转化为XML
+	 * 对List支持性不好
+	 * @param obj
+	 * @return
+	 */
+	private static String genXml(Object obj, Field field) {
+		if (null == obj) return "";
+
+		Class objCls = obj.getClass();
+		if (objCls == String.class
+				|| objCls == Integer.class
+				|| objCls == Byte.class
+				|| objCls == Boolean.class
+				|| objCls == Float.class
+				|| objCls == Double.class
+				|| objCls == Character.class
+				|| objCls == Long.class
+				|| objCls == Short.class)
+		{
+			return String.valueOf(obj);
+		} else if (objCls == Date.class)
+			return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format((Date) obj);
+		else if (objCls == LocalDate.class)
+			return DateUtils.format((LocalDate) obj, "yyyy-MM-dd");
+		else if (objCls == LocalDateTime.class)
+			return DateUtils.format((LocalDateTime) obj, "yyyy-MM-dd HH:mm:ss");
+
+		StringBuilder sb = new StringBuilder();
+		if (List.class.isInstance(obj))
+		{
+			List list = (List) obj;
+			if (list.isEmpty()) return "";
+			if (null != field){
+				XmlItem itemAnnotation = field.getAnnotation(XmlItem.class);
+				if (null == itemAnnotation)
+					throw new RuntimeException("List field <" + field.getName() + "> must has XmlItem annotation");
+				String tag = itemAnnotation.value();
+				if (StringUtils.isNull(tag))
+					throw new RuntimeException("XmlItem of <" + field.getName() + "> must has value");
+				for (Object listo : list) {
+					sb.append("<").append(tag).append(">");
+					sb.append(genXml(listo, null));
+					sb.append("</").append(tag).append(">");
+				}
+			} else {
+				for (Object listo : list)
+					sb.append(genXml(listo, null));
+			}
+			return sb.toString();
+		}
+
+		if (Set.class.isInstance(obj)) {
+			Set set = (Set) obj;
+			if (set.isEmpty()) return "";
+			if (null != field){
+				XmlItem itemAnnotation = field.getAnnotation(XmlItem.class);
+				if (null == itemAnnotation)
+					throw new RuntimeException("List field <" + field.getName() + "> must has XmlItem annotation");
+				String tag = itemAnnotation.value();
+				if (StringUtils.isNull(tag))
+					throw new RuntimeException("XmlItem of <" + field.getName() + "> must has value");
+				for (Iterator<Object> it = set.iterator(); it.hasNext();) {
+					Object setto = it.next();
+					sb.append("<").append(tag).append(">");
+					sb.append(genXml(setto, null));
+					sb.append("</").append(tag).append(">");
+				}
+			} else {
+				for (Iterator<Object> it = set.iterator(); it.hasNext();) {
+					Object setto = it.next();
+					sb.append(genXml(setto, null));
+				}
+			}
+
+			return sb.toString();
+		}
+
+		if (Map.class.isInstance(obj))
+		{
+			Map mapo = (Map) obj;
+			if (mapo.isEmpty()) return "";
+
+			for (Iterator<Map.Entry<Object, Object>> it = mapo.entrySet().iterator(); it.hasNext(); )
+			{
+				Map.Entry<Object, Object> keyo = it.next();
+				sb.append("<").append(keyo.getKey().toString()).append(">");
+				sb.append(genXml(keyo.getValue(), null));
+				sb.append("</").append(keyo.getKey().toString()).append(">");
+			}
+
+			return sb.toString();
+		}
+
+		// toString
+		Field[] fs = obj.getClass().getDeclaredFields();
+
 		if (null == fs || fs.length < 1) return "";
 
-		String name = null;
+
+		// 当前类
 		for (Field f : fs)
 		{
-			name = f.getName();
-			sb.append("<").append(name).append(">")
-					.append(ReflectUtils.getValue(obj, f.getName()))
-					.append("</").append(name).append(">");
+			f.setAccessible(true);
+			Object sub = null;
+			try {
+				if ("this$0".equals(f.getName())){
+					continue;
+				}
+				sb.append("<").append(f.getName()).append(">");
+				sb.append(genXml(f.get(obj), f));
+				sb.append("</").append(f.getName()).append(">");
+			} catch (IllegalAccessException e)
+			{// 已处理访问控制，不会有此异常
+				throw new RuntimeException(e);
+			}
 		}
 
 		return sb.toString();
+	}
+
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target({ElementType.FIELD})
+	public @interface XmlItem{
+		String value() default "item";
 	}
 }
