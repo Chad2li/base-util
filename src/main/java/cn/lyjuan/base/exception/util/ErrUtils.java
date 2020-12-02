@@ -5,6 +5,7 @@ import cn.lyjuan.base.exception.impl.AppException;
 
 /**
  * 抛异常工具
+ *
  */
 public class ErrUtils
 {
@@ -31,7 +32,7 @@ public class ErrUtils
     public static void appThrow(IAppCode code, String log, Throwable t)
     {
         // todo 未实现国际化
-        appThrow(code.code(), code.msg(), log, t);
+        appThrow(IAppCode.fullCode(code), code.msg(), log, t);
     }
 
 

@@ -1,11 +1,11 @@
-package cn.lyjuan.base.http;
+package cn.lyjuan.base.http.vo.res;
 
 import com.github.pagehelper.Page;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 @ApiModel
-public class PagerResp<T> extends BaseResp<T>
+public class PagerRes<T> extends BaseRes<T>
 {
     /**
      * page number
@@ -60,7 +60,7 @@ public class PagerResp<T> extends BaseResp<T>
     /**
      * 清除信息
      */
-    public PagerResp<T> clear()
+    public PagerRes<T> clear()
     {
         this.pn = null;
         this.ps = null;
@@ -69,11 +69,11 @@ public class PagerResp<T> extends BaseResp<T>
         return this;
     }
 
-    public PagerResp()
+    public PagerRes()
     {
     }
 
-    public PagerResp<T> page(Object page)
+    public PagerRes<T> page(Object page)
     {
         if (null != page && page instanceof Page)
         {
@@ -85,12 +85,12 @@ public class PagerResp<T> extends BaseResp<T>
         return this;
     }
 
-    public static <T> PagerResp<T> page(Integer pn, Integer ps, Long tc)
+    public static <T> PagerRes<T> page(Integer pn, Integer ps, Long tc)
     {
-        return new PagerResp<T>().setPn(pn).setPs(ps).setTc(tc);
+        return new PagerRes<T>().setPn(pn).setPs(ps).setTc(tc);
     }
 
-    public PagerResp<T> setPn(Integer pn)
+    public PagerRes<T> setPn(Integer pn)
     {
         this.pn = pn;
         return this;
@@ -101,7 +101,7 @@ public class PagerResp<T> extends BaseResp<T>
         return ps;
     }
 
-    public PagerResp<T> setPs(Integer ps)
+    public PagerRes<T> setPs(Integer ps)
     {
         this.ps = ps;
         return this;
@@ -112,7 +112,7 @@ public class PagerResp<T> extends BaseResp<T>
         return tc;
     }
 
-    public PagerResp<T> setTc(Long tc)
+    public PagerRes<T> setTc(Long tc)
     {
         this.tc = tc;
         return this;
@@ -121,7 +121,7 @@ public class PagerResp<T> extends BaseResp<T>
     @Override
     public String toString()
     {
-        return "PagerResp{" +
+        return "PagerRes{" +
                 "pn=" + pn +
                 ", ps=" + ps +
                 ", tc=" + tc +

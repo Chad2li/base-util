@@ -344,7 +344,6 @@ public class StringUtils
         // 基本类型直接输出
         if (null == obj)
             return "";
-
         Class objCls = obj.getClass();
         if (objCls == String.class
                 || objCls == Integer.class
