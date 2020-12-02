@@ -173,20 +173,32 @@ public class XmlUtils
 
 	/**
 	 * 将对象转换为XML文档
+	 * 并默认删除为空的属性值
 	 * @param obj
 	 * @return
 	 */
-	public static String genXml(Object obj){
-		return genXml(obj, null);
+	public static String genXml(Object obj) {
+		return genXml(obj, true);
+	}
+
+	/**
+	 * 将对象转换为XML文档
+	 * @param obj
+	 * @param delNull	true删除为空（Null或空字符串）的属性
+	 * @return
+	 */
+	public static String genXml(Object obj, boolean delNull){
+		return genXml(obj, null, delNull);
 	}
 
 	/**
 	 * 将对象转化为XML
 	 * 对List支持性不好
 	 * @param obj
+	 * @param delNull	true删除为空（Null或空字符串）的属性
 	 * @return
 	 */
-	private static String genXml(Object obj, Field field) {
+	private static String genXml(Object obj, Field field, boolean delNull) {
 		if (null == obj) return "";
 
 		Class objCls = obj.getClass();
@@ -222,12 +234,12 @@ public class XmlUtils
 					throw new RuntimeException("XmlItem of <" + field.getName() + "> must has value");
 				for (Object listo : list) {
 					sb.append("<").append(tag).append(">");
-					sb.append(genXml(listo, null));
+					sb.append(genXml(listo, null, delNull));
 					sb.append("</").append(tag).append(">");
 				}
 			} else {
 				for (Object listo : list)
-					sb.append(genXml(listo, null));
+					sb.append(genXml(listo, null, delNull));
 			}
 			return sb.toString();
 		}
@@ -245,13 +257,13 @@ public class XmlUtils
 				for (Iterator<Object> it = set.iterator(); it.hasNext();) {
 					Object setto = it.next();
 					sb.append("<").append(tag).append(">");
-					sb.append(genXml(setto, null));
+					sb.append(genXml(setto, null, delNull));
 					sb.append("</").append(tag).append(">");
 				}
 			} else {
 				for (Iterator<Object> it = set.iterator(); it.hasNext();) {
 					Object setto = it.next();
-					sb.append(genXml(setto, null));
+					sb.append(genXml(setto, null, delNull));
 				}
 			}
 
@@ -267,7 +279,7 @@ public class XmlUtils
 			{
 				Map.Entry<Object, Object> keyo = it.next();
 				sb.append("<").append(keyo.getKey().toString()).append(">");
-				sb.append(genXml(keyo.getValue(), null));
+				sb.append(genXml(keyo.getValue(), null, delNull));
 				sb.append("</").append(keyo.getKey().toString()).append(">");
 			}
 
@@ -286,11 +298,14 @@ public class XmlUtils
 			f.setAccessible(true);
 			Object sub = null;
 			try {
+				sub = f.get(obj);
+				if (delNull && StringUtils.isNull(sub))// 根据 delNull 参数去掉为空的属性
+					continue;
 				if ("this$0".equals(f.getName())){
 					continue;
 				}
 				sb.append("<").append(f.getName()).append(">");
-				sb.append(genXml(f.get(obj), f));
+				sb.append(genXml(sub, f, delNull));
 				sb.append("</").append(f.getName()).append(">");
 			} catch (IllegalAccessException e)
 			{// 已处理访问控制，不会有此异常

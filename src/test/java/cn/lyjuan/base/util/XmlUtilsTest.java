@@ -38,7 +38,7 @@ public class XmlUtilsTest {
         model.setAge(18);
         model.setGender(Byte.parseByte("1"));
         model.setScore(99.9);
-        model.setBirthday(DateUtils.parseDate("1988-01-01", "yyyy-MM-dd"));
+//        model.setBirthday(DateUtils.parseDate("1988-01-01", "yyyy-MM-dd"));
         model.setCreatetime(LocalDateTime.now());
 
         Map<String, String> map = new HashMap<>(2);
@@ -59,7 +59,7 @@ public class XmlUtilsTest {
         ad2.setArea("朝阳区");
         ad2.setCity("某街XXXX号");
         ads.add(ad2);
-        model.setAddresses(ads);
+//        model.setAddresses(ads);
 
         Set<Mail> mails = new HashSet<>(2);
         Mail mail1 = new Mail();
