@@ -7,29 +7,34 @@ import cn.lyjuan.base.http.vo.res.BaseRes;
 import cn.lyjuan.base.util.SpringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.omg.PortableInterceptor.SUCCESSFUL;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.ServletRequestBindingException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
-
-import javax.servlet.http.HttpServletRequest;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 /**
  * Created by ly on 2015/1/11.
  */
-@ControllerAdvice
+@RestControllerAdvice
 @ResponseBody
 public class ExceptionResolver
 {
     private static Logger log = LogManager.getLogger(ExceptionResolver.class.getName());
 
-    @ExceptionHandler(Throwable.class)
+    /**
+     * 拦截所有 Exception
+     * Note: 只能使用 Exception
+     * @param e
+     * @return
+     */
+    @ExceptionHandler({Exception.class})
     public Object doResolveException(Exception e)
     {
         logExce(e);// 打印日志
@@ -59,7 +64,7 @@ public class ExceptionResolver
         {
             base.setCode(IAppCode.fullCode(BaseCode.PARAM_INVALID));
             base.setMsg(BaseCode.PARAM_INVALID.msg());
-        } else if (e instanceof HttpRequestMethodNotSupportedException)// 不支付的请求方法
+        } else if (e instanceof HttpRequestMethodNotSupportedException)// 不支持的请求方法
         {
             base.setCode(IAppCode.fullCode(BaseCode.REQ_METHOD_UNSUPPORTED));
             base.setMsg(BaseCode.REQ_METHOD_UNSUPPORTED.msg());

@@ -75,7 +75,7 @@ public class AppException extends RuntimeException implements IAppException
     public AppException(String code, String msg, String log, Throwable throwable)
     {
         super(msg, throwable);
-        this.setCode(null == code ? BaseCode.ERROR.code() : code);
+        this.setCode(code);
         this.setMsg(StringUtils.isNull(msg) ? BaseCode.ERROR.msg() : msg);
         this.setLog(StringUtils.isNull(log) ? msg : log);
         this.setThrowable(throwable);

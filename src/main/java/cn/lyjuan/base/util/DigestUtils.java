@@ -32,7 +32,7 @@ public class DigestUtils
 	/**
 	 * md5的同步锁对象
 	 */
-	private static String LOCK_MD5 = "#L__lock_md5L#";
+	private static String LOCK_MD5 = "#L_lock_md5_L#";
 
 	static
 	{
@@ -43,7 +43,7 @@ public class DigestUtils
 		}
 		catch (NoSuchAlgorithmException e)
 		{
-			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -105,7 +105,7 @@ public class DigestUtils
 			md5.reset();
 		}
 		int i;
-		StringBuffer buf = new StringBuffer("");
+		StringBuilder buf = new StringBuilder("");
 		for (int offset = 0; offset < b.length; offset++)
 		{
 			i = b[offset];

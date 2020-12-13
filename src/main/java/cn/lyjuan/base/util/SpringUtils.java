@@ -180,6 +180,38 @@ public class SpringUtils
     }
 
     /**
+     * 读取request body内容
+     * @param req
+     * @return
+     */
+    public static String reqBody(HttpServletRequest req) {
+        InputStream in = null;
+        String str = null;
+        try {
+            in = req.getInputStream();
+            if (!in.markSupported())
+                throw new RuntimeException("request unsupported mark");
+
+            in.mark(req.getContentLength());
+
+            str = HttpUtils.postStr(in);
+
+            in.reset();
+        } catch (IOException e) {
+            try {
+                if (null != in) in.reset();
+            } catch (IOException e2) {
+                throw new RuntimeException(e2);
+            }
+
+            throw new RuntimeException(e);
+        }
+
+
+        return str;
+    }
+
+    /**
      * 将非 HTTP 开头的地址拼接上前缀URL
      *
      * @param subUrl 子URL

@@ -1,4 +1,4 @@
-package cn.lyjuan.base.http.log;
+package cn.lyjuan.base.http.aop.log;
 
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
@@ -7,6 +7,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * 对req重复读取
+ */
 public class BufferedServletRequestWrapper extends HttpServletRequestWrapper
 {
     private BufferedServletInputStream inputStream;

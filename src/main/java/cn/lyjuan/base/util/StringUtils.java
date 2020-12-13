@@ -1,17 +1,14 @@
 package cn.lyjuan.base.util;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
-public class StringUtils
-{
+public class StringUtils {
 
     /**
      * 判断一个字符串是否是数字
@@ -19,8 +16,7 @@ public class StringUtils
      * @param str
      * @return
      */
-    public static boolean isNumber(Object str)
-    {
+    public static boolean isNumber(Object str) {
         return str != null && str.toString().matches("^-?[0-9]+$");
     }
 
@@ -30,8 +26,7 @@ public class StringUtils
      * @param str 字符串
      * @return 如果该对象转换的字符串为数字，并长度在一定范围内，则返回 true，否则 false
      */
-    public static boolean isNumLen(Object str, int min, int max, boolean isTrim)
-    {
+    public static boolean isNumLen(Object str, int min, int max, boolean isTrim) {
         if (isNull(str)) return false;
 
         if (str.toString().replace(" ", "").matches("^-?[\\d]{" + min + "," + max + "}$"))
@@ -47,8 +42,7 @@ public class StringUtils
      * @param len
      * @return
      */
-    public static boolean isNumber(Object str, int len)
-    {
+    public static boolean isNumber(Object str, int len) {
         return str != null && str.toString().matches("^-?[0-9]{" + len + "}$");
     }
 
@@ -58,8 +52,7 @@ public class StringUtils
      * @param str
      * @return
      */
-    public static boolean isNull(Object str)
-    {
+    public static boolean isNull(Object str) {
         return str == null || str.toString().trim().length() < 1;
     }
 
@@ -72,8 +65,7 @@ public class StringUtils
      * 该方法调用重载方法 hiddenPhoneNumber(phoneNumber, '*', 3, 7)
      * 注意：如果手机号为 null 或长度不足 7  ，返回 "" 空字符串
      */
-    public static String hideMobile(String mobile)
-    {
+    public static String hideMobile(String mobile) {
         return hide(mobile, '*', 3, 7);
     }
 
@@ -83,15 +75,13 @@ public class StringUtils
      * @param card
      * @return
      */
-    public static String hideCard(String card)
-    {
+    public static String hideCard(String card) {
         if (card == null || card.length() < 4) return card;
 
         return hide(card, '*', card.length() - 12, card.length() - 4);
     }
 
-    public static String hideName(String name)
-    {
+    public static String hideName(String name) {
         return hide(name, '*', 0, 1);
     }
 
@@ -100,16 +90,15 @@ public class StringUtils
      * @param replaceTo   使用该字符替换原字符串中的特定字符。
      * @param start       要替换字符串索引起点，小于 0 时默认为 0 。
      * @param end         要替换字符串索引终点， 大于被替换字符串长度时默认为被替换字符串末尾， 为负数时返回 "" 字符串。
+     * @return 返回进行隐藏处理后的字符串
      * @author Chad
      * 使用特定字符(replaceTo)替换原字符串(replaceFrom)中指定的内容(索引在 start 和 end 之间)。
      * <p>
      * 注意，如果出现以下情况，则返回 "" 空字符串：
      * 1. 要替换的字符串为空；
      * 2. 替换终点小于 0。
-     * @return 返回进行隐藏处理后的字符串
      */
-    public static String hide(String replaceFrom, char replaceTo, int start, int end)
-    {
+    public static String hide(String replaceFrom, char replaceTo, int start, int end) {
         // hidden 保存用于拼接字符串
         StringBuilder hidden = new StringBuilder();
 
@@ -141,8 +130,7 @@ public class StringUtils
      * @param arr
      * @return
      */
-    public static boolean isNullArray(Object[] arr)
-    {
+    public static boolean isNullArray(Object[] arr) {
         return null == arr || arr.length < 1;
     }
 
@@ -155,8 +143,7 @@ public class StringUtils
      * @param isTrim 判断长度时是否去掉空格
      * @return
      */
-    public static boolean isLen(Object str, int min, int max, boolean isTrim)
-    {
+    public static boolean isLen(Object str, int min, int max, boolean isTrim) {
         if (isNull(str)) return false;// 字符串为空
 
         if (isTrim)// 去掉空格
@@ -177,8 +164,7 @@ public class StringUtils
      * @param msg
      * @return
      */
-    public static boolean isSmsLen(String msg)
-    {
+    public static boolean isSmsLen(String msg) {
         return isLen(msg, -1, 70, false);
     }
 
@@ -188,8 +174,7 @@ public class StringUtils
      * @param obj 转换对象
      * @return 如果对象为空，返回空字符串，否则返回该对象的{@code toString}的值
      */
-    public static String nullToStr(Object obj)
-    {
+    public static String nullToStr(Object obj) {
         return nullToStr(obj, true);
     }
 
@@ -200,8 +185,7 @@ public class StringUtils
      * @param trim 是否清掉字符串前后的空字符
      * @return 如果对象为空，返回空字符串，否则返回该对象的{@code toString}的值
      */
-    public static String nullToStr(Object obj, boolean trim)
-    {
+    public static String nullToStr(Object obj, boolean trim) {
         return isNull(obj) ? "" : trim ? obj.toString().trim() : obj.toString();
     }
 
@@ -212,13 +196,11 @@ public class StringUtils
      * @param param
      * @return
      */
-    public static String format(String src, String plac, Object... param)
-    {
+    public static String format(String src, String plac, Object... param) {
         if (isNull(src) || isNullArray(param)) return "";
 
         int len = param.length;
-        for (int i = 0; i < len; i++)
-        {
+        for (int i = 0; i < len; i++) {
             if (len < i) return plac;
 
             if (isNull(param[i]))
@@ -236,8 +218,7 @@ public class StringUtils
      * @param obj
      * @return 如果是 double 类型，返回true，否则返回 false
      */
-    public static boolean isDouble(String obj)
-    {
+    public static boolean isDouble(String obj) {
         return !isNull(obj) && obj.matches("(^[0-9]+\\.[0-9]+|([0-9]+$))");
     }
 
@@ -248,8 +229,7 @@ public class StringUtils
      * @param pattern 时间格式
      * @return true 表示该字符串为正确的时间格式，否则不是
      */
-    public static boolean isDate(Object obj, String pattern)
-    {
+    public static boolean isDate(Object obj, String pattern) {
         LocalDate date = parseDate(obj, pattern);
 
         return !isNull(date);
@@ -262,8 +242,7 @@ public class StringUtils
      * @param pattern 时间解析模式
      * @return 成功解析返回时间{@code Date}，解析失败或{@code obj}参数为空， 返回{@code null}
      */
-    public static LocalDate parseDate(Object obj, String pattern)
-    {
+    public static LocalDate parseDate(Object obj, String pattern) {
         if (isNull(obj))
             return null;
 
@@ -276,8 +255,7 @@ public class StringUtils
      * @param obj
      * @return
      */
-    public static boolean isCertid(Object obj)
-    {
+    public static boolean isCertid(Object obj) {
         return !isNull(obj) && obj.toString().trim().matches("^[\\d]{17}[\\dxX]$");
     }
 
@@ -288,12 +266,10 @@ public class StringUtils
      * @param operator 1 移动 2 联通 3电信， 该标志关系到视图 vll_operator 数据
      * @return true 表示手机号格式正确，否则表示手机号格式错误
      */
-    public static boolean isOperator(String mobile, int operator)
-    {
+    public static boolean isOperator(String mobile, int operator) {
         String reg = "^1[\\d]{10}$";
 
-        switch (operator)
-        {
+        switch (operator) {
             case 1: // 移动
                 reg = "^1[\\d]{10}$";
                 break;
@@ -315,30 +291,29 @@ public class StringUtils
      * @param def   参数的默认值
      * @return
      */
-    public static int pageParam(String param, int def)
-    {
+    public static int pageParam(String param, int def) {
         return isNumber(param) && Integer.parseInt(param) > 0 ? Integer.parseInt(param) : def;
     }
 
     /**
      * 返回当前对象当前类信息
+     *
      * @param obj
      * @return
      */
-    public static String toStr(Object obj)
-    {
+    public static String toStr(Object obj) {
         return toStr(obj, null, null);
     }
 
     /**
      * 输出对象的内容
-     * @param obj       对象
-     * @param currCls   输出对象指定类的信息，默认打印当前类
-     * @param stopCls   输出对象递归父类信息，停止于指定类（stopCls类对象信息不会输出），默认仅打印当前类
+     *
+     * @param obj     对象
+     * @param currCls 输出对象指定类的信息，默认打印当前类
+     * @param stopCls 输出对象递归父类信息，停止于指定类（stopCls类对象信息不会输出），默认仅打印当前类
      * @return
      */
-    public static String toStr(Object obj, Class currCls, Class stopCls)
-    {
+    public static String toStr(Object obj, Class currCls, Class stopCls) {
         if (null == obj) return "";
 
         // 基本类型直接输出
@@ -353,8 +328,7 @@ public class StringUtils
                 || objCls == Double.class
                 || objCls == Character.class
                 || objCls == Long.class
-                || objCls == Short.class)
-        {
+                || objCls == Short.class) {
             return String.valueOf(obj);
         } else if (objCls == Date.class)
             return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format((Date) obj);
@@ -365,8 +339,7 @@ public class StringUtils
 
         StringBuilder sb = new StringBuilder();
 
-        if (List.class.isInstance(obj))
-        {
+        if (List.class.isInstance(obj)) {
             List list = (List) obj;
 
             if (list.isEmpty()) return "[]";
@@ -379,14 +352,12 @@ public class StringUtils
             return sb.toString();
         }
 
-        if (Map.class.isInstance(obj))
-        {
+        if (Map.class.isInstance(obj)) {
             Map mapo = (Map) obj;
             if (mapo.isEmpty()) return "[]";
 
             sb.append("[");
-            for (Iterator<Map.Entry<Object, Object>> it = mapo.entrySet().iterator(); it.hasNext(); )
-            {
+            for (Iterator<Map.Entry<Object, Object>> it = mapo.entrySet().iterator(); it.hasNext(); ) {
                 Map.Entry<Object, Object> keyo = it.next();
                 sb.append(toStr(keyo.getKey())).append("=").append(toStr(keyo.getValue()));
                 sb.append(",");
@@ -394,6 +365,18 @@ public class StringUtils
             sb.delete(sb.length() - 1, sb.length());
             sb.append("]");
 
+            return sb.toString();
+        }
+
+        if (objCls.isArray()) {
+            Object[] arr = (Object[]) obj;
+            if (arr.length < 1) return "[]";
+            sb.append("[");
+            for (Object o : arr) {
+                sb.append(toStr(o)).append(",");
+            }
+            sb.delete(sb.length() - 1, sb.length());
+            sb.append("]");
             return sb.toString();
         }
 
@@ -409,18 +392,16 @@ public class StringUtils
 
         sb.append(currCls.getSimpleName()).append("{");
         // 当前类
-        for (Field f : fs)
-        {
+        for (Field f : fs) {
             f.setAccessible(true);
             Object sub = null;
             try {
                 sub = f.get(obj);
-                if (sub == obj){
+                if (sub == obj) {
                     sb.append(obj.toString()).append(", ");
                     break;
                 }
-            } catch (IllegalAccessException e)
-            {// 已处理访问控制，不会有此异常
+            } catch (IllegalAccessException e) {// 已处理访问控制，不会有此异常
             }
             sb.append(f.getName() + "=");
             sb.append(toStr(sub, null, null));

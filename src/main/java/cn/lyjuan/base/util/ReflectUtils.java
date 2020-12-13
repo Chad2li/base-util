@@ -240,6 +240,8 @@ public class ReflectUtils
         //返回表示此 Class 所表示的实体（类、接口、基本类型或 void）的直接超类的 Type。
         Type genType = cls.getGenericSuperclass();
 
+        if (null == genType) return null;
+
         if (!(genType instanceof ParameterizedType))
         {
             return Object.class;

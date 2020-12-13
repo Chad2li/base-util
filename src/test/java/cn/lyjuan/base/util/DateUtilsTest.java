@@ -67,4 +67,13 @@ public class DateUtilsTest
 
         Assert.assertEquals(dateFirstDayOfMonth, DateUtils.format(ld, datePattern));
     }
+
+    @Test
+    public void duration(){
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime end = DateUtils.addLong(now, 5000);
+
+        long dura = DateUtils.duration(now, end);
+        Assert.assertEquals(5000, dura);
+    }
 }

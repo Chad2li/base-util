@@ -1,4 +1,4 @@
-package cn.lyjuan.base.http.log;
+package cn.lyjuan.base.http.aop.log;
 
 import org.springframework.boot.web.servlet.ServletComponentScan;
 
@@ -7,7 +7,9 @@ import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
-//@Component
+/**
+ * 将req封装成可重复读取
+ */
 @ServletComponentScan
 @WebFilter(urlPatterns = "*",filterName = "logFilter")
 public class LogFilter implements Filter

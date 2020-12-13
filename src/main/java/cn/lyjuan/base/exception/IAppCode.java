@@ -3,8 +3,7 @@ package cn.lyjuan.base.exception;
 /**
  * 状态码接口
  */
-public interface IAppCode
-{
+public interface IAppCode {
     /**
      * 状态码所属模块
      *
@@ -27,8 +26,7 @@ public interface IAppCode
      */
     String msg();
 
-    static String fullCode(IAppCode code)
-    {
-        return code.module().module() + code.code();
+    static String fullCode(IAppCode code) {
+        return code.module() + "_" + code.code();
     }
 }

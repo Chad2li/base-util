@@ -1,5 +1,8 @@
 package cn.lyjuan.base.util;
 
+import com.sun.org.apache.xerces.internal.xni.parser.XMLDTDContentModelFilter;
+
+import java.sql.Time;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.*;
@@ -23,6 +26,7 @@ public class DateUtils {
     public static LocalDate parseDate(String date, String pattern) {
         return LocalDate.parse(date, getDTF(pattern));
     }
+
     /**
      * 解析日期
      *
@@ -64,6 +68,7 @@ public class DateUtils {
 
     /**
      * 13位毫秒级时间戳转时间
+     *
      * @param date
      * @return
      */
@@ -73,6 +78,7 @@ public class DateUtils {
 
     /**
      * 时间转13位毫秒级时间戳
+     *
      * @param time
      * @return
      */
@@ -82,11 +88,11 @@ public class DateUtils {
 
     /**
      * @param date
-     * @param add  毫秒
+     * @param addMillis  毫秒，为负则减
      * @return
      */
-    public static LocalDateTime addLong(LocalDateTime date, long add) {
-        return date.plus(add, ChronoUnit.MILLIS);
+    public static LocalDateTime addLong(LocalDateTime date, long addMillis) {
+        return date.plus(addMillis, ChronoUnit.MILLIS);
     }
 
     /**
@@ -130,10 +136,22 @@ public class DateUtils {
 
     /**
      * 多少毫秒之后的时间，可以为负数
+     *
      * @param millis
      * @return
      */
-    public static LocalDateTime afterTime(long millis){
+    public static LocalDateTime afterTime(long millis) {
         return addLong(LocalDateTime.now(), millis);
+    }
+
+    /**
+     * 计算毫秒级时间差，duration = end - start
+     *
+     * @param start
+     * @param end
+     * @return
+     */
+    public static long duration(LocalDateTime start, LocalDateTime end) {
+        return Duration.between(start, end).toMillis();
     }
 }
