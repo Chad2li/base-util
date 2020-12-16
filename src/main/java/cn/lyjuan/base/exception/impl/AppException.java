@@ -3,6 +3,8 @@ package cn.lyjuan.base.exception.impl;
 import cn.lyjuan.base.exception.IAppException;
 import cn.lyjuan.base.util.StringUtils;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * 业务逻辑异常，无法处理，返回状态码及信息
  */
@@ -72,12 +74,12 @@ public class AppException extends RuntimeException implements IAppException
                 '}';
     }
 
-    public AppException(String code, String msg, String log, Throwable throwable)
+    public AppException(@NotNull String code, String msg, String log, Throwable throwable)
     {
         super(msg, throwable);
         this.setCode(code);
-        this.setMsg(StringUtils.isNull(msg) ? BaseCode.ERROR.msg() : msg);
-        this.setLog(StringUtils.isNull(log) ? msg : log);
+        this.setMsg(msg);
+        this.setLog(log);
         this.setThrowable(throwable);
     }
 }
