@@ -1,16 +1,11 @@
 package cn.lyjuan.base.util;
 
-import com.sun.org.apache.xerces.internal.xni.parser.XMLDTDContentModelFilter;
-
-import java.sql.Time;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
-import java.time.temporal.TemporalUnit;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 实现线程安全的格式化时间
@@ -19,9 +14,15 @@ import java.util.*;
  * @version 2.0    2014-12-18
  */
 public class DateUtils {
-    public static final Map<String, DateTimeFormatter> DTFS = new HashMap<>();
+    public static final String FMT_DATE_TIME = "yyyy-MM-dd HH:mm:ss";
 
-    public static final ZoneOffset zoneOffset = OffsetDateTime.now().getOffset();
+    public static final String FMT_DATE = "yyyy-MM-dd";
+
+    public static final String FMT_TIME = "HH:mm:ss";
+
+    private static final Map<String, DateTimeFormatter> DTFS = new HashMap<>();
+
+    private static final ZoneOffset zoneOffset = OffsetDateTime.now().getOffset();
 
     public static LocalDate parseDate(String date, String pattern) {
         return LocalDate.parse(date, getDTF(pattern));
