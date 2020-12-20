@@ -324,7 +324,7 @@
             <id>snapshots</id>
             <name>nexus snapshot</name>
             <url>
-                http://nexus.hehewang.com/repository/hehewang-snapshots/
+                http://nexus.hehewang.com:7777/repository/hehewang-snapshots/
             </url>
             <uniqueVersion>true</uniqueVersion>
         </snapshotRepository>
@@ -332,7 +332,7 @@
             <id>releases</id>
             <name>nexus release</name>
             <url>
-                http://nexus.hehewang.com/repository/hehewang-releases/
+                http://nexus.hehewang.com:7777/repository/hehewang-releases/
             </url>
         </repository>
     </distributionManagement>
