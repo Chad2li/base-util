@@ -73,21 +73,37 @@ public class LoginHandler {
         }
 
         IUserService.UserToken user = userService.user(token);
-
-        if (null == user || !userService.isAccessValid(user.getTokenCreatetime())) {// token无效
+        // token无效
+        if (null == user || !userService.isAccessValid(user.getTokenCreatetime())) {
             ErrUtils.appThrow(userService.errTokenInvalid());
         }
-        // 无权访问
+        // 接口无需权限
+        if (null == login) {
+            userService.setCache(user);
+            return;
+        }
         String[] types = login.value();
+        // 仅登录即可
+        if (types.length == 1 && Login.TYPE_USER.equalsIgnoreCase(types[0])) {
+            userService.setCache(user);
+            return;
+        }
+        // 权限判断
+        String[] userTypes = user.getLoginType();
+        if (null == userTypes || userTypes.length < 1) {
+            // 无权访问
+            ErrUtils.appThrow(userService.errIllegalPermission());
+        }
         for (String type : types) {
-            if (type.equalsIgnoreCase(user.getLoginType())) {
-                // 有权限
-                userService.setCache(user);
-                return;
+            for (String userType : userTypes) {
+                if (type.equalsIgnoreCase(userType)) {
+                    // 有权限
+                    userService.setCache(user);
+                    return;
+                }
             }
         }
         // 无权访问
         ErrUtils.appThrow(userService.errIllegalPermission());
-
     }
 }

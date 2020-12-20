@@ -257,7 +257,7 @@ public class HttpUtils
      */
     public static String sendGet(String url, String encode)
     {
-        log.severe(HTTP_METHOD_GET + "请求 URL >> " + url);
+//        log.severe(HTTP_METHOD_GET + "请求 URL >> " + url);
         StringBuilder result = new StringBuilder();
         try
         {
@@ -289,7 +289,7 @@ public class HttpUtils
             log.severe("网络异常 url >> " + url + " error >> " + e.getMessage());
             throw new RuntimeException(e);
         }
-        log.severe("result >> " + result.toString());
+//        log.severe("result >> " + result.toString());
         return result.toString();
     }
 
