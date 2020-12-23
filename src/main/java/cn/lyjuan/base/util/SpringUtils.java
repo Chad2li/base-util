@@ -181,8 +181,9 @@ public class SpringUtils {
             in = req.getInputStream();
             if (!in.markSupported())
                 throw new RuntimeException("request unsupported mark");
+            in.reset();
 
-            in.mark(req.getContentLength());
+            // in.mark(req.getContentLength());
 
             str = HttpUtils.postStr(in);
 
