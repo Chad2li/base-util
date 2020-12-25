@@ -59,6 +59,10 @@ public class DateUtils {
         return dtf;
     }
 
+    public static String format(LocalTime time, String pattern) {
+        return time.format(getDTF(pattern));
+    }
+
     public static String format(LocalDate date, String pattern) {
         return date.format(getDTF(pattern));
     }
@@ -89,7 +93,7 @@ public class DateUtils {
 
     /**
      * @param date
-     * @param addMillis  毫秒，为负则减
+     * @param addMillis 毫秒，为负则减
      * @return
      */
     public static LocalDateTime addLong(LocalDateTime date, long addMillis) {
