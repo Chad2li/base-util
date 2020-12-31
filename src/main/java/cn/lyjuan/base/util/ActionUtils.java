@@ -1,26 +1,20 @@
 package cn.lyjuan.base.util;
 
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.UnsupportedEncodingException;
 
-
-public class ActionUtils
-{
-    private static Logger log = LogManager.getLogger(ActionUtils.class.getName());
-
+@Slf4j
+public class ActionUtils {
     /**
      * 是否ajax请求
      */
-    public static boolean isAjaxRequest(HttpServletRequest request)
-    {
+    public static boolean isAjaxRequest(HttpServletRequest request) {
         if ("XMLHttpRequest".equalsIgnoreCase(request.getHeader("X-Requested-With"))
-                || request.getParameter("ajax") != null || request.getHeader("ajax") == "true")
-        {
+                || request.getParameter("ajax") != null || request.getHeader("ajax") == "true") {
             return true;
         }
 
@@ -34,13 +28,10 @@ public class ActionUtils
      *
      * @param req
      */
-    public static void setDefaultEncode(HttpServletRequest req, HttpServletResponse resp, String charset)
-    {
-        try
-        {
+    public static void setDefaultEncode(HttpServletRequest req, HttpServletResponse resp, String charset) {
+        try {
             req.setCharacterEncoding(charset);
-        } catch (UnsupportedEncodingException e)
-        {
+        } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
         resp.setCharacterEncoding(charset);

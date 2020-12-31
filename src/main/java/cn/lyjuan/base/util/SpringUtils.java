@@ -1,8 +1,6 @@
 package cn.lyjuan.base.util;
 
 import org.springframework.http.server.ServletServerHttpRequest;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
@@ -12,7 +10,10 @@ import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -20,8 +21,7 @@ import java.util.*;
 /**
  * Created by ly on 2015/3/17.
  */
-public class SpringUtils
-{
+public class SpringUtils {
     /**
      * 根据时间获取文件名
      *
@@ -29,8 +29,7 @@ public class SpringUtils
      * @param suf     文件后缀
      * @return
      */
-    public static String getDateRealPath(String subPath, String suf)
-    {
+    public static String getDateRealPath(String subPath, String suf) {
         LocalDate now = LocalDate.now();
 
         String path = DateUtils.format(now, "yyyy/MM");
@@ -41,10 +40,9 @@ public class SpringUtils
 
         // 获取文件名
         String fileName = path + "/" + UUID.randomUUID().toString().replaceAll("-", "") + suf;
-        File   f        = new File(realPath + "/" + fileName);
+        File f = new File(realPath + "/" + fileName);
 
-        while (f.isFile())
-        {
+        while (f.isFile()) {
             fileName = path + "/" + UUID.randomUUID().toString().replaceAll("-", "") + suf;
             f = new File(realPath + "/" + fileName);
         }
@@ -57,8 +55,7 @@ public class SpringUtils
      *
      * @return
      */
-    public static String getProjectRealPath()
-    {
+    public static String getProjectRealPath() {
         String path = SpringUtils.class.getClassLoader().getResource("").getFile();
 
         path = path.replace("WEB-INF/classes/", "");
@@ -74,20 +71,19 @@ public class SpringUtils
      * @return 返回保存文件的相对路径
      * @throws java.io.IOException
      */
-    public static String saveUploadFile(CommonsMultipartFile file, String disPath)
-    {
+    public static String saveUploadFile(CommonsMultipartFile file, String disPath) {
         if (null == file || file.isEmpty()) return null;
 
         String realPath = getProjectRealPath();
 
         String oriFileName = file.getOriginalFilename();
-        String suf         = "";
+        String suf = "";
         suf = oriFileName.indexOf(".") > -1 ?
                 oriFileName.substring(oriFileName.lastIndexOf(".")) : suf;// 文件后缀名
 
         // 生成文件名称
-        String name     = disPath + "/" + DateUtils.format(LocalDateTime.now(), "yyyy/MM/yyyyMMddHHmmssSSS") + suf;
-        File   saveFile = new File(realPath, name);
+        String name = disPath + "/" + DateUtils.format(LocalDateTime.now(), "yyyy/MM/yyyyMMddHHmmssSSS") + suf;
+        File saveFile = new File(realPath, name);
         while (saveFile.isFile())
             saveFile = new File(realPath, name = disPath + "/" + DateUtils.format(LocalDateTime.now(), "yyyy/MM/yyyyMMddHHmmssSSS") + suf);
 
@@ -95,11 +91,9 @@ public class SpringUtils
             saveFile.getParentFile().mkdirs();
 
         // 保存文件
-        try
-        {
+        try {
             file.getFileItem().write(saveFile);
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
@@ -112,8 +106,7 @@ public class SpringUtils
      *
      * @return
      */
-    public static HttpServletRequest getRequest()
-    {
+    public static HttpServletRequest getRequest() {
         return ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
     }
 
@@ -122,8 +115,7 @@ public class SpringUtils
      *
      * @return
      */
-    public static HttpServletResponse getResponse()
-    {
+    public static HttpServletResponse getResponse() {
         HttpServletResponse resp = ((org.springframework.web.context.request.ServletRequestAttributes)
                 RequestContextHolder.getRequestAttributes()).getResponse();
         return resp;
@@ -134,26 +126,25 @@ public class SpringUtils
      *
      * @return
      */
-    public static ServletServerHttpRequest getServletRequest()
-    {
+    public static ServletServerHttpRequest getServletRequest() {
         HttpServletRequest req = getRequest();
 
         return new ServletServerHttpRequest(req);
     }
 
-    /**
-     * 获取 Spring Security 认证用户信息
-     *
-     * @return
-     */
-    public static UserDetails getUserPrincipal()
-    {
-        UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getPrincipal();
-
-        return userDetails;
-    }
+//    /**
+//     * 获取 Spring Security 认证用户信息
+//     *
+//     * @return
+//     */
+//    public static UserDetails getUserPrincipal()
+//    {
+//        UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext()
+//                .getAuthentication()
+//                .getPrincipal();
+//
+//        return userDetails;
+//    }
 
     /**
      * 获取参数，使用 {@code getParameter()} 方法
@@ -162,15 +153,13 @@ public class SpringUtils
      * @return
      * @throws java.io.UnsupportedEncodingException
      */
-    public static Map<String, String> getParam(HttpServletRequest req)
-    {
+    public static Map<String, String> getParam(HttpServletRequest req) {
         Map<String, String> map = new HashMap<String, String>();
 
         Enumeration<String> es = req.getParameterNames();
 
-        while (es.hasMoreElements())
-        {
-            String name  = es.nextElement();
+        while (es.hasMoreElements()) {
+            String name = es.nextElement();
             String value = req.getParameter(name);
 
             map.put(name, value);
@@ -181,6 +170,7 @@ public class SpringUtils
 
     /**
      * 读取request body内容
+     *
      * @param req
      * @return
      */
@@ -191,8 +181,9 @@ public class SpringUtils
             in = req.getInputStream();
             if (!in.markSupported())
                 throw new RuntimeException("request unsupported mark");
+            in.reset();
 
-            in.mark(req.getContentLength());
+            // in.mark(req.getContentLength());
 
             str = HttpUtils.postStr(in);
 
@@ -218,8 +209,7 @@ public class SpringUtils
      * @param preUrl 前缀URL
      * @return
      */
-    public static String appendUrl(String subUrl, String preUrl)
-    {
+    public static String appendUrl(String subUrl, String preUrl) {
         if (StringUtils.isNull(subUrl)) return "";
 
         if (StringUtils.isNull(preUrl)) return subUrl;
@@ -236,14 +226,12 @@ public class SpringUtils
      * @param content
      * @return
      */
-    public static String parseImageType(byte[] content)
-    {
+    public static String parseImageType(byte[] content) {
         ByteArrayInputStream bais = new ByteArrayInputStream(content);
-        ImageInputStream     iis  = null;
+        ImageInputStream iis = null;
 
         String type = "";
-        try
-        {
+        try {
             iis = ImageIO.createImageInputStream(bais);
 
             Iterator<ImageReader> iter = ImageIO.getImageReaders(iis);
@@ -254,8 +242,7 @@ public class SpringUtils
 
             // close stream
             iis.close();
-        } catch (IOException e)
-        {
+        } catch (IOException e) {
             throw new RuntimeException("parseImageType faile", e);
         }
 

@@ -1,34 +1,38 @@
-package cn.lyjuan.base.http.aop.log;
+package cn.lyjuan.base.http.filter;
 
+import cn.lyjuan.base.http.filter.wrapper.RequestWrapper;
+import cn.lyjuan.base.http.filter.wrapper.ResponseWrapper;
 import cn.lyjuan.base.util.JsonUtils;
 import cn.lyjuan.base.util.SpringUtils;
 import cn.lyjuan.base.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.Around;
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.core.annotation.Order;
 
+import javax.servlet.*;
+import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
 /**
- * 该类提供Spring请求的日志打印功能
+ * 1. 将req封装成可重复读取<br/>
+ * 2. 打印日志信息
  */
 @Slf4j
-@Aspect
-@Order(LoggingHandler.ORDER_LOGGING)
-public class LoggingHandler {
-    public static final int ORDER_LOGGING = 100;
+@WebFilter(urlPatterns = {"*"}, filterName = LoggingFilter.NAME)
+@Order(LoggingFilter.ORDER)
+public class LoggingFilter implements Filter {
+    public static final String NAME = "baseLoggingFilterName";
+
+    public static final int ORDER = 1000;
     /**
      * 打印最大长度
      */
     private int maxLen = 255;
-
     /**
      * 超出长度后截取前多少个
      */
@@ -37,44 +41,6 @@ public class LoggingHandler {
      * 超出长度后截后多少个
      */
     private int sufLe = 10;
-
-    /**
-     * 拦截带{@link org.springframework.web.bind.annotation.RestController}
-     * 或{@link org.springframework.web.bind.annotation.RequestMapping}
-     * 且为{@code public}的方法
-     */
-    @Pointcut("(@within(org.springframework.web.bind.annotation.RestController)" +
-            " || @within(org.springframework.stereotype.Controller))" +
-            " && execution(public * *(..))")
-    public void pointcut() {
-
-    }
-
-    /**
-     * 打印日志
-     *
-     * @param point
-     */
-    @Around("pointcut()")
-    public Object logging(ProceedingJoinPoint point) throws Throwable {
-        HttpServletRequest req = SpringUtils.getRequest();
-
-        // 打印请求信息
-        logReq(req);
-
-        // 记录处理时间
-        long begin = System.currentTimeMillis();
-        // 执行
-        Object result = point.proceed();
-        // 处理时间
-        long divide = System.currentTimeMillis() - begin;
-
-        // 打印响应信息
-        logRes(result, divide);
-
-        // 返回响应
-        return result;
-    }
 
     /**
      * 打印响应信息
@@ -93,7 +59,7 @@ public class LoggingHandler {
             log.info("RES: {} [{}]", resultJson, divide);
     }
 
-    private void logReq(HttpServletRequest req) {
+    private void logReq(RequestWrapper req) {
         // 注意隐藏用户的pwd、token等信息
         // 忽略文件上传内容（易内存溢出）
 
@@ -111,7 +77,6 @@ public class LoggingHandler {
             return;
         }
         // header
-        StringBuilder sb = new StringBuilder();
         Map.Entry<String, String> entry = null;
 
         log.debug("=========== REQ-{} ===========", method);
@@ -125,7 +90,7 @@ public class LoggingHandler {
         Map<String, String> params = SpringUtils.getParam(req);
         String body = null;
         if (!"GET".equalsIgnoreCase(method))
-            body = SpringUtils.reqBody(req);
+            body = new String(req.toByteArray());
         if (null != params && params.size() > 0) {
             for (Iterator<Map.Entry<String, String>> it = params.entrySet().iterator(); it.hasNext(); ) {
                 entry = it.next();
@@ -187,27 +152,27 @@ public class LoggingHandler {
         return header;
     }
 
-    public int getMaxLen() {
-        return maxLen;
-    }
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain) throws IOException, ServletException {
+        //可重复读取 封装
+        RequestWrapper req = new RequestWrapper((HttpServletRequest) request);
+        ResponseWrapper res = new ResponseWrapper((HttpServletResponse) response);
 
-    public void setMaxLen(int maxLen) {
-        this.maxLen = maxLen;
-    }
+        // 打印请求信息
+        logReq(req);
 
-    public int getPreLen() {
-        return preLen;
-    }
+        // 记录处理时间
+        long begin = System.currentTimeMillis();
 
-    public void setPreLen(int preLen) {
-        this.preLen = preLen;
-    }
+        //将request 传到下一个Filter
+        filterChain.doFilter(req, res);
+        // response
+        String result = new String(res.toByteArray());
 
-    public int getSufLe() {
-        return sufLe;
-    }
+        // 处理时间
+        long divide = System.currentTimeMillis() - begin;
 
-    public void setSufLe(int sufLe) {
-        this.sufLe = sufLe;
+        // 打印响应信息
+        logRes(result, divide);
     }
 }

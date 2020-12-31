@@ -35,7 +35,7 @@ public class ProxoolDBUtils
             Class.forName("org.logicalcobwebs.proxool.ProxoolDriver");
         } catch (ClassNotFoundException e)
         {
-            new RuntimeException("load database driver class error:org.logicalcobwebs.proxool.ProxoolDriver", e);
+            throw new RuntimeException("load database driver class error:org.logicalcobwebs.proxool.ProxoolDriver", e);
         }
     }
 

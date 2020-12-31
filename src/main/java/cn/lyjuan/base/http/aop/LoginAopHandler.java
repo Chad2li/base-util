@@ -1,37 +1,37 @@
-package cn.lyjuan.base.http.aop.login;
+package cn.lyjuan.base.http.aop;
 
 import cn.lyjuan.base.exception.util.ErrUtils;
-import cn.lyjuan.base.http.aop.login.annotation.Login;
-import cn.lyjuan.base.http.aop.login.service.IUserService;
+import cn.lyjuan.base.http.aop.annotation.Login;
+import cn.lyjuan.base.http.aop.service.IUserService;
 import cn.lyjuan.base.util.SpringUtils;
 import cn.lyjuan.base.util.StringUtils;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
-
-import javax.annotation.Resource;
 
 /**
  * 登录身份检查
  */
 @Slf4j
+@Data
 @Aspect
-@Order(LoginHandler.ORDER_LOGIN)
-public class LoginHandler {
-    public static final int ORDER_LOGIN = 1000;
+@Order(LoginAopHandler.ORDER)
+public class LoginAopHandler {
+    public static final int ORDER = SignAopHandler.ORDER;
+
+    public static final String USER_SERVICE_NAME = "loginHandlerUserServiceImpl";
 
     private IUserService userService;
 
-    public LoginHandler(IUserService userService) {
+    public LoginAopHandler(IUserService userService) {
         this.userService = userService;
     }
 
@@ -74,21 +74,37 @@ public class LoginHandler {
         }
 
         IUserService.UserToken user = userService.user(token);
-
-        if (null == user || !userService.isAccessValid(user.getTokenCreatetime())) {// token无效
+        // token无效
+        if (null == user || !userService.isAccessValid(user.getTokenCreatetime())) {
             ErrUtils.appThrow(userService.errTokenInvalid());
         }
-        // 无权访问
+        // 接口无需权限
+        if (null == login) {
+            userService.setCache(user);
+            return;
+        }
         String[] types = login.value();
+        // 仅登录即可
+        if (types.length == 1 && Login.TYPE_USER.equalsIgnoreCase(types[0])) {
+            userService.setCache(user);
+            return;
+        }
+        // 权限判断
+        String[] userTypes = user.getLoginType();
+        if (null == userTypes || userTypes.length < 1) {
+            // 无权访问
+            ErrUtils.appThrow(userService.errIllegalPermission());
+        }
         for (String type : types) {
-            if (type.equalsIgnoreCase(user.getLoginType())) {
-                // 有权限
-                userService.setCache(user);
-                return;
+            for (String userType : userTypes) {
+                if (type.equalsIgnoreCase(userType)) {
+                    // 有权限
+                    userService.setCache(user);
+                    return;
+                }
             }
         }
         // 无权访问
         ErrUtils.appThrow(userService.errIllegalPermission());
-
     }
 }

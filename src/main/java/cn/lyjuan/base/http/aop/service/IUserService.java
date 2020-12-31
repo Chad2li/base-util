@@ -1,4 +1,4 @@
-package cn.lyjuan.base.http.aop.login.service;
+package cn.lyjuan.base.http.aop.service;
 
 import cn.lyjuan.base.exception.IAppCode;
 import lombok.Data;
@@ -58,7 +58,7 @@ public interface IUserService<T extends IUserService.UserToken> {
         /**
          * 登陆类型
          */
-        protected String loginType;
+        protected String[] loginType;
         protected String access;
         protected String refresh;
         /**

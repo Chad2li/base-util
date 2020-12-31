@@ -1,7 +1,8 @@
 package cn.lyjuan.base.http.vo.res;
 
-import cn.lyjuan.base.exception.impl.BaseCode;
 import cn.lyjuan.base.exception.IAppCode;
+import cn.lyjuan.base.exception.impl.BaseCode;
+import cn.lyjuan.base.util.StringUtils;
 import com.github.pagehelper.Page;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -28,10 +29,11 @@ public class BaseRes<T> {
 
     /**
      * 成功的响应重载方法
+     *
      * @param <T>
      * @return
      */
-    public static <T> PagerRes<T> succ() {
+    public static <T> BaseRes<T> succ() {
         return resp();
     }
 
@@ -40,7 +42,7 @@ public class BaseRes<T> {
      *
      * @return
      */
-    public static <T> PagerRes<T> resp() {
+    public static <T> BaseRes<T> resp() {
         return resp(BaseCode.SUCC, "succ", null);
     }
 
@@ -50,7 +52,7 @@ public class BaseRes<T> {
      * @param code
      * @return
      */
-    public static <T> PagerRes<T> resp(IAppCode code) {
+    public static <T> BaseRes<T> resp(IAppCode code) {
         return resp(code, "", null);
     }
 
@@ -61,7 +63,7 @@ public class BaseRes<T> {
      * @param msg
      * @return
      */
-    public static <T> PagerRes<T> resp(IAppCode code, String msg) {
+    public static <T> BaseRes<T> resp(IAppCode code, String msg) {
         return resp(code, msg, null);
     }
 
@@ -72,7 +74,7 @@ public class BaseRes<T> {
      * @param <T>
      * @return
      */
-    public static <T> PagerRes<T> resp(T t) {
+    public static <T> BaseRes<T> resp(T t) {
         return resp(BaseCode.SUCC, "succ", t);
     }
 
@@ -85,15 +87,15 @@ public class BaseRes<T> {
      * @param <T>
      * @return
      */
-    public static <T> PagerRes<T> resp(IAppCode code, String msg, T t) {
-        PagerRes<T> base = null;
+    public static <T> BaseRes<T> resp(IAppCode code, String msg, T t) {
+        BaseRes<T> base = null;
         if (null != t && t instanceof Page) {
             Page p = (Page) t;
             base = PagerRes.page(p.getPageNum(), p.getPageSize(), p.getTotal());
         }
 
         if (null == base)
-            base = new PagerRes<>();
+            base = new BaseRes();
 
         base.setCode(IAppCode.fullCode(code)).setMsg(msg).setData(t);
 
@@ -128,6 +130,21 @@ public class BaseRes<T> {
     public BaseRes<T> setMsg(String msg) {
         this.msg = msg;
         return this;
+    }
+
+    public static BaseRes res(IAppCode code, String msg) {
+        return res(IAppCode.fullCode(code), msg);
+    }
+
+    public static BaseRes res(IAppCode code) {
+        return res(IAppCode.fullCode(code), code.msg());
+    }
+
+    public static BaseRes res(String code, String msg) {
+        BaseRes res = new BaseRes();
+        res.setCode(StringUtils.isNull(code) ? IAppCode.fullCode(BaseCode.ERROR) : code);
+        res.setMsg(StringUtils.isNull(msg) ? BaseCode.ERROR.msg() : msg);
+        return res;
     }
 
     @Override

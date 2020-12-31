@@ -1,4 +1,4 @@
-package cn.lyjuan.base.http.aop.login.annotation;
+package cn.lyjuan.base.http.aop.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

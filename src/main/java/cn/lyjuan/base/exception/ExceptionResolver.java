@@ -5,9 +5,8 @@ import cn.lyjuan.base.exception.impl.AppException;
 import cn.lyjuan.base.exception.impl.BaseCode;
 import cn.lyjuan.base.http.vo.res.BaseRes;
 import cn.lyjuan.base.util.SpringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.springframework.http.ResponseEntity;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.BindException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -17,26 +16,29 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 /**
  * Created by ly on 2015/1/11.
  */
+@Slf4j
+@Data
 @RestControllerAdvice
 @ResponseBody
-public class ExceptionResolver
-{
-    private static Logger log = LogManager.getLogger(ExceptionResolver.class.getName());
+public class ExceptionResolver {
+    /**
+     * 是否为测试环境
+     */
+    private boolean isDebug = false;
 
     /**
      * 拦截所有 Exception
      * Note: 只能使用 Exception
+     *
      * @param e
      * @return
      */
     @ExceptionHandler({Exception.class})
-    public Object doResolveException(Exception e)
-    {
+    public Object doResolveException(Exception e) {
         logExce(e);// 打印日志
 
         BaseRes resp = ajaxExce(e);// 封闭异常信息
@@ -50,20 +52,21 @@ public class ExceptionResolver
      * @param e
      * @return
      */
-    public BaseRes ajaxExce(Exception e)
-    {
+    public BaseRes ajaxExce(Exception e) {
         BaseRes base = new BaseRes();
 
-        if (e instanceof AppException)
-        {
+        if (e instanceof AppException) {
             AppException infoE = (AppException) e;
 
             base.setCode(infoE.getCode());
             base.setMsg(infoE.getMsg());
-        } else if (isParamErr(e))
-        {
+        } else if (isParamErr(e)) {
             base.setCode(IAppCode.fullCode(BaseCode.PARAM_INVALID));
-            base.setMsg(BaseCode.PARAM_INVALID.msg());
+            if (!isDebug) {
+                base.setMsg(BaseCode.PARAM_INVALID.msg());
+            } else {
+                base.setMsg(e.getMessage());
+            }
         } else if (e instanceof HttpRequestMethodNotSupportedException)// 不支持的请求方法
         {
             base.setCode(IAppCode.fullCode(BaseCode.REQ_METHOD_UNSUPPORTED));
@@ -72,8 +75,7 @@ public class ExceptionResolver
         {
             base.setCode(IAppCode.fullCode(BaseCode.PATH_NOT_FOUND));
             base.setMsg(BaseCode.PATH_NOT_FOUND.msg());
-        } else
-        {
+        } else {
             base.setCode(IAppCode.fullCode(BaseCode.ERROR));
             base.setMsg(BaseCode.ERROR.msg());
         }
@@ -86,13 +88,11 @@ public class ExceptionResolver
      *
      * @param e
      */
-    private void logExce(Exception e)
-    {
+    private void logExce(Exception e) {
         if (null == e)
             return;
 
-        if (e instanceof AppException)
-        {
+        if (e instanceof AppException) {
             AppException info = (AppException) e;
 
             log.error("WARN: " + info.getCode() + "-" + info.getLog(), info.getThrowable());
@@ -102,11 +102,9 @@ public class ExceptionResolver
         } else if (e instanceof HttpRequestMethodNotSupportedException)// 不支付的请求方法
         {
             log.warn("WARN: [{}] not supported [{}] method", SpringUtils.getRequest().getRequestURI(), SpringUtils.getRequest().getMethod());
-        } else if (e instanceof NoHandlerFoundException)
-        {
+        } else if (e instanceof NoHandlerFoundException) {
             log.warn("WARN: [[]] not found", SpringUtils.getRequest().getRequestURI());
-        } else
-        {
+        } else {
             log.error("Error: " + e.getMessage(), e);
         }
     }
@@ -117,8 +115,7 @@ public class ExceptionResolver
      * @param e
      * @return true参数错误
      */
-    private boolean isParamErr(Exception e)
-    {
+    private boolean isParamErr(Exception e) {
         return e instanceof MissingServletRequestParameterException
                 || e instanceof ServletRequestBindingException
                 || e instanceof BindException
