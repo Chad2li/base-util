@@ -2,6 +2,7 @@ package cn.lyjuan.base.http.vo.res;
 
 import cn.lyjuan.base.exception.IAppCode;
 import cn.lyjuan.base.exception.impl.BaseCode;
+import cn.lyjuan.base.util.StringUtils;
 import com.github.pagehelper.Page;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -129,6 +130,21 @@ public class BaseRes<T> {
     public BaseRes<T> setMsg(String msg) {
         this.msg = msg;
         return this;
+    }
+
+    public static BaseRes res(IAppCode code, String msg) {
+        return res(IAppCode.fullCode(code), msg);
+    }
+
+    public static BaseRes res(IAppCode code) {
+        return res(IAppCode.fullCode(code), code.msg());
+    }
+
+    public static BaseRes res(String code, String msg) {
+        BaseRes res = new BaseRes();
+        res.setCode(StringUtils.isNull(code) ? IAppCode.fullCode(BaseCode.ERROR) : code);
+        res.setMsg(StringUtils.isNull(msg) ? BaseCode.ERROR.msg() : msg);
+        return res;
     }
 
     @Override

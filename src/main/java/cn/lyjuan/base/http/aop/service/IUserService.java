@@ -1,4 +1,4 @@
-package cn.lyjuan.base.http.aop.login.service;
+package cn.lyjuan.base.http.aop.service;
 
 import cn.lyjuan.base.exception.IAppCode;
 import lombok.Data;

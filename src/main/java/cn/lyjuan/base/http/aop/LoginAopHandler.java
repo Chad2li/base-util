@@ -1,11 +1,12 @@
-package cn.lyjuan.base.http.aop.login;
+package cn.lyjuan.base.http.aop;
 
 import cn.lyjuan.base.exception.util.ErrUtils;
-import cn.lyjuan.base.http.aop.log.LoggingHandler;
-import cn.lyjuan.base.http.aop.login.annotation.Login;
-import cn.lyjuan.base.http.aop.login.service.IUserService;
+import cn.lyjuan.base.http.aop.annotation.Login;
+import cn.lyjuan.base.http.aop.service.IUserService;
 import cn.lyjuan.base.util.SpringUtils;
 import cn.lyjuan.base.util.StringUtils;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.Signature;
@@ -13,7 +14,6 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.annotation.Order;
 
@@ -21,16 +21,17 @@ import org.springframework.core.annotation.Order;
  * 登录身份检查
  */
 @Slf4j
+@Data
 @Aspect
-@Order(LoginHandler.ORDER_LOGIN)
-public class LoginHandler {
-    public static final int ORDER_LOGIN = 1000;
+@Order(LoginAopHandler.ORDER)
+public class LoginAopHandler {
+    public static final int ORDER = SignAopHandler.ORDER;
 
     public static final String USER_SERVICE_NAME = "loginHandlerUserServiceImpl";
 
     private IUserService userService;
 
-    public LoginHandler(@Qualifier(USER_SERVICE_NAME) IUserService userService) {
+    public LoginAopHandler(IUserService userService) {
         this.userService = userService;
     }
 

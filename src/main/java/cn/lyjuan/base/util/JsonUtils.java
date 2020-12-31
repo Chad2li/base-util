@@ -51,7 +51,7 @@ public class JsonUtils {
      * @return
      */
     public static String to(Object obj) {
-        if (null == obj) return "";
+        if (null == obj) return null;
 
         Class objCls = obj.getClass();
         if (objCls == String.class

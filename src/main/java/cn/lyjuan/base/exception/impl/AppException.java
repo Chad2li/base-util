@@ -1,9 +1,6 @@
 package cn.lyjuan.base.exception.impl;
 
 import cn.lyjuan.base.exception.IAppException;
-import cn.lyjuan.base.util.StringUtils;
-
-import javax.validation.constraints.NotNull;
 
 /**
  * 业务逻辑异常，无法处理，返回状态码及信息
@@ -74,7 +71,7 @@ public class AppException extends RuntimeException implements IAppException
                 '}';
     }
 
-    public AppException(@NotNull String code, String msg, String log, Throwable throwable)
+    public AppException(String code, String msg, String log, Throwable throwable)
     {
         super(msg, throwable);
         this.setCode(code);

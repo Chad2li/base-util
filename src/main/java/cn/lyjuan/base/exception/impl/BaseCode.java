@@ -28,7 +28,25 @@ public enum BaseCode implements IAppCode
     /**
      * 路径不存在
      */
-    , PATH_NOT_FOUND("0006", "path_not_found");
+    , PATH_NOT_FOUND("0006", "path_not_found")
+    /**
+     * requestId重复
+     */
+    , REQUESTID_DUPLICATE("0007", "request_id_duplicate")
+    /**
+     * 请求时间戳超时
+     */
+    , TIMESTAMP_TIMEOUT("0008", "timestamp_timeout")
+    /**
+     * appId无效
+     */
+    , APP_ID_INVALID("0009", "app_id_invalid")
+    /**
+     * 签名无效
+     */
+    , SIGN_INVALID("0010", "sign_invalid")
+    //
+    ;
 
     private String code;
 
