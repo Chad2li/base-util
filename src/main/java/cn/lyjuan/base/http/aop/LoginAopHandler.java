@@ -3,6 +3,7 @@ package cn.lyjuan.base.http.aop;
 import cn.lyjuan.base.exception.util.ErrUtils;
 import cn.lyjuan.base.http.aop.annotation.Login;
 import cn.lyjuan.base.http.aop.service.IUserService;
+import cn.lyjuan.base.http.filter.FilterProperties;
 import cn.lyjuan.base.util.SpringUtils;
 import cn.lyjuan.base.util.StringUtils;
 import lombok.AllArgsConstructor;
@@ -31,6 +32,8 @@ public class LoginAopHandler {
 
     private IUserService userService;
 
+    private FilterProperties filterProperties;
+
     public LoginAopHandler(IUserService userService) {
         this.userService = userService;
     }
@@ -46,6 +49,9 @@ public class LoginAopHandler {
 
     @Before("pointcut()")
     public void handle(JoinPoint jp) {
+        if (FilterProperties.isSkip(this.filterProperties, SpringUtils.getRequest().getRequestURI()))
+            return;
+
         log.debug("login handler");
         // 获取类对象
         Object target = jp.getTarget();

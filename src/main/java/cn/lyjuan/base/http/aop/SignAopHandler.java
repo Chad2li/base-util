@@ -4,10 +4,9 @@ import cn.lyjuan.base.exception.impl.BaseCode;
 import cn.lyjuan.base.exception.util.ErrUtils;
 import cn.lyjuan.base.http.aop.service.IHeaderService;
 import cn.lyjuan.base.http.aop.service.ISignService;
-import cn.lyjuan.base.http.filter.wrapper.RequestWrapper;
+import cn.lyjuan.base.http.filter.FilterProperties;
 import cn.lyjuan.base.util.HttpSignUtil;
 import cn.lyjuan.base.util.SpringUtils;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
@@ -15,6 +14,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.core.annotation.Order;
+import org.springframework.web.util.ContentCachingRequestWrapper;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
@@ -32,6 +32,8 @@ public class SignAopHandler<H extends IHeaderService.AHeaderParam> {
 
     protected ISignService signService;
 
+    private FilterProperties filterProperties;
+
     public SignAopHandler(IHeaderService<H> headerService, ISignService signService) {
         this.headerService = headerService;
         this.signService = signService;
@@ -48,6 +50,8 @@ public class SignAopHandler<H extends IHeaderService.AHeaderParam> {
 
     @Before("pointcut()")
     public void handler(JoinPoint jp) {
+        if (FilterProperties.isSkip(this.filterProperties, SpringUtils.getRequest().getRequestURI()))
+            return;
         // 不可在此处通过PropertiesConfig.IS_DEBUG跳过，下面有用到 body cache
 
         HttpServletRequest req = SpringUtils.getRequest();
@@ -62,7 +66,7 @@ public class SignAopHandler<H extends IHeaderService.AHeaderParam> {
         // 获取body参数，get方法不获取
         String body = null;
         if (!"GET".equalsIgnoreCase(req.getMethod()))
-            body = new String(((RequestWrapper) req).toByteArray());
+            body = new String(((ContentCachingRequestWrapper) req).getContentAsByteArray());
         // 拼接签名字符串
         String signStr = HttpSignUtil.appendSign(req.getRequestURI(), req.getMethod(), header, get, body, app.getMd5key());
 

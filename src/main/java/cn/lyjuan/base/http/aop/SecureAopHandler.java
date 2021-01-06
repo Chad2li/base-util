@@ -4,8 +4,10 @@ import cn.lyjuan.base.exception.impl.BaseCode;
 import cn.lyjuan.base.exception.util.ErrUtils;
 import cn.lyjuan.base.http.aop.service.IHeaderService;
 import cn.lyjuan.base.http.aop.service.ISecureService;
+import cn.lyjuan.base.http.filter.FilterProperties;
 import cn.lyjuan.base.http.filter.HeaderFilter;
 import cn.lyjuan.base.util.DateUtils;
+import cn.lyjuan.base.util.SpringUtils;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
@@ -34,6 +36,8 @@ public class SecureAopHandler {
     protected IHeaderService headerService;
 
     private ISecureService secureService;
+
+    private FilterProperties filterProperties;
     /**
      * 时间戳超时的秒数，默认5分钟
      */
@@ -56,6 +60,9 @@ public class SecureAopHandler {
 
     @Before("pointcut()")
     public void handler(JoinPoint jp) {
+        if (FilterProperties.isSkip(this.filterProperties, SpringUtils.getRequest().getRequestURI()))
+            return;
+
         if (isDebug) {// 测试环境跳过安全认证
             log.warn("Skip secure handler for debug");
             return;

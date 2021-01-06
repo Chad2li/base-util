@@ -1,20 +1,14 @@
 package cn.lyjuan.base.http.filter;
 
-import cn.lyjuan.base.exception.IAppCode;
 import cn.lyjuan.base.exception.impl.BaseCode;
-import cn.lyjuan.base.exception.util.ErrUtils;
 import cn.lyjuan.base.http.aop.service.IHeaderService;
 import cn.lyjuan.base.http.vo.res.BaseRes;
 import cn.lyjuan.base.util.JsonUtils;
-import cn.lyjuan.base.util.SpringUtils;
 import cn.lyjuan.base.util.StringUtils;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
-import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.core.annotation.Order;
+import org.springframework.web.util.ContentCachingRequestWrapper;
 
 import javax.servlet.*;
 import javax.servlet.annotation.WebFilter;
@@ -47,6 +41,8 @@ public class HeaderFilter<T extends IHeaderService.AHeaderParam> implements Filt
 
     private IHeaderService<T> headerService;
 
+    private FilterProperties filterProperties;
+
     public HeaderFilter(Class<T> headerCls, IHeaderService<T> headerService) {
         this.headerCls = headerCls;
         this.headerService = headerService;
@@ -54,24 +50,29 @@ public class HeaderFilter<T extends IHeaderService.AHeaderParam> implements Filt
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        // 解析头部信息
-        T header = IHeaderService.AHeaderParam.parse((HttpServletRequest) request, headerCls);
-        // 校验头部信息
-        String errMsg = header.check();
-        // 校验头部信息未通过
-        if (!StringUtils.isNull(errMsg)) {
-            // 此处直接返回信息
-            // 或者使用 BasicErrorController 处理请求信息
-            String msg = isDebug ? errMsg : BaseCode.PARAM_INVALID.msg();
-            BaseRes res = BaseRes.res(BaseCode.PARAM_INVALID, msg);
-            String json = JsonUtils.to(res);
-            response.getWriter().print(json);
-            response.flushBuffer();
-            return;
-        }
 
-        // 缓存头部信息
-        headerService.cache(header);
+        ContentCachingRequestWrapper req = (ContentCachingRequestWrapper) request;
+
+        if (!FilterProperties.isSkip(this.filterProperties, req.getRequestURI())) {
+            // 解析头部信息
+            T header = IHeaderService.AHeaderParam.parse((HttpServletRequest) request, headerCls);
+            // 校验头部信息
+            String errMsg = header.check();
+            // 校验头部信息未通过
+            if (!StringUtils.isNull(errMsg)) {
+                // 此处直接返回信息
+                // 或者使用 BasicErrorController 处理请求信息
+                String msg = isDebug ? errMsg : BaseCode.PARAM_INVALID.msg();
+                BaseRes res = BaseRes.res(BaseCode.PARAM_INVALID, msg);
+                String json = JsonUtils.to(res);
+                response.getWriter().print(json);
+                response.flushBuffer();
+                return;
+            }
+
+            // 缓存头部信息
+            headerService.cache(header);
+        }
 
         chain.doFilter(request, response);
     }
