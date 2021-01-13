@@ -63,6 +63,8 @@ public class HeaderFilter<T extends IHeaderService.AHeaderParam> implements Filt
                 // 此处直接返回信息
                 // 或者使用 BasicErrorController 处理请求信息
                 String msg = isDebug ? errMsg : BaseCode.PARAM_INVALID.msg();
+                if (log.isDebugEnabled())
+                    log.debug("header check invalid: {}", msg);
                 BaseRes res = BaseRes.res(BaseCode.PARAM_INVALID, msg);
                 String json = JsonUtils.to(res);
                 response.getWriter().print(json);

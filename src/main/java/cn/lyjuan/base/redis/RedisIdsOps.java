@@ -101,9 +101,8 @@ public class RedisIdsOps {
      * @param redisKey
      * @param hashKey
      * @param id
-     * @return
      */
-    public Long existsId(String redisKey, Object hashKey, Integer id) {
+    public boolean existsId(String redisKey, Object hashKey, Integer id) {
         /**
          * List设置lua的KEYS
          */
@@ -122,7 +121,7 @@ public class RedisIdsOps {
          */
         Long result = redisTemplate.execute(existsScript, keyList, JsonUtils.to(argvMap));
 
-        return result;
+        return result > 0;
     }
 
     /**

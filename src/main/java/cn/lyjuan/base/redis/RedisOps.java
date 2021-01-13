@@ -6,7 +6,9 @@ import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.*;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -50,32 +52,6 @@ public class RedisOps {
      * 写入缓存
      *
      * @param key
-     * @param offset 位 8Bit=1Byte
-     * @return
-     */
-    public boolean setBit(String key, long offset, boolean isShow) {
-        ValueOperations<String, String> operations = redisTemplate.opsForValue();
-        operations.setBit(key, offset, isShow);
-        return true;
-    }
-
-    /**
-     * 写入缓存
-     *
-     * @param key
-     * @param offset
-     * @return
-     */
-    public boolean getBit(String key, long offset) {
-        ValueOperations<String, String> operations = redisTemplate.opsForValue();
-        return operations.getBit(key, offset);
-    }
-
-
-    /**
-     * 写入缓存
-     *
-     * @param key
      * @param value
      * @return
      */
@@ -95,6 +71,35 @@ public class RedisOps {
             redisTemplate.delete(keys[0]);
         else
             redisTemplate.delete(Arrays.asList(keys));
+    }
+
+    /**
+     * redis键重命名
+     *
+     * @param oldKey
+     * @param newKey
+     */
+    public void rename(final String oldKey, final String newKey) {
+        redisTemplate.rename(oldKey, newKey);
+    }
+
+    /**
+     * redis值自增
+     *
+     * @param redisKey
+     */
+    public long incr(final String redisKey) {
+        return redisTemplate.opsForValue().increment(redisKey);
+    }
+
+    /**
+     * redis值自增指定的数
+     *
+     * @param redisKey
+     * @param delta    增加的数，可为负
+     */
+    public long incrby(final String redisKey, int delta) {
+        return redisTemplate.opsForValue().increment(redisKey, delta);
     }
 
     /**
@@ -208,7 +213,7 @@ public class RedisOps {
      * @param key
      * @return
      */
-    public <T> T get(final String key, Class<T> cls) {
+    public <T> T get(final String key, Type cls) {
         String json = get(key);
         if (StringUtils.isNull(json)) return null;
         return JsonUtils.from(cls, json);
@@ -301,7 +306,7 @@ public class RedisOps {
      * @param <T>
      * @return
      */
-    public <T> T hgetAll(final String key, Class<T> cls) {
+    public <T> T hgetAll(final String key, Type cls) {
         Map<Object, Object> map = redisTemplate.opsForHash().entries(key);
         if (null == map || map.isEmpty()) return null;
 
@@ -317,7 +322,7 @@ public class RedisOps {
      * @param hashKey
      * @return
      */
-    public <T> T hmGet(String key, Object hashKey, Class<T> cls) {
+    public <T> T hmGet(String key, Object hashKey, Type cls) {
         HashOperations<String, String, String> hash = redisTemplate.opsForHash();
         String json = hash.get(key, JsonUtils.to(hashKey));
         if (StringUtils.isNull(json)) return null;
@@ -325,14 +330,83 @@ public class RedisOps {
     }
 
     /**
-     * 列表添加
+     * list.rightPush
      *
      * @param k
      * @param v
+     * @param <T>
      */
-    public <T> void lPush(String k, T v) {
+    public <T> void lPush(String k, T... v) {
+        lPush(true, k, v);
+    }
+
+//    public <T> void lPush(String k, Collection<T> vs) {
+//        lPush(true, k, rawValues(vs));
+//    }
+
+    /**
+     * 列表添加
+     *
+     * @param isRight true使用 rightPush；false使用leftPush
+     * @param k
+     * @param v
+     */
+    public <T> void lPush(boolean isRight, String k, T... v) {
         ListOperations<String, String> list = redisTemplate.opsForList();
-        list.rightPush(k, JsonUtils.to(v));
+        if (null == v || v.length < 1) return;
+
+        if (1 == v.length) {
+            if (StringUtils.isNull(v[0])) return;
+            String vJson = JsonUtils.to(v[0]);
+            if (isRight)
+                list.rightPush(k, vJson);
+            else
+                list.leftPush(k, vJson);
+        } else {
+            String[] vs = new String[v.length];
+            for (int i = 0; i < v.length; i++) {
+                if (StringUtils.isNull(v[i])) continue;
+
+                vs[i] = JsonUtils.to(v[i]);
+            }
+
+            if (isRight)
+                list.rightPushAll(k, vs);
+            else
+                list.leftPushAll(k, vs);
+        }
+    }
+
+    /**
+     * list.leftPop
+     *
+     * @param k
+     * @param cls
+     * @param <T>
+     * @return
+     */
+    public <T> T lPop(String k, Type cls) {
+        return lPop(k, true, cls);
+    }
+
+    /**
+     * 获取列表元素
+     *
+     * @param k
+     * @param isLeft true leftPop；false rightPop
+     * @param cls
+     * @param <T>
+     * @return
+     */
+    public <T> T lPop(String k, boolean isLeft, Type cls) {
+        ListOperations<String, String> list = redisTemplate.opsForList();
+        String json = null;
+        if (isLeft)
+            json = list.leftPop(k);
+        else
+            json = list.rightPop(k);
+
+        return StringUtils.isNull(json) ? null : JsonUtils.from(cls, json);
     }
 
     /**
@@ -343,7 +417,7 @@ public class RedisOps {
      * @param end
      * @return
      */
-    public <T> List<T> lRange(String k, long start, long end, Class<T> cls) {
+    public <T> List<T> lRange(String k, long start, long end, Type cls) {
         ListOperations<String, String> listOper = redisTemplate.opsForList();
         List<String> list = listOper.range(k, start, end);
         // 防止空指针
@@ -368,18 +442,64 @@ public class RedisOps {
     }
 
     /**
+     * 添加set元素
+     *
+     * @param k
+     * @param values
+     * @param <T>
+     */
+    public <T> void sAdd(String k, T... values) {
+        SetOperations<String, String> setOper = redisTemplate.opsForSet();
+        if (StringUtils.isNullArray(values)) return;
+        String[] vs = new String[values.length];
+        for (int i = 0; i < values.length; i++) {
+            if (StringUtils.isNull(values[i])) continue;
+            vs[i] = JsonUtils.to(values[i]);
+        }
+        setOper.add(k, vs);
+    }
+
+    /**
+     * set中是否存在该值
+     *
+     * @param k
+     * @param v
+     * @param <T>
+     * @return
+     */
+    public <T> boolean sIsMember(String k, T v) {
+        SetOperations<String, String> setOper = redisTemplate.opsForSet();
+        return StringUtils.isNull(v) ? false : setOper.isMember(k, JsonUtils.to(v));
+    }
+
+    /**
+     * 随机删除set中一个元素，并返回该值
+     *
+     * @param k
+     * @param type
+     * @param <T>
+     * @return
+     */
+    public <T> T sPop(String k, Type type) {
+        SetOperations<String, String> setOper = redisTemplate.opsForSet();
+        String json = setOper.pop(k);
+        return JsonUtils.from(type, json);
+    }
+
+    /**
      * 集合获取
      *
      * @param key
      * @return
      */
-    public <T> Set<T> sMembers(String key, Class<T> cls) {
+    public <T> Set<T> sMembers(String key, Type cls) {
         SetOperations<String, String> setOper = redisTemplate.opsForSet();
         Set<String> origins = setOper.members(key);
-        if (null == origins || origins.isEmpty()) return new HashSet<>(0);
+        if (null == origins || origins.isEmpty()) return Collections.emptySet();
 
         Set<T> targets = new HashSet<>(origins.size());
         origins.forEach(item -> {
+            if (StringUtils.isNull(item)) return;
             targets.add(JsonUtils.from(cls, item));
         });
         return targets;
@@ -405,34 +525,16 @@ public class RedisOps {
      * @param maxScore
      * @return
      */
-    public <T> Set<T> rangeByScore(String key, double minScore, double maxScore, Class<T> cls) {
+    public <T> Set<T> rangeByScore(String key, double minScore, double maxScore, Type cls) {
         ZSetOperations<String, String> zset = redisTemplate.opsForZSet();
         Set<String> origins = zset.rangeByScore(key, minScore, maxScore);
-        if (null == origins || origins.isEmpty()) return new HashSet<>(0);
+        if (null == origins || origins.isEmpty()) return Collections.emptySet();
 
         Set<T> targets = new HashSet<>(origins.size());
         origins.forEach(item -> {
             targets.add(JsonUtils.from(cls, item));
         });
         return targets;
-    }
-
-
-    //第一次加载的时候将数据加载到redis中
-    // TODO 理解
-    public void saveDataToRedis(String name) {
-        double index = Math.abs(name.hashCode() % size);
-        long indexLong = new Double(index).longValue();
-        boolean availableUsers = setBit("availableUsers", indexLong, true);
-    }
-
-    //第一次加载的时候将数据加载到redis中
-    // TODO 理解
-    public boolean getDataToRedis(String name) {
-
-        double index = Math.abs(name.hashCode() % size);
-        long indexLong = new Double(index).longValue();
-        return getBit("availableUsers", indexLong);
     }
 
     /**
@@ -453,7 +555,7 @@ public class RedisOps {
      * @param key
      * @return 无数据返回 NULL
      */
-    public <T> Set<ZSetOperations.TypedTuple<T>> zRankWithScore(String key, long start, long end, Class<T> cls) {
+    public <T> Set<ZSetOperations.TypedTuple<T>> zRankWithScore(String key, long start, long end, Type cls) {
         ZSetOperations<String, String> zset = redisTemplate.opsForZSet();
 
         Set<ZSetOperations.TypedTuple<String>> ret = zset.rangeWithScores(key, start, end);
@@ -485,13 +587,36 @@ public class RedisOps {
         zset.incrementScore(key, JsonUtils.to(value), scoure);
     }
 
+    public <T> String[] rawValues(T... values) {
+        Assert.notEmpty(values, "Values must not be 'null' or empty.");
+        Assert.noNullElements(values, "Values must not contain 'null' value.");
+        String[] strArr = new String[values.length];
+        int i = 0;
+        for (T t : values) {
+            strArr[i++] = JsonUtils.to(t);
+        }
+        return strArr;
+    }
+
+    public <T> String[] rawValues(Collection<T> values) {
+        Assert.notEmpty(values, "Values must not be 'null' or empty.");
+        Assert.noNullElements(values.toArray(), "Values must not contain 'null' value.");
+
+        String[] strArr = new String[values.size()];
+        int i = 0;
+        for (T t : values) {
+            strArr[i++] = JsonUtils.to(t);
+        }
+        return strArr;
+    }
+
 
     /**
      * 有序集合获取排名
      *
      * @param key
      */
-    public <T> Set<ZSetOperations.TypedTuple<T>> reverseZRankWithScore(String key, long start, long end, Class<T> cls) {
+    public <T> Set<ZSetOperations.TypedTuple<T>> reverseZRankWithScore(String key, long start, long end, Type cls) {
         ZSetOperations<String, String> zset = redisTemplate.opsForZSet();
         Set<ZSetOperations.TypedTuple<String>> ret = zset.reverseRangeByScoreWithScores(key, start, end);
 
@@ -503,14 +628,14 @@ public class RedisOps {
      *
      * @param key
      */
-    public <T> Set<ZSetOperations.TypedTuple<T>> reverseZRankWithRank(String key, long start, long end, Class<T> cls) {
+    public <T> Set<ZSetOperations.TypedTuple<T>> reverseZRankWithRank(String key, long start, long end, Type cls) {
         ZSetOperations<String, String> zset = redisTemplate.opsForZSet();
         Set<ZSetOperations.TypedTuple<String>> ret = zset.reverseRangeWithScores(key, start, end);
 
         return conver(ret, cls);
     }
 
-    private <T> Set<ZSetOperations.TypedTuple<T>> conver(Set<ZSetOperations.TypedTuple<String>> ret, Class<T> cls) {
+    private <T> Set<ZSetOperations.TypedTuple<T>> conver(Set<ZSetOperations.TypedTuple<String>> ret, Type cls) {
         if (null == ret || ret.isEmpty()) return new LinkedHashSet<>(0);
         Set<ZSetOperations.TypedTuple<T>> targets = new LinkedHashSet<>(ret.size());
         ret.forEach(item -> {

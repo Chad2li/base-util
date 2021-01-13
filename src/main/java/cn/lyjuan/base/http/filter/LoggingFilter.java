@@ -1,5 +1,7 @@
 package cn.lyjuan.base.http.filter;
 
+import cn.lyjuan.base.http.filter.log.BufferedRequestWrapper;
+import cn.lyjuan.base.util.HttpUtils;
 import cn.lyjuan.base.util.JsonUtils;
 import cn.lyjuan.base.util.SpringUtils;
 import cn.lyjuan.base.util.StringUtils;
@@ -13,6 +15,7 @@ import javax.servlet.*;
 import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -30,7 +33,7 @@ import java.util.Map;
 public class LoggingFilter implements Filter {
     public static final String NAME = "baseLoggingFilterName";
 
-    public static final int ORDER = 1000;
+    public static final int ORDER = 1;
     /**
      * 打印最大长度
      */
@@ -63,7 +66,7 @@ public class LoggingFilter implements Filter {
             log.info("RES: {} [{}]", resultJson, divide);
     }
 
-    private void logReq(ContentCachingRequestWrapper req) {
+    private void logReq(BufferedRequestWrapper req) {
         // 注意隐藏用户的pwd、token等信息
         // 忽略文件上传内容（易内存溢出）
 
@@ -90,12 +93,12 @@ public class LoggingFilter implements Filter {
             entry = it.next();
             log.debug("--head {}: {}", entry.getKey(), entry.getValue());
         }
-//994D8356C1960AD944B7889E525C:C2:CB
 
         Map<String, String> params = SpringUtils.getParam(req);
         String body = null;
-        if (!"GET".equalsIgnoreCase(method))
-            body = new String(req.getContentAsByteArray());
+        if (!"GET".equalsIgnoreCase(method)) {
+            body = SpringUtils.reqBody(req);
+        }
         if (null != params && params.size() > 0) {
             for (Iterator<Map.Entry<String, String>> it = params.entrySet().iterator(); it.hasNext(); ) {
                 entry = it.next();
@@ -162,7 +165,7 @@ public class LoggingFilter implements Filter {
         // 记录处理时间
         long begin = System.currentTimeMillis();
         //可重复读取 封装
-        ContentCachingRequestWrapper req = new ContentCachingRequestWrapper((HttpServletRequest) request);
+        BufferedRequestWrapper req = new BufferedRequestWrapper((HttpServletRequest) request);
         ContentCachingResponseWrapper res = new ContentCachingResponseWrapper((HttpServletResponse) response);
 
         boolean isSkip = FilterProperties.isSkip(this.filterProperties, req.getRequestURI());

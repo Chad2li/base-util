@@ -39,8 +39,31 @@ public class RedisUtil {
         Map<String, String> result = new HashMap<>(map.size());
 
         for (Map.Entry<String, Object> entry : map.entrySet()) {
+            if (StringUtils.isNull(entry.getKey())
+                    || StringUtils.isNull(entry.getValue())) continue;
             result.put(entry.getKey(), JsonUtils.to(entry.getValue()));
         }
+
+        return result;
+    }
+
+    /**
+     * 转换redis hash存储map
+     *
+     * @param obj
+     * @param <T>
+     * @return
+     */
+    public static <T> Map<byte[], byte[]> bean2byteMap(T obj) {
+        Map<String, Object> map = ReflectUtils.membersToMap(obj);
+        Map<byte[], byte[]> result = new HashMap<>(map.size());
+
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            if (StringUtils.isNull(entry.getKey())
+                    || StringUtils.isNull(entry.getValue())) continue;
+            result.put(entry.getKey().getBytes(), JsonUtils.to(entry.getValue()).getBytes());
+        }
+
 
         return result;
     }
@@ -131,11 +154,11 @@ public class RedisUtil {
             return key;
 
         if (1 == spanValues.length)
-            return key.replace(IRedisKey.ID_SPAN, spanValues[0]);
+            return key.replaceAll(IRedisKey.ID_SPAN, spanValues[0]);
 
         String strKey = key;
         for (String id : spanValues) {
-            strKey = strKey.replace(IRedisKey.ID_SPAN, id);
+            strKey = strKey.replaceFirst(IRedisKey.ID_SPAN, id);
         }
 
         return strKey;
