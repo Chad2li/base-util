@@ -26,9 +26,8 @@ import java.util.Map;
  * @param
  */
 @Data
-@Service(RedisBloomOps.REDIS_BLOOM_OPS_NAME)
 public class RedisBloomOps {
-    public static final String REDIS_BLOOM_OPS_NAME = "appApiRedisBloomOps";
+    public static final String BEAN_NAME = "appApiRedisBloomOps";
     /**
      * 缓存所有funnels
      */

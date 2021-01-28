@@ -20,24 +20,49 @@ public class BufferedRequestWrapper extends ContentCachingRequestWrapper {
 
     public BufferedRequestWrapper(HttpServletRequest request) throws IOException {
         super(request);
-        InputStream is = request.getInputStream();
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        byte buff[] = new byte[1024];
-        int read;
-        while ((read = is.read(buff)) > 0) {
-            baos.write(buff, 0, read);
+//        InputStream is = super.getInputStream();
+//        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//        byte buff[] = new byte[1024];
+//        int read;
+//        while ((read = is.read(buff)) > 0) {
+//            baos.write(buff, 0, read);
+//        }
+//        this.inputStream = new BufferedInputStream(baos.toByteArray());
+    }
+
+    private void wrapperInputStream() {
+        try {
+            InputStream is = super.getInputStream();
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            byte buff[] = new byte[1024];
+            int read;
+            while ((read = is.read(buff)) > 0) {
+                baos.write(buff, 0, read);
+            }
+            this.inputStream = new BufferedInputStream(baos.toByteArray());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        this.inputStream = new BufferedInputStream(baos.toByteArray());
     }
 
     @Override
     public byte[] getContentAsByteArray() {
-        String body = SpringUtils.reqBody(this);
-        return StringUtils.isNull(body) ? new byte[0] : body.getBytes();
+        byte[] bytes = super.getContentAsByteArray();
+        // spring在获取 getParameters 后无法再次获取输入流数据
+        if (null == bytes || bytes.length < 1) {
+            wrapperInputStream();
+            bytes = SpringUtils.reqBody(this).getBytes();
+            return bytes;
+        }
+
+        return new byte[0];
+//        String body = SpringUtils.reqBody(this);
+//        return StringUtils.isNull(body) ? new byte[0] : body.getBytes();
     }
 
     @Override
     public ServletInputStream getInputStream() throws IOException {
-        return this.inputStream;
+        return null != this.inputStream ? this.inputStream : super.getInputStream();
+//        return this.inputStream;
     }
 }

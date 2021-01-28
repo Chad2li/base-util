@@ -4,10 +4,11 @@ import cn.lyjuan.base.util.JsonUtils;
 import cn.lyjuan.base.util.StringUtils;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.*;
-import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
+import javax.annotation.Resource;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -16,9 +17,8 @@ import java.util.concurrent.TimeUnit;
  * RedisUtils
  */
 @Data
-@Service(RedisOps.NAME)
 public class RedisOps {
-    public static final String NAME = "baseRedisOps";
+    public static final String BEAN_NAME = "baseRedisOps";
 
     private RedisTemplate<String, String> redisTemplate;
 
@@ -450,7 +450,7 @@ public class RedisOps {
      */
     public <T> void sAdd(String k, T... values) {
         SetOperations<String, String> setOper = redisTemplate.opsForSet();
-        if (StringUtils.isNullArray(values)) return;
+        if (StringUtils.isNull(values)) return;
         String[] vs = new String[values.length];
         for (int i = 0; i < values.length; i++) {
             if (StringUtils.isNull(values[i])) continue;

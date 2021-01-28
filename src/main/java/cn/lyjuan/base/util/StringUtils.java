@@ -47,16 +47,6 @@ public class StringUtils {
     }
 
     /**
-     * 判断一个字符串是否为空
-     *
-     * @param str
-     * @return
-     */
-    public static boolean isNull(Object str) {
-        return str == null || str.toString().trim().length() < 1;
-    }
-
-    /**
      * @param mobile 需要做隐藏处理的手机号
      * @return 返回进行隐藏处理后的字符串
      * @author Chad
@@ -125,13 +115,33 @@ public class StringUtils {
     }
 
     /**
+     * 判断一个字符串是否为空
+     *
+     * @param str
+     * @return
+     */
+    public static boolean isNull(Object str) {
+        return str == null || str.toString().trim().length() < 1;
+    }
+
+    /**
      * 判断一个数据是否为空
      *
      * @param arr
      * @return
      */
-    public static boolean isNullArray(Object[] arr) {
+    public static boolean isNull(Object[] arr) {
         return null == arr || arr.length < 1;
+    }
+
+    /**
+     * 是否是空集合
+     *
+     * @param collection
+     * @return
+     */
+    public static boolean isNull(Collection collection) {
+        return null == collection || collection.isEmpty();
     }
 
     /**
@@ -197,7 +207,7 @@ public class StringUtils {
      * @return
      */
     public static String format(String src, String plac, Object... param) {
-        if (isNull(src) || isNullArray(param)) return "";
+        if (isNull(src) || isNull(param)) return "";
 
         int len = param.length;
         for (int i = 0; i < len; i++) {

@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.interceptor.KeyGenerator;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
@@ -26,6 +25,7 @@ import org.springframework.data.redis.connection.lettuce.LettuceClientConfigurat
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettucePoolingClientConfiguration;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.RedisSerializer;
@@ -43,9 +43,10 @@ import java.util.Set;
  * https://blog.csdn.net/qq_32447321/article/details/53143795
  */
 @Slf4j
-@Configuration
-@PropertySource({"classpath:conf/redis-${spring.profiles.active}.properties"})
+@PropertySource({"classpath:redis.properties"})
 public class RedisClusterConfig {
+    public static final String REDIS_TEMPLATE_BEAN_NAME = "baseRedisTemplateName";
+
     @Value("${redis.timeout.command}")
     private int commandTimeout;
     /**
@@ -134,11 +135,11 @@ public class RedisClusterConfig {
         return lettuceConnectionFactory;
     }
 
-    @Bean
-    public RedisTemplate<String, Object> redisTemplate(LettuceConnectionFactory lettuceConnectionFactory) {
+//    @Bean(REDIS_TEMPLATE_BEAN_NAME)
+    public RedisTemplate<String, String> redisTemplate(LettuceConnectionFactory lettuceConnectionFactory) {
 
         // 配置redisTemplate
-        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<String, Object>();
+        RedisTemplate<String, String> redisTemplate = new StringRedisTemplate();
         redisTemplate.setConnectionFactory(lettuceConnectionFactory);
         RedisSerializer<?> stringSerializer = new StringRedisSerializer();
 

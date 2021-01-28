@@ -23,6 +23,7 @@ import java.util.List;
 @Slf4j
 @Data
 public class RedisDistOps {
+    public static final String BEAN_NAME = "baseRedisDistOpsName";
     /**
      * 加锁名称，标识加锁者身份
      */
@@ -95,10 +96,8 @@ public class RedisDistOps {
      * @return
      */
     public boolean lock(String lockName) {
-        String fullLockName = name + ":" + lockName;
-
-        synchronized (fullLockName) {
-            return lock(fullLockName, lockRetry);
+        synchronized (lockName.intern()) {
+            return lock(lockName, lockRetry);
         }
     }
 
@@ -109,8 +108,7 @@ public class RedisDistOps {
      * @return
      */
     public boolean unlock(String lockName) {
-        String fulLockName = name + ":" + lockName;
-        byte[] nameBytes = fulLockName.getBytes();
+        byte[] nameBytes = lockName.getBytes();
         // 只能解锁自己加的锁
         List<Object> list = redisOps.executePipelined(new RedisCallback<Boolean>() {
             @Override
@@ -124,21 +122,21 @@ public class RedisDistOps {
             }
         });
         if (log.isDebugEnabled())
-            log.debug("Redis unlock: {}", fulLockName);
+            log.debug("Redis unlock: {}", lockName);
         return null != list && !list.isEmpty();
     }
 
     /**
      * 重试加锁，如果加锁失败，最多重试 retry 次，每次重试前休眠 500 毫秒
      *
-     * @param fullLockName 锁全称
-     * @param retry        重试次数
+     * @param lockName 锁全称
+     * @param retry    重试次数
      * @return true最终加锁成功
      */
-    private boolean lock(String fullLockName, int retry) {
-        boolean ok = redisOps.set(fullLockName, name, false, lockRetry);
+    private boolean lock(String lockName, int retry) {
+        boolean ok = redisOps.set(lockName, name, false, lockRetry);
         if (log.isDebugEnabled())
-            log.debug("Redis set lock: {} {} ==> {}", fullLockName, retry, ok);
+            log.debug("Redis set lock: {} {} ==> {}", lockName, retry, ok);
         if (ok) return true;
 
         if (--retry <= 0) return false;
@@ -148,7 +146,7 @@ public class RedisDistOps {
         } catch (InterruptedException e) {
         }
 
-        return lock(fullLockName, retry);
+        return lock(lockName, retry);
     }
 }
 

@@ -109,56 +109,30 @@ public class RedisUtil {
         return idKeys.split(",")[index];
     }
 
+
     /**
-     * 生成完整的redis key
-     *
+     * 替换Key中的点位符，生成完成的RedisKey
      * @param key
      * @param spanIds
      * @return
      */
-    public static String key(IRedisKey key, int... spanIds) {
+    public static String key(IRedisKey key, Object... spanIds) {
         return key(key.key(), spanIds);
     }
 
-    public static String key(IRedisKey key, String... spanValues) {
-        return key(key.key(), spanValues);
-    }
-
-
-    /**
-     * 生成完整的redis key
-     *
-     * @param spanIds
-     * @return
-     */
-    public static String key(String key, int... spanIds) {
-        if (1 == spanIds.length)
-            return RedisUtil.key(key, String.valueOf(spanIds[0]));
-
-        String[] arr = new String[spanIds.length];
-        for (int i = 0; i < spanIds.length; i++) {
-            arr[i] = String.valueOf(spanIds[i]);
-        }
-        return RedisUtil.key(key, arr);
-    }
-
-    /**
-     * 使用spanValues替换key中{@code RedisSpan.ID_SPAN}占位符
-     *
-     * @param key
-     * @param spanValues
-     * @return
-     */
-    public static String key(String key, String... spanValues) {
-        if (null == spanValues || spanValues.length < 1)
+    public static String key(String key, Object... spanIds) {
+        if (null == spanIds || spanIds.length < 1)
             return key;
 
-        if (1 == spanValues.length)
-            return key.replaceAll(IRedisKey.ID_SPAN, spanValues[0]);
+        if (1 == spanIds.length) {
+            if (StringUtils.isNull(spanIds[0])) return key;
+
+            return key.replaceAll(IRedisKey.ID_SPAN, JsonUtils.to(spanIds[0]));
+        }
 
         String strKey = key;
-        for (String id : spanValues) {
-            strKey = strKey.replaceFirst(IRedisKey.ID_SPAN, id);
+        for (Object id : spanIds) {
+            strKey = strKey.replaceFirst(IRedisKey.ID_SPAN, JsonUtils.to(id));
         }
 
         return strKey;

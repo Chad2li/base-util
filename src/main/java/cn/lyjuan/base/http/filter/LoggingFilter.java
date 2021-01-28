@@ -66,7 +66,7 @@ public class LoggingFilter implements Filter {
             log.info("RES: {} [{}]", resultJson, divide);
     }
 
-    private void logReq(BufferedRequestWrapper req) {
+    private void logReq(ContentCachingRequestWrapper req) {
         // 注意隐藏用户的pwd、token等信息
         // 忽略文件上传内容（易内存溢出）
 
@@ -97,7 +97,7 @@ public class LoggingFilter implements Filter {
         Map<String, String> params = SpringUtils.getParam(req);
         String body = null;
         if (!"GET".equalsIgnoreCase(method)) {
-            body = SpringUtils.reqBody(req);
+            body = new String(req.getContentAsByteArray());
         }
         if (null != params && params.size() > 0) {
             for (Iterator<Map.Entry<String, String>> it = params.entrySet().iterator(); it.hasNext(); ) {

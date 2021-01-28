@@ -15,9 +15,8 @@ import javax.annotation.Resource;
 import java.util.*;
 
 @Data
-@Service(RedisIdsOps.REDIS_IDS_OPS_NAME)
 public class RedisIdsOps {
-    public static final String REDIS_IDS_OPS_NAME = "appApiRedisIdsOps";
+    public static final String BEAN_NAME = "baseRedisIdsOps";
     private static DefaultRedisScript<Long> addScript = new DefaultRedisScript<>();
     private static DefaultRedisScript<Long> delScript = new DefaultRedisScript<>();
     private static DefaultRedisScript<Long> existsScript = new DefaultRedisScript<>();
