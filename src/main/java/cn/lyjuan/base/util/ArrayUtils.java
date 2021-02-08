@@ -2,6 +2,8 @@ package cn.lyjuan.base.util;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -15,25 +17,36 @@ public class ArrayUtils {
      * @param separator 分隔符
      * @return
      */
-    public static String join(Object objArr, String separator) {
-        if (StringUtils.isNull(objArr)) return "";
-
-        if (!objArr.getClass().isArray()) return "";
-
-        int len = Array.getLength(objArr);
-        if (len < 1) return "";
+    public static String join(Object[] objArr, String separator) {
+        if (null == objArr || objArr.length == 0)
+            return "";
 
         StringBuilder sb = new StringBuilder();
         Object obj = null;
-        for (int i = 0; i < len; i++) {
+        for (int i = 0; i < objArr.length; i++) {
             obj = Array.get(objArr, i);
             if (StringUtils.isNull(obj))
-                sb.append("").append(separator);
+                sb.append(separator);
             else
-                sb.append(obj.toString().trim()).append(separator);
+                sb.append(StringUtils.toStr(objArr).trim()).append(separator);
         }
 
         sb.delete(sb.length() - 1, sb.length());
+
+        return sb.toString();
+    }
+
+    public static String join(Collection coll, String sep) {
+        if (null == coll || coll.isEmpty())
+            return "";
+
+        StringBuilder sb = new StringBuilder();
+        for (Object c : coll) {
+            sb.append(StringUtils.toStr(c).trim()).append(sep);
+        }
+
+        if (sb.length() > 0)
+            sb.deleteCharAt(sb.length() - 1);
 
         return sb.toString();
     }
@@ -44,7 +57,7 @@ public class ArrayUtils {
      * @param array
      * @return
      */
-    public static String join(Object array) {
+    public static String join(Object[] array) {
         return join(array, ",");
     }
 

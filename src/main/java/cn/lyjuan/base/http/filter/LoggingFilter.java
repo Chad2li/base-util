@@ -8,6 +8,8 @@ import cn.lyjuan.base.util.StringUtils;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpHeaders;
+import org.springframework.web.filter.CorsFilter;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 
@@ -33,7 +35,7 @@ import java.util.Map;
 public class LoggingFilter implements Filter {
     public static final String NAME = "baseLoggingFilterName";
 
-    public static final int ORDER = 1;
+    public static final int ORDER = 100;
     /**
      * 打印最大长度
      */

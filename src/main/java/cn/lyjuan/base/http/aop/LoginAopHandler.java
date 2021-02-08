@@ -6,7 +6,6 @@ import cn.lyjuan.base.http.aop.service.IUserService;
 import cn.lyjuan.base.http.filter.FilterProperties;
 import cn.lyjuan.base.util.SpringUtils;
 import cn.lyjuan.base.util.StringUtils;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
@@ -15,8 +14,10 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.annotation.Order;
+import org.springframework.util.CollectionUtils;
+
+import java.util.List;
 
 /**
  * 登录身份检查
@@ -74,14 +75,20 @@ public class LoginAopHandler {
         String token = SpringUtils.getRequest().getHeader("token");
         // 无token参数
         if (StringUtils.isNull(token)) {
-            if (null != login)// 必须登录
-                userService.errNeedLogin();
-            else return;
+            if (null == login)
+                return;
+            // 标识无须登录
+            for (String l : login.value()) {
+                if (Login.TYPE_UNLOGIN.equalsIgnoreCase(l))
+                    return;
+            }
+            // 必须登录
+            userService.errNeedLogin();
         }
 
         IUserService.UserToken user = userService.user(token);
         // token无效
-        if (null == user || !userService.isAccessValid(user.getTokenCreatetime())) {
+        if (null == user || !userService.isAccessValid(user)) {
             ErrUtils.appThrow(userService.errTokenInvalid());
         }
         // 接口无需权限
@@ -96,13 +103,12 @@ public class LoginAopHandler {
             return;
         }
         // 权限判断
-        String[] userTypes = user.getLoginType();
-        if (null == userTypes || userTypes.length < 1) {
-            // 无权访问
+        List<String> loginTypes = user.getLoginTypes();
+        if (CollectionUtils.isEmpty(loginTypes)) {// 无权访问
             ErrUtils.appThrow(userService.errIllegalPermission());
         }
         for (String type : types) {
-            for (String userType : userTypes) {
+            for (String userType : loginTypes) {
                 if (type.equalsIgnoreCase(userType)) {
                     // 有权限
                     userService.setCache(user);

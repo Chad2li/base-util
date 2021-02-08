@@ -436,9 +436,9 @@ public class RedisOps {
      * @param k
      * @param v
      */
-    public <T> void add(String k, T v) {
+    public <T> long add(String k, T v) {
         SetOperations<String, String> set = redisTemplate.opsForSet();
-        set.add(k, JsonUtils.to(v));
+        return set.add(k, JsonUtils.to(v));
     }
 
     /**
@@ -448,15 +448,47 @@ public class RedisOps {
      * @param values
      * @param <T>
      */
-    public <T> void sAdd(String k, T... values) {
+    public <T> long sAdd(String k, T... values) {
         SetOperations<String, String> setOper = redisTemplate.opsForSet();
-        if (StringUtils.isNull(values)) return;
+        if (StringUtils.isNull(values)) return 0;
         String[] vs = new String[values.length];
         for (int i = 0; i < values.length; i++) {
             if (StringUtils.isNull(values[i])) continue;
             vs[i] = JsonUtils.to(values[i]);
         }
-        setOper.add(k, vs);
+        return setOper.add(k, vs);
+    }
+
+    /**
+     * 移除set元素
+     *
+     * @param k
+     * @param values
+     * @param <T>
+     * @return
+     */
+    public <T> long sRem(String k, T... values) {
+        SetOperations<String, String> setOper = redisTemplate.opsForSet();
+        if (StringUtils.isNull(values)) return 0;
+        List<String> list = new ArrayList<>(values.length);
+        for (int i = 0; i < values.length; i++) {
+            if (StringUtils.isNull(values[i])) continue;
+            list.add(JsonUtils.to(values[i]));
+        }
+
+        return setOper.remove(k, list.toArray());
+    }
+
+    /**
+     * Set元素大小
+     *
+     * @param key
+     * @return
+     */
+    public long sSize(final String key) {
+        SetOperations<String, String> setOper = redisTemplate.opsForSet();
+        Long size = setOper.size(key);
+        return null == size ? 0 : size;
     }
 
     /**

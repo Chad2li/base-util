@@ -10,13 +10,18 @@ import java.lang.annotation.Target;
  */
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Login
-{
+public @interface Login {
     /**
      * 匹配的登录身份
+     *
      * @return
      */
     String[] value() default TYPE_USER;
+
+    /**
+     * 无须登录
+     */
+    String TYPE_UNLOGIN = "TYPE_UNLOGIN";
 
     /**
      * 普通用户，默认登录类型
