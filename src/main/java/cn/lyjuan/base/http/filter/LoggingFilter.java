@@ -170,6 +170,11 @@ public class LoggingFilter implements Filter {
         BufferedRequestWrapper req = new BufferedRequestWrapper((HttpServletRequest) request);
         ContentCachingResponseWrapper res = new ContentCachingResponseWrapper((HttpServletResponse) response);
 
+        res.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+        res.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, "*");
+        res.setHeader(HttpHeaders.ACCESS_CONTROL_MAX_AGE, "3600");
+        res.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS, "*");
+
         boolean isSkip = FilterProperties.isSkip(this.filterProperties, req.getRequestURI());
         if (!isSkip) {
             // 打印请求信息

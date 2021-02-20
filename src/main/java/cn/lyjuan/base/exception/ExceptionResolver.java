@@ -5,10 +5,14 @@ import cn.lyjuan.base.exception.impl.AppException;
 import cn.lyjuan.base.exception.impl.BaseCode;
 import cn.lyjuan.base.http.vo.res.BaseRes;
 import cn.lyjuan.base.util.SpringUtils;
+import cn.lyjuan.base.util.StringUtils;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
+import org.springframework.util.CollectionUtils;
 import org.springframework.validation.BindException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.ServletRequestBindingException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -16,6 +20,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
+
+import javax.validation.ConstraintViolationException;
 
 /**
  * Created by ly on 2015/1/11.
@@ -65,7 +71,7 @@ public class ExceptionResolver {
             if (!isDebug) {
                 base.setMsg(BaseCode.PARAM_INVALID.msg());
             } else {
-                base.setMsg(e.getMessage());
+                base.setMsg(getDebugMsg(e));
             }
         } else if (e instanceof HttpRequestMethodNotSupportedException)// 不支持的请求方法
         {
@@ -120,7 +126,42 @@ public class ExceptionResolver {
                 || e instanceof ServletRequestBindingException
                 || e instanceof BindException
                 || e instanceof MethodArgumentTypeMismatchException
+                || e instanceof ConstraintViolationException
 
                 ;
+    }
+
+    private String getDebugMsg(Exception e) {
+        if (e instanceof MethodArgumentNotValidException) {
+            StringBuilder sb = new StringBuilder();
+            ((MethodArgumentNotValidException) e).getAllErrors().forEach(item -> {
+                Object[] args = item.getArguments();
+                if (!StringUtils.isNull(args)) {
+                    sb.append("[");
+                    for (Object o : args) {
+                        if (o instanceof DefaultMessageSourceResolvable) {
+                            sb.append(((DefaultMessageSourceResolvable) o).getDefaultMessage()).append(",");
+                        }
+                    }
+                    if (sb.length() > 1) {
+                        sb.deleteCharAt(sb.length() - 1);
+                        sb.append("] ");
+                    } else
+                        sb.deleteCharAt(0);
+                }
+                String objName = item.getObjectName();
+                String defMsg = item.getDefaultMessage();
+                log.warn("objName:{} args:{} defMsg:{}", objName, StringUtils.toStr(args), defMsg);
+                sb.append(defMsg).append(",");
+            });
+            if (sb.length() > 0) {
+                sb.deleteCharAt(sb.length() - 1);
+            }
+            return sb.toString();
+        } else if (e instanceof ConstraintViolationException) {
+            return e.getMessage();
+        }
+
+        return e.getMessage();
     }
 }
