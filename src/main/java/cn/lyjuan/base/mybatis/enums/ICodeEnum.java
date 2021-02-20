@@ -14,6 +14,13 @@ public interface ICodeEnum {
     int code();
 
     /**
+     * 显示名称
+     *
+     * @return
+     */
+    String name();
+
+    /**
      * 判断是否是指定的类型
      *
      * @param codeEnum
