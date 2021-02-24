@@ -18,7 +18,6 @@ elseif sep then
 else
     for i, v in ipairs(keys) do
         values[i] = redis.call("get", v)
---        values[i] = v
     end
 end
 

@@ -13,6 +13,10 @@ import org.springframework.util.CollectionUtils;
 import java.lang.reflect.Type;
 import java.util.*;
 
+/**
+ * 集群环境下，所有的redisKey需要定位到同一个slot<br/>
+ * 可使用 {slotKey}:yourIdentify，redis只使用 {} 中的值来计算 slot值
+ */
 @Data
 public class RedisMultiGetOps {
     public static final String BEAN_NAME = "appApiRedisMultiGetOps";
