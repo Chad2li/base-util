@@ -14,5 +14,5 @@ import org.springframework.transaction.annotation.Transactional;
 @Rollback(true)
 @Transactional
 @AutoConfigureMockMvc
-public class BaseSpringTest {
+public abstract class BaseSpringTest {
 }

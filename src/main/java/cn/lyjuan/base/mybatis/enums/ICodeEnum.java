@@ -18,7 +18,7 @@ public interface ICodeEnum {
      *
      * @return
      */
-    String name();
+    String display();
 
     /**
      * 判断是否是指定的类型

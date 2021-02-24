@@ -2,6 +2,7 @@ package cn.lyjuan.base;
 
 import cn.lyjuan.base.redis.RedisClusterConfig;
 import cn.lyjuan.base.redis.RedisIncrbyOps;
+import cn.lyjuan.base.redis.RedisMultiGetOps;
 import cn.lyjuan.base.redis.RedisOps;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
@@ -16,18 +17,22 @@ import javax.annotation.Resource;
 @ImportAutoConfiguration(classes = {RedisClusterConfig.class})
 @EnableConfigurationProperties
 public class SpringBoot {
-    @Resource
-    private RedisClusterConfig redisClusterConfig;
 
     @Bean
     @Resource
-    public RedisOps redisOps(@Qualifier(RedisClusterConfig.REDIS_TEMPLATE_BEAN_NAME) RedisTemplate<String, String> rt) {
+    public RedisOps redisOps(RedisTemplate<String, String> rt) {
         return new RedisOps(rt);
     }
 
     @Bean
     @Resource
-    public RedisIncrbyOps redisIncrbyOps(@Qualifier(RedisClusterConfig.REDIS_TEMPLATE_BEAN_NAME) RedisTemplate<String, String> rt) {
+    public RedisIncrbyOps redisIncrbyOps(RedisTemplate<String, String> rt) {
         return new RedisIncrbyOps(rt);
+    }
+
+    @Bean
+    @Resource
+    public RedisMultiGetOps redisMultiGetOps(RedisTemplate<String, String> rt) {
+        return new RedisMultiGetOps(rt);
     }
 }
