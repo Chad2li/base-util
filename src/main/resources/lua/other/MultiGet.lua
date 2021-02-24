@@ -1,19 +1,24 @@
 local redisKey = KEYS[1]
 local argObj = cjson.decode(ARGV[1])
-local hashKey = argObj.hashKey
+local isHash = argObj.isHash
 local keys = argObj.keys
 local sep = argObj.sep
 
 local values = {}
 
 -- 获取hash值
-if hashKey then
+if isHash then
     for i, v in ipairs(keys) do
-        values[i] = redis.call("hget", redisKey, hashKey .. sep .. v)
+        values[i] = redis.call("hget", redisKey, v)
+    end
+elseif sep then
+    for i, v in ipairs(keys) do
+        values[i] = redis.call("get", redisKey .. sep .. v)
     end
 else
     for i, v in ipairs(keys) do
-        values[i] = redis.call("get", redisKey .. sep .. v)
+        values[i] = redis.call("get", v)
+--        values[i] = v
     end
 end
 
