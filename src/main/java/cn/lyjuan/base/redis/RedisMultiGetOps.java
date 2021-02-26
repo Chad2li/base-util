@@ -114,6 +114,7 @@ public class RedisMultiGetOps {
         Map<String, Object> argvMap = new HashMap<>();
         argvMap.put("isHash", false);
         argvMap.put("keys", keys);
+        separator = StringUtils.isNull(separator) ? "" : separator;
         argvMap.put("sep", separator);
 
         String json = JsonUtils.to(argvMap);
@@ -141,7 +142,7 @@ public class RedisMultiGetOps {
     }
 
     /**
-     * 返回 redisKey的hash结构下所有 {hashKey + separator + keys}的值
+     * 返回 redisKey的hash结构下所有keys的值
      *
      * @param redisKey
      * @param keys

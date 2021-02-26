@@ -4,11 +4,9 @@ import cn.lyjuan.base.util.JsonUtils;
 import cn.lyjuan.base.util.StringUtils;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.*;
 import org.springframework.util.Assert;
 
-import javax.annotation.Resource;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.TimeUnit;

@@ -77,10 +77,14 @@ public class RedisIncrbyOps {
 
 
     /**
-     * 返回所有ID
+     * 对redis值做增值操作
      *
      * @param redisKey redis键
      * @param hashKey  hash键，空表示sds结构
+     * @param incrby    增加的步长，不传表示默认值 1
+     * @param limitEqMax    限制最大值，当改变后的值超过最大值，此次操作失败；为空不限制
+     * @param limitEqMin    限制最小值，当改变后的值小于最小值，此次操作失败；为空不限制
+     * @param exists        空表示不对值的存在性作校验，NX强制不存在才操作，XX强制存在才操作
      * @return
      */
     public Result incrby(String redisKey, Object hashKey, Integer incrby, Long limitEqMax, Long limitEqMin, Exists exists) {
