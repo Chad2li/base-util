@@ -3,6 +3,7 @@ package cn.lyjuan.base.redis;
 import cn.lyjuan.base.util.JsonUtils;
 import cn.lyjuan.base.util.StringUtils;
 import lombok.Data;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.*;
 import org.springframework.util.Assert;
@@ -14,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * RedisUtils
  */
-@Data
+@Setter
 public class RedisOps {
     public static final String BEAN_NAME = "baseRedisOps";
 
