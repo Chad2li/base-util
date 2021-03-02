@@ -14,6 +14,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Type;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -145,6 +146,30 @@ public class SpringUtils {
 //
 //        return userDetails;
 //    }
+
+    /**
+     * 获取Request属性
+     *
+     * @param name
+     * @param <T>
+     * @return
+     */
+    public static <T> T reqAttr(String name) {
+        Object val = SpringUtils.getRequest().getAttribute(name);
+        if (null == val) return null;
+        return (T) val;
+    }
+
+    /**
+     * 设置请求属性值
+     *
+     * @param name
+     * @param val
+     * @param <T>
+     */
+    public static <T> void reqAttr(String name, T val) {
+        SpringUtils.getRequest().setAttribute(name, val);
+    }
 
     /**
      * 获取参数，使用 {@code getParameter()} 方法

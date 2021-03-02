@@ -1,5 +1,6 @@
 package cn.lyjuan.base.http.aop;
 
+import cn.lyjuan.base.exception.IAppCode;
 import cn.lyjuan.base.exception.util.ErrUtils;
 import cn.lyjuan.base.http.aop.annotation.Login;
 import cn.lyjuan.base.http.aop.service.IUserService;
@@ -83,7 +84,8 @@ public class LoginAopHandler {
                     return;
             }
             // 必须登录
-            userService.errNeedLogin();
+            IAppCode code = userService.errNeedLogin();
+            ErrUtils.appThrow(code);
         }
 
         IUserService.UserToken user = userService.user(token);
