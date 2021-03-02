@@ -1,28 +1,28 @@
 package cn.lyjuan.base.util;
 
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.logging.Logger;
 
 /**
  * HTTP 工具类
- * @deprecated 请使用HttpClient或RestTemplate
+ *
  * @author chad
+ * @deprecated 请使用HttpClient或RestTemplate
  */
-public class HttpUtils
-{
-    private static Logger log = Logger.getLogger(HttpUtils.class.getName());
-
+@Slf4j
+public class HttpUtils {
     /**
      * Form 表单参数分隔符
      */
@@ -33,15 +33,21 @@ public class HttpUtils
      */
     public static final String FORM_EP = "=";
 
-    /** PUT 请求方式 **/
+    /**
+     * PUT 请求方式
+     **/
     public static final String HTTP_METHOD_PUT = "PUT";
 
     public static final String HTTP_METHOD_DELETE = "DELETE";
 
-    /** POST 请求方式 **/
+    /**
+     * POST 请求方式
+     **/
     public static final String HTTP_METHOD_POST = "POST";
 
-    /** GET 请求方式 **/
+    /**
+     * GET 请求方式
+     **/
     public static final String HTTP_METHOD_GET = "GET";
 
     private static final int CONN_TIMEOUT = 10000;
@@ -49,146 +55,138 @@ public class HttpUtils
 
     /**
      * 发送 PUT 请求
+     *
      * @param url
      * @param params
      * @param charset
      * @param headers
      * @return
      */
-    public static String sendPut(String url, String params, String charset, String...headers)
-    {
+    public static String sendPut(String url, String params, String charset, Map<String, String> headers) {
         return send(HTTP_METHOD_PUT, url, params, false, charset, headers);
     }
 
     /**
      * 发送 DELETE 请求
+     *
      * @param url
      * @param params
      * @param charset
      * @param headers
      * @return
      */
-    public static String sendDelete(String url, String params, String charset, String...headers)
-    {
+    public static String sendDelete(String url, String params, String charset, Map<String, String> headers) {
         return send(HTTP_METHOD_DELETE, url, params, false, charset, headers);
     }
 
     /**
      * 发送请求，将map参数以HTML表单形式拼接成字符串提交
-     * @param url       请求的 URL 地址
-     * @param params    请求参数
-     * @param charset   编码方式
+     *
+     * @param url     请求的 URL 地址
+     * @param params  请求参数
+     * @param charset 编码方式
      * @return
      */
-    public static String sendPost(String url, Map<String, String> params, String charset)
-    {
-        return sendPost(url, paraToForm(params), true, charset);
+    public static String sendPost(String url, Map<String, String> params, String charset) {
+        return sendPost(url, paraToForm(params), true, charset, null);
     }
 
     /**
      * 发送POST请求
-     * @param url       链接
-     * @param params    请求内容
-     * @param charset   字符编码
+     *
+     * @param url     链接
+     * @param params  请求内容
+     * @param charset 字符编码
      * @return
      */
-    public static String sendPost(String url, String params, String charset)
-    {
-        return sendPost(url, params, false, charset);
+    public static String sendPost(String url, String params, String charset) {
+        return sendPost(url, params, false, charset, null);
     }
 
     /**
      * 发送POST请求
-     * @param url       链接
-     * @param params    请求内容
-     * @param charset   字符编码
-     * @param headers   请求头
+     *
+     * @param url     链接
+     * @param params  请求内容
+     * @param charset 字符编码
+     * @param headers 请求头
      * @return
      */
-    public static String sendPost(String url, String params, String charset, String...headers)
-    {
+    public static String sendPost(String url, String params, String charset, Map<String, String> headers) {
         return send(HTTP_METHOD_POST, url, params, false, charset, headers);
     }
 
     /**
      * 发送请求，将map参数以HTML表单形式拼接成字符串提交
-     * @param url       请求的 URL 地址
-     * @param params    请求参数
-     * @param charset   编码方式
-     * @param headers   请求头属性
+     *
+     * @param url     请求的 URL 地址
+     * @param params  请求参数
+     * @param charset 编码方式
+     * @param headers 请求头属性
      * @return
      */
-    public static String sendPost(String url, Map<String, String> params, String charset, String...headers)
-    {
+    public static String sendPost(String url, Map<String, String> params, String charset, Map<String, String> headers) {
         return sendPost(url, paraToForm(params), true, charset, headers);
     }
 
     /**
      * 发送 HTTP POST 请求
-     * @param url       请求的 URL 地址
-     * @param params    请求的参数内容
-     * @param isForm    form请求标识，为true时会在请求头属性中添加：application/x-www-form-urlencoded;charset={charset}
-     * @param charset   编码方式
-     * @param headers   请求头属性
-     * @return          返回请求响应内容
+     *
+     * @param url     请求的 URL 地址
+     * @param params  请求的参数内容
+     * @param isForm  form请求标识，为true时会在请求头属性中添加：application/x-www-form-urlencoded;charset={charset}
+     * @param charset 编码方式
+     * @param headers 请求头属性
+     * @return 返回请求响应内容
      */
-    public static String sendPost(String url, String params, boolean isForm, String charset, String...headers)
-    {
+    public static String sendPost(String url, String params, boolean isForm, String charset, Map<String, String> headers) {
         return send(HTTP_METHOD_POST, url, params, isForm, charset, headers);
     }
 
     /**
      * 发送请求
-     * @param method    方法
-     * @param url       链接
-     * @param params    参数
-     * @param isForm    是否Form表单格式提交
-     * @param charset   字符编码
-     * @param headers   请求头
+     *
+     * @param method  方法
+     * @param url     链接
+     * @param params  参数
+     * @param isForm  是否Form表单格式提交
+     * @param charset 字符编码
+     * @param headers 请求头
      * @return
      */
-    public static String send(String method, String url, String params, boolean isForm, String charset, String...headers)
-    {
-        String[] cpHeaders = null;
-
+    public static String send(String method, String url, String params, boolean isForm, String charset, Map<String, String> headers) {
         if (isForm)// 增加FORM表单提交属性
         {
-            if (null != headers)
-            {
-                cpHeaders = new String[headers.length + 2];
-                System.arraycopy(headers, 0, cpHeaders, 0, headers.length);
-            }
-            else
-                cpHeaders = new String[2];
+            if (null == headers)
+                headers = new HashMap<>(2);
 
-            cpHeaders[cpHeaders.length - 2] = "Content-Type";
-            cpHeaders[cpHeaders.length - 1] = "application/x-www-form-urlencoded;charset=" + charset;
-        } else
-            cpHeaders = headers;
+            headers.put("Content-Type", "application/x-www-form-urlencoded;charset=" + charset);
+        }
 
-        return send(method, url, params, charset, cpHeaders);
+        return send(method, url, params, charset, headers);
     }
 
     /**
      * 发送 POST/PUT 等内容请求
-     * @param method    请求方法名
-     * @param url       请求地址
-     * @param params    请求POST内容
-     * @param charset   编码
-     * @param headers   请求头信息
+     *
+     * @param method  请求方法名
+     * @param url     请求地址
+     * @param params  请求POST内容
+     * @param charset 编码
+     * @param headers 请求头信息
      * @return
      */
-    public static String send(String method, String url, String params, String charset, String...headers)
-    {
-        if (null == headers)
-            log.fine(method + "请求 URL >> " + url + " params >> " + params);
-        else
-            log.fine(method + "请求 URL >> " + url + " params >> " + params + " headers >> " + Arrays.toString(headers) );
+    public static String send(String method, String url, String params, String charset, Map<String, String> headers) {
+        if (log.isDebugEnabled()) {
+            if (null == headers)
+                log.debug(method + "请求 URL >> " + url + " params >> " + params);
+            else
+                log.debug(method + "请求 URL >> " + url + " params >> " + params + " headers >> " + headers);
+        }
 
         params = null == params ? "" : params;
         StringBuilder result = new StringBuilder();
-        try
-        {
+        try {
             // 打开连接，并设置参数
             URL httpUrl = new URL(url);
             HttpURLConnection conn = (HttpURLConnection) httpUrl
@@ -196,27 +194,23 @@ public class HttpUtils
             conn.setRequestMethod(method);
             conn.setConnectTimeout(CONN_TIMEOUT);
             conn.setReadTimeout(READ_TIMEOUT);
-            if (!HTTP_METHOD_DELETE.equals(method))
-            {
+            if (!HTTP_METHOD_DELETE.equals(method)) {
                 conn.setDoInput(true); // 设置可输入
                 conn.setDoOutput(true);// 设置可输出
             }
-
-            if (null != headers && headers.length > 0)
-            {
-                for (int i = 0; i < headers.length; i=i+2)
-                {
-                    if (headers.length < i + 2)// 如果剩余参数为单数
-                        break;
-                    conn.setRequestProperty(headers[i], headers[i+1]);
+            if (!CollectionUtils.isEmpty(headers)) {
+                for (Map.Entry<String, String> h : headers.entrySet()) {
+                    if (StringUtils.isNull(h.getKey())
+                            || StringUtils.isNull(h.getValue()))
+                        continue;
+                    conn.setRequestProperty(h.getKey(), h.getValue());
                 }
             }
 
             conn.connect();
 
             // 输出
-            if (!HTTP_METHOD_DELETE.equals(method))
-            {
+            if (!HTTP_METHOD_DELETE.equals(method)) {
                 conn.getOutputStream().write(params.getBytes(charset));
                 conn.getOutputStream().flush();
                 conn.getOutputStream().close();
@@ -233,10 +227,9 @@ public class HttpUtils
 
             // 关闭连接
             conn.disconnect();
-        } catch (IOException e)
-        {
-            log.severe("网络异常 url >> " + url + " params >> " + params
-                    + " charset >> " + charset + " headers >> " +  (null == headers ? "null" : Arrays.toString(headers))
+        } catch (IOException e) {
+            log.warn("网络异常 url >> " + url + " params >> " + params
+                    + " charset >> " + charset + " headers >> " + headers
                     + " error >> " + e.getMessage());
             throw new RuntimeException(e);
         }
@@ -255,12 +248,10 @@ public class HttpUtils
      * @throws java.io.IOException
      * @throws java.io.IOException
      */
-    public static String sendGet(String url, String encode)
-    {
+    public static String sendGet(String url, String encode) {
 //        log.severe(HTTP_METHOD_GET + "请求 URL >> " + url);
         StringBuilder result = new StringBuilder();
-        try
-        {
+        try {
             // 打开连接，设置参数
             URL httpUrl = new URL(url);
             HttpURLConnection conn = (HttpURLConnection) httpUrl
@@ -284,9 +275,8 @@ public class HttpUtils
             // 关闭连接
             conn.getInputStream().close();
             conn.disconnect();
-        } catch (IOException e)
-        {
-            log.severe("网络异常 url >> " + url + " error >> " + e.getMessage());
+        } catch (IOException e) {
+            log.warn("网络异常 url >> " + url + " error >> " + e.getMessage());
             throw new RuntimeException(e);
         }
 //        log.severe("result >> " + result.toString());
@@ -299,16 +289,14 @@ public class HttpUtils
      * @param params
      * @return
      */
-    public static String paraToForm(Map<String, String> params)
-    {
+    public static String paraToForm(Map<String, String> params) {
         if (null == params)
             return "";
 
         StringBuilder result = new StringBuilder();
 
         for (Iterator<Entry<String, String>> it = params.entrySet().iterator(); it
-                .hasNext(); )
-        {
+                .hasNext(); ) {
             Entry<String, String> e = it.next();
             result.append(e.getKey()).append("=").append(e.getValue()).append(
                     FORM_SEPARATE);
@@ -330,8 +318,7 @@ public class HttpUtils
      * @throws java.io.IOException
      */
     public static Map<String, String> postParam(InputStream in)
-            throws IOException
-    {
+            throws IOException {
         // 读取POST请求
         String post = postStr(in);
 
@@ -344,12 +331,12 @@ public class HttpUtils
 
     /**
      * 获取POST提交的数据
+     *
      * @param in
      * @return
      * @throws java.io.IOException
      */
-    public static String postStr(InputStream in) throws IOException
-    {
+    public static String postStr(InputStream in) throws IOException {
         StringBuilder sb = new StringBuilder();
         String line = null;
         BufferedReader reader = new BufferedReader(new InputStreamReader(in));
@@ -361,10 +348,10 @@ public class HttpUtils
 
     /**
      * 解析 URL 中的参数
+     *
      * @return
      */
-    public static Map<String, String> parseURLParam(String strs)
-    {
+    public static Map<String, String> parseURLParam(String strs) {
         Map<String, String> map = new HashMap<String, String>();
 
         if (StringUtils.isNull(strs))
@@ -372,8 +359,7 @@ public class HttpUtils
 
         String str[] = strs.split(FORM_SEPARATE);
 
-        for (String s : str)
-        {
+        for (String s : str) {
             String[] str2 = s.split(FORM_EP);
             if (str2 == null || str2.length == 0)
                 continue;
