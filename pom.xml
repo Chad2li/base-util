@@ -6,7 +6,7 @@
 
     <groupId>cn.lyjuan</groupId>
     <artifactId>base-util</artifactId>
-    <version>2.2.7-SNAPSHOT</version>
+    <version>2.2.8-SNAPSHOT</version>
     <packaging>jar</packaging>
 
 
@@ -350,6 +350,10 @@
             <artifactId>commons-pool2</artifactId>
             <version>2.9.0</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
         </dependency>
         <!-- Druid$ -->
     </dependencies>
