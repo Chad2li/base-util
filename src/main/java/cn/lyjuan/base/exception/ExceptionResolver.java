@@ -9,7 +9,7 @@ import cn.lyjuan.base.util.StringUtils;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
-import org.springframework.util.CollectionUtils;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -71,7 +71,7 @@ public class ExceptionResolver {
             if (!isDebug) {
                 base.setMsg(BaseCode.PARAM_INVALID.msg());
             } else {
-                base.setMsg(getDebugMsg(e));
+                base.setMsg(parseParamErrDebugMsg(e));
             }
         } else if (e instanceof HttpRequestMethodNotSupportedException)// 不支持的请求方法
         {
@@ -122,16 +122,23 @@ public class ExceptionResolver {
      * @return true参数错误
      */
     private boolean isParamErr(Exception e) {
-        return e instanceof MissingServletRequestParameterException
-                || e instanceof ServletRequestBindingException
-                || e instanceof BindException
-                || e instanceof MethodArgumentTypeMismatchException
-                || e instanceof ConstraintViolationException
+        return e instanceof MissingServletRequestParameterException// 少参数
+                || e instanceof ServletRequestBindingException// 少参数
+                || e instanceof BindException// 少参数
+                || e instanceof MethodArgumentTypeMismatchException// 少参数
+                || e instanceof ConstraintViolationException// validation检验不通过
+                || e instanceof HttpMessageNotReadableException//没有 request body
 
                 ;
     }
 
-    private String getDebugMsg(Exception e) {
+    /**
+     * 解析参数错误调试信息
+     *
+     * @param e
+     * @return
+     */
+    private String parseParamErrDebugMsg(Exception e) {
         if (e instanceof MethodArgumentNotValidException) {
             StringBuilder sb = new StringBuilder();
             ((MethodArgumentNotValidException) e).getAllErrors().forEach(item -> {
@@ -160,6 +167,8 @@ public class ExceptionResolver {
             return sb.toString();
         } else if (e instanceof ConstraintViolationException) {
             return e.getMessage();
+        } else if (e instanceof HttpMessageNotReadableException) {
+            return "Request body is missing";
         }
 
         return e.getMessage();

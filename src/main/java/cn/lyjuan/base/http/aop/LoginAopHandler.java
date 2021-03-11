@@ -3,6 +3,7 @@ package cn.lyjuan.base.http.aop;
 import cn.lyjuan.base.exception.IAppCode;
 import cn.lyjuan.base.exception.util.ErrUtils;
 import cn.lyjuan.base.http.aop.annotation.Login;
+import cn.lyjuan.base.http.aop.service.IHeaderService;
 import cn.lyjuan.base.http.aop.service.IUserService;
 import cn.lyjuan.base.http.filter.FilterProperties;
 import cn.lyjuan.base.util.SpringUtils;
@@ -28,11 +29,13 @@ import java.util.List;
 @Aspect
 @Order(LoginAopHandler.ORDER)
 public class LoginAopHandler {
-    public static final int ORDER = SignAopHandler.ORDER;
+    public static final int ORDER = SignAopHandler.ORDER - 1;
 
     public static final String USER_SERVICE_NAME = "loginHandlerUserServiceImpl";
 
     private IUserService userService;
+
+    private IHeaderService<? extends IHeaderService.AHeaderParam> headerService;
 
     private FilterProperties filterProperties;
 
@@ -73,9 +76,8 @@ public class LoginAopHandler {
         // 登录检查
 //        boolean mustLogin = null != login && login.value();
 
-        String token = SpringUtils.getRequest().getHeader("token");
-        // 无token参数
-        if (StringUtils.isNull(token)) {
+        // 没有用户标识
+        if (!headerService.hasUserId()) {
             if (null == login)
                 return;
             // 标识无须登录
@@ -88,7 +90,7 @@ public class LoginAopHandler {
             ErrUtils.appThrow(code);
         }
 
-        IUserService.UserToken user = userService.user(token);
+        IUserService.UserToken user = userService.user(headerService.cache());
         // token无效
         if (null == user || !userService.isAccessValid(user)) {
             ErrUtils.appThrow(userService.errTokenInvalid());

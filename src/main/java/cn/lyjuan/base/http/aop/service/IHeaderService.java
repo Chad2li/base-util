@@ -23,6 +23,13 @@ public interface IHeaderService<T extends IHeaderService.AHeaderParam> {
      */
     T cache();
 
+    /**
+     * 请求头部中是否有用户标识
+     *
+     * @return
+     */
+    boolean hasUserId();
+
     @Data
     @NoArgsConstructor
     abstract class AHeaderParam {

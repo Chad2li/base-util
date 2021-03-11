@@ -7,14 +7,14 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public interface IUserService<T extends IUserService.UserToken> {
+public interface IUserService<T extends IUserService.UserToken, E extends IHeaderService.AHeaderParam> {
     /**
-     * 根据access token 获取用户信息
+     * 根据请求头部参数 获取用户信息
      *
-     * @param access
+     * @param header
      * @return
      */
-    <T extends UserToken> T user(String access);
+    T user(E header);
 
     /**
      * 将用户信息存入cache
@@ -28,7 +28,7 @@ public interface IUserService<T extends IUserService.UserToken> {
      *
      * @return
      */
-    <T extends UserToken> T getCache();
+    T getCache();
 
     /**
      * 验证token是否过期
