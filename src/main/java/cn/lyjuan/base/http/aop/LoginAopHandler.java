@@ -28,19 +28,20 @@ import java.util.List;
 @Data
 @Aspect
 @Order(LoginAopHandler.ORDER)
-public class LoginAopHandler {
+public class LoginAopHandler<H extends IHeaderService.AHeaderParam> {
     public static final int ORDER = SignAopHandler.ORDER - 1;
 
     public static final String USER_SERVICE_NAME = "loginHandlerUserServiceImpl";
 
     private IUserService userService;
 
-    private IHeaderService<? extends IHeaderService.AHeaderParam> headerService;
+    private IHeaderService<H> headerService;
 
     private FilterProperties filterProperties;
 
-    public LoginAopHandler(IUserService userService) {
+    public LoginAopHandler(IUserService userService, IHeaderService<H> headerService) {
         this.userService = userService;
+        this.headerService = headerService;
     }
 
     /**

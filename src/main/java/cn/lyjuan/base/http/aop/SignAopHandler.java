@@ -30,7 +30,7 @@ public class SignAopHandler<H extends IHeaderService.AHeaderParam> {
 
     protected IHeaderService<H> headerService;
 
-    protected ISignService signService;
+    protected ISignService<H> signService;
 
     private FilterProperties filterProperties;
 
@@ -58,7 +58,7 @@ public class SignAopHandler<H extends IHeaderService.AHeaderParam> {
         // 获取header参数
         H header = headerService.cache();
         // 获取app信息
-        ISignService.App app = signService.app(header.getAppId());
+        ISignService.App app = signService.app(header);
         if (null == app || !app.isValid())
             ErrUtils.appThrow(BaseCode.APP_ID_INVALID);
         // 获取url参数

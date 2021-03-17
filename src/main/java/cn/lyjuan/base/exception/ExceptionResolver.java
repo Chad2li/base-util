@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -35,6 +36,10 @@ public class ExceptionResolver {
      * 是否为测试环境
      */
     private boolean isDebug = false;
+    /**
+     * true应用程序自行处理参数验证失败异常：比如国际化参数错误消息
+     */
+    private boolean customValidationMsg = false;
 
     /**
      * 拦截所有 Exception
@@ -101,15 +106,15 @@ public class ExceptionResolver {
         if (e instanceof AppException) {
             AppException info = (AppException) e;
 
-            log.error("WARN: " + info.getCode() + "-" + info.getLog(), info.getThrowable());
+            log.warn("WARN: " + info.getCode() + "-" + info.getLog(), info.getThrowable());
         } else if (isParamErr(e))// 缺少参数
         {
-            log.error("WARN: " + SpringUtils.getRequest().getRequestURI() + ": " + e.getMessage());
+            log.warn("WARN: " + SpringUtils.getRequest().getRequestURI() + ": " + e.getMessage());
         } else if (e instanceof HttpRequestMethodNotSupportedException)// 不支付的请求方法
         {
             log.warn("WARN: [{}] not supported [{}] method", SpringUtils.getRequest().getRequestURI(), SpringUtils.getRequest().getMethod());
         } else if (e instanceof NoHandlerFoundException) {
-            log.warn("WARN: [[]] not found", SpringUtils.getRequest().getRequestURI());
+            log.warn("WARN: [{}] not found", SpringUtils.getRequest().getRequestURI());
         } else {
             log.error("Error: " + e.getMessage(), e);
         }
@@ -140,8 +145,12 @@ public class ExceptionResolver {
      */
     private String parseParamErrDebugMsg(Exception e) {
         if (e instanceof MethodArgumentNotValidException) {
+            // 自行处理还是默认处理
             StringBuilder sb = new StringBuilder();
-            ((MethodArgumentNotValidException) e).getAllErrors().forEach(item -> {
+            for (ObjectError item : ((MethodArgumentNotValidException) e).getAllErrors()) {
+                if (customValidationMsg)
+                    return item.getDefaultMessage();
+
                 Object[] args = item.getArguments();
                 if (!StringUtils.isNull(args)) {
                     sb.append("[");
@@ -158,9 +167,10 @@ public class ExceptionResolver {
                 }
                 String objName = item.getObjectName();
                 String defMsg = item.getDefaultMessage();
+
                 log.warn("objName:{} args:{} defMsg:{}", objName, StringUtils.toStr(args), defMsg);
                 sb.append(defMsg).append(",");
-            });
+            }
             if (sb.length() > 0) {
                 sb.deleteCharAt(sb.length() - 1);
             }
