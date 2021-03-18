@@ -116,6 +116,15 @@ public class BaseRes<T> {
     public BaseRes() {
     }
 
+    /**
+     * 是否为成功响应
+     *
+     * @return
+     */
+    public boolean isSucc() {
+        return IAppCode.fullCode(BaseCode.SUCC).equals(this.code);
+    }
+
     public T getData() {
         return data;
     }
