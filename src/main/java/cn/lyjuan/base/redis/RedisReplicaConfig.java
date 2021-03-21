@@ -25,7 +25,7 @@ public class RedisReplicaConfig {
     /**
      * 连接主机
      */
-    @Value("${reids.hostname")
+    @Value("${redis.hostname}")
     private String hostname;
     /**
      * 连接端口
@@ -57,7 +57,7 @@ public class RedisReplicaConfig {
      */
     @Value("${redis.lettuce.pool.max-wait-millis}")
     private int maxWaitMillis;
-    @Value("${redis.cluster.auth}")
+    @Value("${redis.auth}")
     private String auth;
 
     public GenericObjectPoolConfig<?> genericObjectPoolConfig() {
