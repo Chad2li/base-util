@@ -79,7 +79,7 @@ public class RedisReplicaConfig {
     public LettuceConnectionFactory lettuceConnectionFactory() {
         LettuceClientConfiguration clientConfig = LettucePoolingClientConfiguration.builder()
                 .poolConfig(genericObjectPoolConfig())
-                .readFrom(ReadFrom.REPLICA_PREFERRED)
+                .readFrom(ReadFrom.UPSTREAM_PREFERRED)
 //                .clientOptions(clientOptions)
                 .commandTimeout(Duration.ofSeconds(commandTimeout)) //默认RedisURI.DEFAULT_TIMEOUT 60
                 .build();
