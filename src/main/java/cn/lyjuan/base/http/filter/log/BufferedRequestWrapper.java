@@ -1,14 +1,13 @@
 package cn.lyjuan.base.http.filter.log;
 
+import cn.lyjuan.base.util.ArrayUtils;
 import cn.lyjuan.base.util.SpringUtils;
 import cn.lyjuan.base.util.StringUtils;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.Arrays;
 
 /**
@@ -31,6 +30,8 @@ public class BufferedRequestWrapper extends ContentCachingRequestWrapper {
     }
 
     private void wrapperInputStream() {
+        if (null != this.inputStream)
+            return;
         try {
             InputStream is = super.getInputStream();
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -48,14 +49,13 @@ public class BufferedRequestWrapper extends ContentCachingRequestWrapper {
     @Override
     public byte[] getContentAsByteArray() {
         byte[] bytes = super.getContentAsByteArray();
-        // spring在获取 getParameters 后无法再次获取输入流数据
-        if (null == bytes || bytes.length < 1) {
-            wrapperInputStream();
-            bytes = SpringUtils.reqBody(this).getBytes();
+        if (null != bytes && bytes.length > 0) {
             return bytes;
         }
-
-        return new byte[0];
+        // spring在获取 getParameters 后无法再次获取输入流数据
+        wrapperInputStream();
+        bytes = SpringUtils.reqBody(this).getBytes();
+        return bytes;
 //        String body = SpringUtils.reqBody(this);
 //        return StringUtils.isNull(body) ? new byte[0] : body.getBytes();
     }

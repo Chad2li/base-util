@@ -19,6 +19,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -68,7 +72,7 @@ public class LoggingFilter implements Filter {
             log.info("RES: {} [{}]", resultJson, divide);
     }
 
-    private void logReq(ContentCachingRequestWrapper req) {
+    private void logReq(ContentCachingRequestWrapper req) throws UnsupportedEncodingException {
         // 注意隐藏用户的pwd、token等信息
         // 忽略文件上传内容（易内存溢出）
 
@@ -99,7 +103,8 @@ public class LoggingFilter implements Filter {
         Map<String, String> params = SpringUtils.getParam(req);
         String body = null;
         if (!"GET".equalsIgnoreCase(method)) {
-            body = new String(req.getContentAsByteArray());
+            //            body = SpringUtils.reqBody(req);
+            body = new String(((ContentCachingRequestWrapper) req).getContentAsByteArray());
         }
         if (null != params && params.size() > 0) {
             for (Iterator<Map.Entry<String, String>> it = params.entrySet().iterator(); it.hasNext(); ) {
@@ -109,7 +114,7 @@ public class LoggingFilter implements Filter {
         }
 
         if (!StringUtils.isNull(body)) {
-            log.debug("--body {}", body);
+            log.debug("--body {}", URLDecoder.decode(body, StandardCharsets.UTF_8.name()));
         }
 
     }

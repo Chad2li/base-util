@@ -144,9 +144,9 @@ public class RedisOps {
         ValueOperations<String, String> oper = redisTemplate.opsForValue();
         Boolean result;
         if (nx)
-            result = oper.setIfPresent(key, JsonUtils.to(value), expireSeconds, TimeUnit.SECONDS);
-        else
             result = oper.setIfAbsent(key, JsonUtils.to(value), expireSeconds, TimeUnit.SECONDS);
+        else
+            result = oper.setIfPresent(key, JsonUtils.to(value), expireSeconds, TimeUnit.SECONDS);
 
         return result;
     }
