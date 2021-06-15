@@ -271,7 +271,12 @@ public class RedisOps {
      * @param hashKey
      */
     public Long hmDel(String key, Object... hashKey) {
-        return redisTemplate.opsForHash().delete(key, JsonUtils.to(hashKey));
+        String[] hashKeys = new String[hashKey.length];
+        int i = 0;
+        for (Object o : hashKey) {
+            hashKeys[i++] = JsonUtils.to(o);
+        }
+        return redisTemplate.opsForHash().delete(key, hashKeys);
     }
 
     /**
