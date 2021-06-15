@@ -2,12 +2,8 @@ package cn.lyjuan.base.util;
 
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.CollectionUtils;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
@@ -184,8 +180,9 @@ public class HttpUtils {
                 log.debug(method + "请求 URL >> " + url + " params >> " + params + " headers >> " + headers);
         }
 
+        String result = "";
         params = null == params ? "" : params;
-        StringBuilder result = new StringBuilder();
+
         try {
             // 打开连接，并设置参数
             URL httpUrl = new URL(url);
@@ -199,7 +196,7 @@ public class HttpUtils {
                 if (!HTTP_METHOD_GET.equalsIgnoreCase(method))
                     conn.setDoOutput(true);// 设置可输出
             }
-            if (!CollectionUtils.isEmpty(headers)) {
+            if (null != headers && !headers.isEmpty()) {
                 for (Map.Entry<String, String> h : headers.entrySet()) {
                     if (StringUtils.isNull(h.getKey())
                             || StringUtils.isNull(h.getValue()))
@@ -218,11 +215,8 @@ public class HttpUtils {
             }
 
             // 输入
-            BufferedReader in = new BufferedReader(new InputStreamReader(conn
-                    .getInputStream(), charset));
-            String line = null;
-            while (null != (line = in.readLine()))
-                result.append(line);
+            InputStream in = conn.getInputStream();
+            result = inputString(in, charset);
 
             in.close();
 
@@ -234,10 +228,14 @@ public class HttpUtils {
                     + " error >> " + e.getMessage());
             throw new RuntimeException(e);
         }
+        if (null == result) {
+            log.debug("result >> null");
+        } else if (result.length() > 100) {
+            log.debug("result >> " + result.substring(0, 100));
+        } else
+            log.debug("result >> " + result);
 
-        log.info("result >> " + result.toString());
-
-        return result.toString();
+        return result;
     }
 
     /**
@@ -251,7 +249,7 @@ public class HttpUtils {
      */
     public static String sendGet(String url, String encode) {
 //        log.severe(HTTP_METHOD_GET + "请求 URL >> " + url);
-        StringBuilder result = new StringBuilder();
+        String result = "";
         try {
             // 打开连接，设置参数
             URL httpUrl = new URL(url);
@@ -267,11 +265,7 @@ public class HttpUtils {
             conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Safari/605.1.15");
             conn.connect();
 
-            String line = null;
-            BufferedReader in = new BufferedReader(new InputStreamReader(conn
-                    .getInputStream(), encode));
-            while (null != (line = in.readLine()))
-                result.append(line);
+            result = inputString(conn.getInputStream(), encode);
 
             // 关闭连接
             conn.getInputStream().close();
@@ -280,8 +274,34 @@ public class HttpUtils {
             log.warn("网络异常 url >> " + url + " error >> " + e.getMessage());
             throw new RuntimeException(e);
         }
-//        log.severe("result >> " + result.toString());
-        return result.toString();
+        if (null == result) {
+            log.debug("result >> null");
+        } else if (result.length() > 100) {
+            log.debug("result >> " + result.substring(0, 100));
+        } else
+            log.debug("result >> " + result);
+        return result;
+    }
+
+    /**
+     * 将输入流读取为指定编码的字符串
+     *
+     * @param in
+     * @param charset
+     * @return
+     */
+    public static String inputString(InputStream in, String charset) {
+        ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+        byte[] bs = new byte[1024];
+        int len = -1;
+        try {
+            while (-1 != (len = in.read(bs)))
+                byteOut.write(bs, 0, len);
+
+            return new String(byteOut.toByteArray(), charset);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**

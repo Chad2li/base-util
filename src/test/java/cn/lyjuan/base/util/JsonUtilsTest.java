@@ -1,8 +1,12 @@
 package cn.lyjuan.base.util;
 
+import com.alibaba.druid.sql.visitor.functions.Char;
 import com.google.gson.reflect.TypeToken;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.internal.builders.JUnit3Builder;
+import org.junit.jupiter.api.Assertions;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -11,10 +15,8 @@ import java.time.format.DateTimeFormatter;
 /**
  * Created by chad on 2016/8/12.
  */
-public class JsonUtilsTest
-{
-    public static class UserBean
-    {
+public class JsonUtilsTest {
+    public static class UserBean {
         private String name;
 
         private int age;
@@ -23,7 +25,8 @@ public class JsonUtilsTest
 
         private LocalDateTime time;
 
-        public UserBean() {}
+        public UserBean() {
+        }
 
         public String getName() {
             return name;
@@ -79,8 +82,7 @@ public class JsonUtilsTest
     private static String TIME = "1991-10-22 14:58:59";
 
     @Test
-    public void to()
-    {
+    public void to() {
         String strVal = "abc";
         int intVal = 1;
         byte byteVal = 2;
@@ -104,17 +106,16 @@ public class JsonUtilsTest
         Assert.assertEquals(DateUtils.format(now, DateUtils.FMT_DATE_TIME), JsonUtils.to(now));
 
         UserBean user = new UserBean("张三", 19);
-        String expect = "{\"name\":\""+user.getName()+"\",\"age\":"+user.getAge()+",\"date\":\""+DATE+"\",\"time\":\""+TIME+"\"}";
+        String expect = "{\"name\":\"" + user.getName() + "\",\"age\":" + user.getAge() + ",\"date\":\"" + DATE + "\",\"time\":\"" + TIME + "\"}";
         String json = JsonUtils.to(user);
 
         Assert.assertEquals(expect, json);
     }
 
     @Test
-    public void from_class_str()
-    {
+    public void from_class_str() {
         UserBean except = new UserBean("张三", 19);
-        String json = "{\"name\":\""+except.getName()+"\",\"age\":"+except.getAge()+",\"date\":\""+DATE+"\",\"time\":\""+TIME+"\"}";
+        String json = "{\"name\":\"" + except.getName() + "\",\"age\":" + except.getAge() + ",\"date\":\"" + DATE + "\",\"time\":\"" + TIME + "\"}";
 
         UserBean user = JsonUtils.from(UserBean.class, json);
         System.out.println(StringUtils.toStr(user));
@@ -123,13 +124,57 @@ public class JsonUtilsTest
     }
 
     @Test
-    public void from_type_json()
-    {
+    public void from_type_json() {
         UserBean except = new UserBean("张三", 19);
-        String json = "{\"name\":\""+except.getName()+"\",\"age\":"+except.getAge()+",\"date\":\""+DATE+"\",\"time\":\""+TIME+"\"}";
+        String json = "{\"name\":\"" + except.getName() + "\",\"age\":" + except.getAge() + ",\"date\":\"" + DATE + "\",\"time\":\"" + TIME + "\"}";
 
-        UserBean user = JsonUtils.from(new TypeToken<UserBean>(){}.getType(), json);
+        UserBean user = JsonUtils.from(new TypeToken<UserBean>() {
+        }.getType(), json);
 
         Assert.assertEquals(StringUtils.toStr(except), StringUtils.toStr(user));
+    }
+
+    @Test
+    public void simple_type() {
+        String val = "";
+        // String start with /
+        val = "/abc";
+        String val2 = JsonUtils.from(String.class, val);
+        Assert.assertEquals(val, val2);
+        // int
+        val = "1";
+        Integer intVal = JsonUtils.from(Integer.class, val);
+        Assert.assertEquals(1, (int) intVal);
+
+        val = "2021-01-01 11:22:33";
+        LocalDateTime now = JsonUtils.from(LocalDateTime.class, val);
+        Assert.assertEquals(val, DateUtils.format(now, "yyyy-MM-dd HH:mm:ss"));
+
+        val = "true";
+        Boolean booleanVal = JsonUtils.from(Boolean.class, val);
+        Assert.assertTrue(booleanVal);
+        val = "false";
+        booleanVal = JsonUtils.from(Boolean.class, val);
+        Assert.assertFalse(booleanVal);
+
+        val = "1";
+        Long longVal = JsonUtils.from(Long.class, val);
+        Assert.assertEquals(1, (long) longVal);
+
+        val = "1.0";
+        Double doubleVal = JsonUtils.from(Double.class, val);
+        Assert.assertEquals(1.0, (double) doubleVal, 0);
+
+        val = "a";
+        Character charVal = JsonUtils.from(Character.class, val);
+        Assert.assertEquals('a', (char) charVal);
+
+        val = "1";
+        Short shortVal = JsonUtils.from(Short.class, val);
+        Assert.assertEquals(1, (short) shortVal);
+
+        val = "1.1";
+        Float floatVal = JsonUtils.from(Float.class, val);
+        Assert.assertEquals(1.1, (float) floatVal, 0.0001);
     }
 }

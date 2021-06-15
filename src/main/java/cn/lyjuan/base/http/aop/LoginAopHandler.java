@@ -75,17 +75,12 @@ public class LoginAopHandler<H extends IHeaderService.AHeaderParam> {
             login = target.getClass().getDeclaredAnnotation(Login.class);
 
         // 登录检查
-//        boolean mustLogin = null != login && login.value();
+        boolean mustLogin = mustLogin(login);
 
         // 没有用户标识
         if (!headerService.hasUserId()) {
-            if (null == login)
+            if (!mustLogin)
                 return;
-            // 标识无须登录
-            for (String l : login.value()) {
-                if (Login.TYPE_UNLOGIN.equalsIgnoreCase(l))
-                    return;
-            }
             // 必须登录
             IAppCode code = userService.errNeedLogin();
             ErrUtils.appThrow(code);
@@ -94,10 +89,14 @@ public class LoginAopHandler<H extends IHeaderService.AHeaderParam> {
         IUserService.UserToken user = userService.user(headerService.cache());
         // token无效
         if (null == user || !userService.isAccessValid(user)) {
+            // 无须登录权限
+            if (!mustLogin) return;
+            // 必须登录
             ErrUtils.appThrow(userService.errTokenInvalid());
         }
+        // token有效
         // 接口无需权限
-        if (null == login) {
+        if (!mustLogin) {
             userService.setCache(user);
             return;
         }
@@ -123,5 +122,22 @@ public class LoginAopHandler<H extends IHeaderService.AHeaderParam> {
         }
         // 无权访问
         ErrUtils.appThrow(userService.errIllegalPermission());
+    }
+
+    /**
+     * 是否必须登录权限
+     *
+     * @param login
+     * @return true 必须登录权限
+     */
+    public static boolean mustLogin(Login login) {
+        boolean mustLogin = null != login;
+        if (mustLogin) {
+            for (String l : login.value()) {
+                if (Login.TYPE_UNLOGIN.equalsIgnoreCase(l))
+                    mustLogin = false;
+            }
+        }
+        return mustLogin;
     }
 }

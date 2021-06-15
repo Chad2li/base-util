@@ -1,6 +1,7 @@
 package cn.lyjuan.base.redis;
 
 import io.lettuce.core.ReadFrom;
+import lombok.Data;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -15,6 +16,7 @@ import java.time.Duration;
 /**
  * Redis读写分离
  */
+@Data
 @PropertySource({"classpath:redis-replica.properties"})
 public class RedisReplicaConfig {
     /**

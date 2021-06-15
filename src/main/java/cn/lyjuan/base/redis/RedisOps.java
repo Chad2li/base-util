@@ -135,18 +135,19 @@ public class RedisOps {
      *
      * @param key
      * @param value
-     * @param nx            true存在才设置；false不存在才设置
+     * @param xx            true强制存在才设置；false强制不存在才设置
      * @param expireSeconds 过期秒数
      * @param <T>
      * @return true设置成功
      */
-    public <T> boolean set(final String key, final T value, boolean nx, Integer expireSeconds) {
+    public <T> boolean set(final String key, final T value, boolean xx, Integer expireSeconds) {
         ValueOperations<String, String> oper = redisTemplate.opsForValue();
         Boolean result;
-        if (nx)
-            result = oper.setIfAbsent(key, JsonUtils.to(value), expireSeconds, TimeUnit.SECONDS);
-        else
+        if (xx)// 存在才改变值
             result = oper.setIfPresent(key, JsonUtils.to(value), expireSeconds, TimeUnit.SECONDS);
+        else// 不存在才改变值
+            result = oper.setIfAbsent(key, JsonUtils.to(value), expireSeconds, TimeUnit.SECONDS);
+
 
         return result;
     }
@@ -270,7 +271,7 @@ public class RedisOps {
      * @param hashKey
      */
     public Long hmDel(String key, Object... hashKey) {
-        return redisTemplate.opsForHash().delete(key, hashKey);
+        return redisTemplate.opsForHash().delete(key, JsonUtils.to(hashKey));
     }
 
     /**
