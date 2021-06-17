@@ -6,9 +6,9 @@ if [ -n "$1" ]; then
 fi
 
 if [ "install" == $task ]; then
-  mvn clean -Dmaven.test.skip=true -Pprod install
+  mvn clean -Dmaven.test.skip=true install
 fi
 if [ "deploy" == $task ]; then
-  mvn clean -Dmaven.test.skip=true -Pprod deploy
+  mvn clean -Dmaven.test.skip=true deploy
 fi
 echo -e "==========================\nThis build shell skip test!!!\n=========================="

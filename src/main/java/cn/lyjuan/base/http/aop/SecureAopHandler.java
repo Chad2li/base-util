@@ -25,15 +25,14 @@ import java.time.LocalDateTime;
 @Data
 @Aspect
 @Order(SecureAopHandler.ORDER)
-public class SecureAopHandler {
+public class SecureAopHandler<H extends IHeaderService.AHeaderParam> {
     public static final int ORDER = 10000;
-
     /**
      * 测试环境标识
      */
     protected boolean isDebug = false;
 
-    protected IHeaderService headerService;
+    protected IHeaderService<H> headerService;
 
     private ISecureService secureService;
 
@@ -67,19 +66,20 @@ public class SecureAopHandler {
             log.warn("Skip secure handler for debug");
             return;
         }
-        IHeaderService.AHeaderParam header = headerService.cache();
+        H header = headerService.cache();
         // timestamp丢弃超时
         long duration = DateUtils.time2long(LocalDateTime.now()) - header.getTimestamp();
         duration /= 1000;
         if (duration > timestampTimeoutSeconds) {
             ErrUtils.appThrow(BaseCode.TIMESTAMP_TIMEOUT);
         }
+        String fullRequestId = secureService.fullRequestId(header);
         // requestId防重
-        long ttl = secureService.ttl(header.getRequestId());
-        if (-2 != ttl)
+        boolean isExists = secureService.exists(fullRequestId);
+        if (isExists)
             ErrUtils.appThrow(BaseCode.REQUESTID_DUPLICATE);
         // 缓存
-        secureService.cache(header.getRequestId(), timestampTimeoutSeconds + 10);
+        secureService.cache(fullRequestId, timestampTimeoutSeconds + 10);
         if (log.isDebugEnabled())
             log.debug("cache requestId: {}", header.getRequestId());
     }
