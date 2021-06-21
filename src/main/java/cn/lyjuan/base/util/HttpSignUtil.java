@@ -6,6 +6,7 @@ import lombok.val;
 
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
@@ -59,6 +60,12 @@ public class HttpSignUtil {
             if ("sign".equalsIgnoreCase(name)
                     || "md5".equalsIgnoreCase(name)
                     || "md5Sign".equalsIgnoreCase(name))// 跳过sign签名字段
+                continue;
+
+            Field field = ReflectUtils.field(header.getClass(), name);
+            if (Modifier.isStatic(field.getModifiers()))// 跳过static
+                continue;
+            if (Modifier.isTransient(field.getModifiers()))// 跳过 transient
                 continue;
             map.put(name, value.toString());
         }
