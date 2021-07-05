@@ -94,8 +94,6 @@ public class ArrayUtils {
 
         String[] arr = str.split(separate);
 
-        if (StringUtils.isNull(arr)) return null;
-
         return arrUnnull(arr);
     }
 }

@@ -54,7 +54,6 @@ public class RedisIdsOps {
         HashOperations<String, String, String> hash = redisTemplate.opsForHash();
         String ids = hash.get(redisKey, JsonUtils.to(hashKey));
 
-        System.out.println(ids);
         if (StringUtils.isNull(ids)) return Collections.EMPTY_LIST;
         String[] arr = ids.split(",");
         List<Integer> list = new ArrayList<>(arr.length);

@@ -114,7 +114,7 @@ public class SpringTestUtil {
      */
     public static TreeMap<String, String> query(Object... values) {
         TreeMap<String, String> query = new TreeMap<>();
-        if (StringUtils.isNull(values))
+        if (StringUtils.isNullArray(values))
             return query;
 
         for (int i = 0; i < values.length; i += 2) {

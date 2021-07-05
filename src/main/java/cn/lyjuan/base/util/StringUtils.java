@@ -121,7 +121,11 @@ public class StringUtils {
      * @return
      */
     public static boolean isNull(Object str) {
-        return str == null || str.toString().trim().length() < 1;
+        if (str == null || str.toString().trim().length() < 1)
+            return true;
+
+        // array
+        return isNullArray(str);
     }
 
     /**

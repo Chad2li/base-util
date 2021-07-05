@@ -65,7 +65,8 @@ public class RedisOps {
      * @param keys
      */
     public void del(final String... keys) {
-        if (null == keys || keys.length < 1) return;
+        if (StringUtils.isNullArray(keys))
+            throw new RuntimeException("Redis del keys cannot be null");
         if (1 == keys.length)
             redisTemplate.delete(keys[0]);
         else
@@ -104,13 +105,13 @@ public class RedisOps {
     /**
      * 一次设置多个键值
      *
-     * @param vals
+     * @param values
      */
-    public void mset(final Object... vals) {
-        if (null == vals || vals.length < 1) return;
-        Map<String, String> map = new HashMap<>(vals.length / 2);
-        for (int i = 0; i < vals.length; i = i + 2) {
-            map.put(StringUtils.toStr(vals[i]), JsonUtils.to(vals[i + 1]));
+    public void mset(final Object... values) {
+        if (StringUtils.isNullArray(values)) return;
+        Map<String, String> map = new HashMap<>(values.length / 2);
+        for (int i = 0; i < values.length; i = i + 2) {
+            map.put(StringUtils.toStr(values[i]), JsonUtils.to(values[i + 1]));
         }
         redisTemplate.opsForValue().multiSet(map);
     }
@@ -184,7 +185,7 @@ public class RedisOps {
      * @param keys
      */
     public void remove(final String... keys) {
-        if (null == keys || keys.length < 1)
+        if (StringUtils.isNullArray(keys))
             throw new RuntimeException("Redis keys cannot be empty");
         if (1 == keys.length)
             redisTemplate.delete(keys[0]);
@@ -338,11 +339,11 @@ public class RedisOps {
      * list.rightPush
      *
      * @param k
-     * @param v
+     * @param values
      * @param <T>
      */
-    public <T> void lPush(String k, T... v) {
-        lPush(true, k, v);
+    public <T> void lPush(String k, T... values) {
+        lPush(true, k, values);
     }
 
 //    public <T> void lPush(String k, Collection<T> vs) {
@@ -354,25 +355,25 @@ public class RedisOps {
      *
      * @param isRight true使用 rightPush；false使用leftPush
      * @param k
-     * @param v
+     * @param values
      */
-    public <T> void lPush(boolean isRight, String k, T... v) {
+    public <T> void lPush(boolean isRight, String k, T... values) {
         ListOperations<String, String> list = redisTemplate.opsForList();
-        if (null == v || v.length < 1) return;
+        if (StringUtils.isNullArray(values)) return;
 
-        if (1 == v.length) {
-            if (StringUtils.isNull(v[0])) return;
-            String vJson = JsonUtils.to(v[0]);
+        if (1 == values.length) {
+            if (StringUtils.isNull(values[0])) return;
+            String vJson = JsonUtils.to(values[0]);
             if (isRight)
                 list.rightPush(k, vJson);
             else
                 list.leftPush(k, vJson);
         } else {
-            String[] vs = new String[v.length];
-            for (int i = 0; i < v.length; i++) {
-                if (StringUtils.isNull(v[i])) continue;
+            String[] vs = new String[values.length];
+            for (int i = 0; i < values.length; i++) {
+                if (StringUtils.isNull(values[i])) continue;
 
-                vs[i] = JsonUtils.to(v[i]);
+                vs[i] = JsonUtils.to(values[i]);
             }
 
             if (isRight)
@@ -455,7 +456,7 @@ public class RedisOps {
      */
     public <T> long sAdd(String k, T... values) {
         SetOperations<String, String> setOper = redisTemplate.opsForSet();
-        if (StringUtils.isNull(values)) return 0;
+        if (StringUtils.isNullArray(values)) return 0;
         String[] vs = new String[values.length];
         for (int i = 0; i < values.length; i++) {
             if (StringUtils.isNull(values[i])) continue;
@@ -474,7 +475,7 @@ public class RedisOps {
      */
     public <T> long sRem(String k, T... values) {
         SetOperations<String, String> setOper = redisTemplate.opsForSet();
-        if (StringUtils.isNull(values)) return 0;
+        if (StringUtils.isNullArray(values)) return 0;
         List<String> list = new ArrayList<>(values.length);
         for (int i = 0; i < values.length; i++) {
             if (StringUtils.isNull(values[i])) continue;

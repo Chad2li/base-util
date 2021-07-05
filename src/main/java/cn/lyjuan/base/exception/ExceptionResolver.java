@@ -152,7 +152,7 @@ public class ExceptionResolver {
                     return item.getDefaultMessage();
 
                 Object[] args = item.getArguments();
-                if (!StringUtils.isNull(args)) {
+                if (!StringUtils.isNullArray(args)) {
                     sb.append("[");
                     for (Object o : args) {
                         if (o instanceof DefaultMessageSourceResolvable) {
