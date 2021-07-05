@@ -5,32 +5,38 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
-public interface IUserService<T extends IUserService.UserToken> {
+public interface IUserService<T extends IUserService.UserToken, E extends IHeaderService.AHeaderParam> {
     /**
-     * 根据access token 获取用户信息
-     * @param access
+     * 根据请求头部参数 获取用户信息
+     *
+     * @param header
      * @return
      */
-    <T extends UserToken> T user(String access);
+    T user(E header);
 
     /**
      * 将用户信息存入cache
+     *
      * @param user
      */
     void setCache(T user);
 
     /**
      * 将用户信息存入缓存
+     *
      * @return
      */
-    <T extends UserToken> T getCache();
+    T getCache();
 
     /**
      * 验证token是否过期
-     * @return  true未过期
+     *
+     * @param user
+     * @return true未过期
      */
-    boolean isAccessValid(LocalDateTime tokenCreatetime);
+    boolean isAccessValid(T user);
 
     /**
      * 需要登录
@@ -44,13 +50,14 @@ public interface IUserService<T extends IUserService.UserToken> {
 
     /**
      * 无权访问
+     *
      * @return
      */
     IAppCode errIllegalPermission();
 
     @Data
     @NoArgsConstructor
-    abstract class UserToken{
+    abstract class UserToken {
         /**
          * 用户ID
          */
@@ -58,12 +65,10 @@ public interface IUserService<T extends IUserService.UserToken> {
         /**
          * 登陆类型
          */
-        protected String[] loginType;
-        protected String access;
-        protected String refresh;
+        protected List<String> loginTypes;
         /**
-         * token的创建时间，用于有效斯的判断
+         * 缓存时间
          */
-        protected LocalDateTime tokenCreatetime;
+        protected LocalDateTime cacheTime = LocalDateTime.now();
     }
 }

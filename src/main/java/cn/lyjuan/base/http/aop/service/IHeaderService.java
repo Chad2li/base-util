@@ -10,18 +10,25 @@ import javax.servlet.http.HttpServletRequest;
 /**
  * 请求头部信息缓存服务
  */
-public interface IHeaderService<T extends IHeaderService.AHeaderParam> {
+public interface IHeaderService<H extends IHeaderService.AHeaderParam> {
     /**
      * 缓存
      *
      * @param headerParam
      */
-    void cache(T headerParam);
+    void cache(H headerParam);
 
     /**
      * 取出
      */
-    T cache();
+    H cache();
+
+    /**
+     * 请求头部中是否有用户标识
+     *
+     * @return
+     */
+    boolean hasUserId();
 
     @Data
     @NoArgsConstructor

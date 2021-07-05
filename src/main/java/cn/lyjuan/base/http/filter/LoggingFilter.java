@@ -1,18 +1,28 @@
 package cn.lyjuan.base.http.filter;
 
-import cn.lyjuan.base.http.filter.wrapper.RequestWrapper;
-import cn.lyjuan.base.http.filter.wrapper.ResponseWrapper;
+import cn.lyjuan.base.http.filter.log.BufferedRequestWrapper;
+import cn.lyjuan.base.util.HttpUtils;
 import cn.lyjuan.base.util.JsonUtils;
 import cn.lyjuan.base.util.SpringUtils;
 import cn.lyjuan.base.util.StringUtils;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpHeaders;
+import org.springframework.web.filter.CorsFilter;
+import org.springframework.web.util.ContentCachingRequestWrapper;
+import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import javax.servlet.*;
 import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -23,12 +33,13 @@ import java.util.Map;
  * 2. 打印日志信息
  */
 @Slf4j
+@Data
 @WebFilter(urlPatterns = {"*"}, filterName = LoggingFilter.NAME)
 @Order(LoggingFilter.ORDER)
 public class LoggingFilter implements Filter {
     public static final String NAME = "baseLoggingFilterName";
 
-    public static final int ORDER = 1000;
+    public static final int ORDER = 100;
     /**
      * 打印最大长度
      */
@@ -41,6 +52,8 @@ public class LoggingFilter implements Filter {
      * 超出长度后截后多少个
      */
     private int sufLe = 10;
+
+    private FilterProperties filterProperties;
 
     /**
      * 打印响应信息
@@ -59,14 +72,15 @@ public class LoggingFilter implements Filter {
             log.info("RES: {} [{}]", resultJson, divide);
     }
 
-    private void logReq(RequestWrapper req) {
+    private void logReq(ContentCachingRequestWrapper req) throws UnsupportedEncodingException {
         // 注意隐藏用户的pwd、token等信息
         // 忽略文件上传内容（易内存溢出）
 
         // 获取请求：
         // 路径信息
         String url = req.getRequestURI();
-//        String path = req.getContextPath();
+//        url = req.getServletPath();
+//        url = req.getContextPath();
         String method = req.getMethod();
         // 头部信息：
         Map<String, String> header = pkgHeader(req);
@@ -86,11 +100,12 @@ public class LoggingFilter implements Filter {
             log.debug("--head {}: {}", entry.getKey(), entry.getValue());
         }
 
-
         Map<String, String> params = SpringUtils.getParam(req);
         String body = null;
-        if (!"GET".equalsIgnoreCase(method))
-            body = new String(req.toByteArray());
+        if (!"GET".equalsIgnoreCase(method)) {
+            //            body = SpringUtils.reqBody(req);
+            body = new String(((ContentCachingRequestWrapper) req).getContentAsByteArray());
+        }
         if (null != params && params.size() > 0) {
             for (Iterator<Map.Entry<String, String>> it = params.entrySet().iterator(); it.hasNext(); ) {
                 entry = it.next();
@@ -99,7 +114,7 @@ public class LoggingFilter implements Filter {
         }
 
         if (!StringUtils.isNull(body)) {
-            log.debug("--body {}", body);
+            log.debug("--body {}", URLDecoder.decode(body, StandardCharsets.UTF_8.name()));
         }
 
     }
@@ -154,25 +169,37 @@ public class LoggingFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain) throws IOException, ServletException {
-        //可重复读取 封装
-        RequestWrapper req = new RequestWrapper((HttpServletRequest) request);
-        ResponseWrapper res = new ResponseWrapper((HttpServletResponse) response);
-
-        // 打印请求信息
-        logReq(req);
-
         // 记录处理时间
         long begin = System.currentTimeMillis();
+        //可重复读取 封装
+        BufferedRequestWrapper req = new BufferedRequestWrapper((HttpServletRequest) request);
+        ContentCachingResponseWrapper res = new ContentCachingResponseWrapper((HttpServletResponse) response);
+
+        res.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+        res.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, "*");
+        res.setHeader(HttpHeaders.ACCESS_CONTROL_MAX_AGE, "3600");
+        res.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS, "*");
+
+        boolean isSkip = FilterProperties.isSkip(this.filterProperties, req.getRequestURI());
+        if (!isSkip) {
+            // 打印请求信息
+            logReq(req);
+        }
 
         //将request 传到下一个Filter
         filterChain.doFilter(req, res);
-        // response
-        String result = new String(res.toByteArray());
 
-        // 处理时间
-        long divide = System.currentTimeMillis() - begin;
+        if (!isSkip) {
+            // response
+            String result = new String(res.getContentAsByteArray());
 
-        // 打印响应信息
-        logRes(result, divide);
+            // 处理时间
+            long divide = System.currentTimeMillis() - begin;
+
+            // 打印响应信息
+            logRes(result, divide);
+        }
+
+        res.copyBodyToResponse();
     }
 }

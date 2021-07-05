@@ -1,5 +1,6 @@
 package cn.lyjuan.base.util;
 
+import cn.lyjuan.base.http.filter.log.BufferedRequestWrapper;
 import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -14,6 +15,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Type;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -147,6 +149,30 @@ public class SpringUtils {
 //    }
 
     /**
+     * 获取Request属性
+     *
+     * @param name
+     * @param <T>
+     * @return
+     */
+    public static <T> T reqAttr(String name) {
+        Object val = SpringUtils.getRequest().getAttribute(name);
+        if (null == val) return null;
+        return (T) val;
+    }
+
+    /**
+     * 设置请求属性值
+     *
+     * @param name
+     * @param val
+     * @param <T>
+     */
+    public static <T> void reqAttr(String name, T val) {
+        SpringUtils.getRequest().setAttribute(name, val);
+    }
+
+    /**
      * 获取参数，使用 {@code getParameter()} 方法
      *
      * @param req
@@ -175,6 +201,10 @@ public class SpringUtils {
      * @return
      */
     public static String reqBody(HttpServletRequest req) {
+        if (BufferedRequestWrapper.class.isInstance(req)) {
+            return ((BufferedRequestWrapper) req).getContent();
+        }
+
         InputStream in = null;
         String str = null;
         try {
@@ -197,7 +227,6 @@ public class SpringUtils {
 
             throw new RuntimeException(e);
         }
-
 
         return str;
     }

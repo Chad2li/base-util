@@ -1,11 +1,13 @@
 package cn.lyjuan.base.http.aop;
 
+import cn.lyjuan.base.exception.IAppCode;
 import cn.lyjuan.base.exception.util.ErrUtils;
 import cn.lyjuan.base.http.aop.annotation.Login;
+import cn.lyjuan.base.http.aop.service.IHeaderService;
 import cn.lyjuan.base.http.aop.service.IUserService;
+import cn.lyjuan.base.http.filter.FilterProperties;
 import cn.lyjuan.base.util.SpringUtils;
 import cn.lyjuan.base.util.StringUtils;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
@@ -14,8 +16,10 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.annotation.Order;
+import org.springframework.util.CollectionUtils;
+
+import java.util.List;
 
 /**
  * 登录身份检查
@@ -24,15 +28,20 @@ import org.springframework.core.annotation.Order;
 @Data
 @Aspect
 @Order(LoginAopHandler.ORDER)
-public class LoginAopHandler {
-    public static final int ORDER = SignAopHandler.ORDER;
+public class LoginAopHandler<H extends IHeaderService.AHeaderParam> {
+    public static final int ORDER = SignAopHandler.ORDER - 1;
 
     public static final String USER_SERVICE_NAME = "loginHandlerUserServiceImpl";
 
     private IUserService userService;
 
-    public LoginAopHandler(IUserService userService) {
+    private IHeaderService<H> headerService;
+
+    private FilterProperties filterProperties;
+
+    public LoginAopHandler(IUserService userService, IHeaderService<H> headerService) {
         this.userService = userService;
+        this.headerService = headerService;
     }
 
     /**
@@ -46,6 +55,9 @@ public class LoginAopHandler {
 
     @Before("pointcut()")
     public void handle(JoinPoint jp) {
+        if (FilterProperties.isSkip(this.filterProperties, SpringUtils.getRequest().getRequestURI()))
+            return;
+
         log.debug("login handler");
         // 获取类对象
         Object target = jp.getTarget();
@@ -63,23 +75,28 @@ public class LoginAopHandler {
             login = target.getClass().getDeclaredAnnotation(Login.class);
 
         // 登录检查
-//        boolean mustLogin = null != login && login.value();
+        boolean mustLogin = mustLogin(login);
 
-        String token = SpringUtils.getRequest().getHeader("token");
-        // 无token参数
-        if (StringUtils.isNull(token)) {
-            if (null != login)// 必须登录
-                userService.errNeedLogin();
-            else return;
+        // 没有用户标识
+        if (!headerService.hasUserId()) {
+            if (!mustLogin)
+                return;
+            // 必须登录
+            IAppCode code = userService.errNeedLogin();
+            ErrUtils.appThrow(code);
         }
 
-        IUserService.UserToken user = userService.user(token);
+        IUserService.UserToken user = userService.user(headerService.cache());
         // token无效
-        if (null == user || !userService.isAccessValid(user.getTokenCreatetime())) {
+        if (null == user || !userService.isAccessValid(user)) {
+            // 无须登录权限
+            if (!mustLogin) return;
+            // 必须登录
             ErrUtils.appThrow(userService.errTokenInvalid());
         }
+        // token有效
         // 接口无需权限
-        if (null == login) {
+        if (!mustLogin) {
             userService.setCache(user);
             return;
         }
@@ -90,13 +107,12 @@ public class LoginAopHandler {
             return;
         }
         // 权限判断
-        String[] userTypes = user.getLoginType();
-        if (null == userTypes || userTypes.length < 1) {
-            // 无权访问
+        List<String> loginTypes = user.getLoginTypes();
+        if (CollectionUtils.isEmpty(loginTypes)) {// 无权访问
             ErrUtils.appThrow(userService.errIllegalPermission());
         }
         for (String type : types) {
-            for (String userType : userTypes) {
+            for (String userType : loginTypes) {
                 if (type.equalsIgnoreCase(userType)) {
                     // 有权限
                     userService.setCache(user);
@@ -106,5 +122,22 @@ public class LoginAopHandler {
         }
         // 无权访问
         ErrUtils.appThrow(userService.errIllegalPermission());
+    }
+
+    /**
+     * 是否必须登录权限
+     *
+     * @param login
+     * @return true 必须登录权限
+     */
+    public static boolean mustLogin(Login login) {
+        boolean mustLogin = null != login;
+        if (mustLogin) {
+            for (String l : login.value()) {
+                if (Login.TYPE_UNLOGIN.equalsIgnoreCase(l))
+                    mustLogin = false;
+            }
+        }
+        return mustLogin;
     }
 }

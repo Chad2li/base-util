@@ -4,10 +4,8 @@ import org.apache.ibatis.mapping.MappedStatement;
 import tk.mybatis.mapper.mapperhelper.MapperHelper;
 import tk.mybatis.mapper.provider.ExampleProvider;
 
-public class MyMapperProvider extends ExampleProvider
-{
-    public MyMapperProvider(Class<?> mapperClass, MapperHelper mapperHelper)
-    {
+public class MyMapperProvider extends ExampleProvider {
+    public MyMapperProvider(Class<?> mapperClass, MapperHelper mapperHelper) {
         super(mapperClass, mapperHelper);
     }
 
@@ -17,8 +15,7 @@ public class MyMapperProvider extends ExampleProvider
      * @param ms
      * @return
      */
-    public String selectOneByExample(MappedStatement ms)
-    {
+    public String selectOneByExample(MappedStatement ms) {
         return selectByExample(ms);
     }
 }

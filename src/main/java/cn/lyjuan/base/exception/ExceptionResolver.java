@@ -5,10 +5,15 @@ import cn.lyjuan.base.exception.impl.AppException;
 import cn.lyjuan.base.exception.impl.BaseCode;
 import cn.lyjuan.base.http.vo.res.BaseRes;
 import cn.lyjuan.base.util.SpringUtils;
+import cn.lyjuan.base.util.StringUtils;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.ServletRequestBindingException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -16,6 +21,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
+
+import javax.validation.ConstraintViolationException;
 
 /**
  * Created by ly on 2015/1/11.
@@ -29,6 +36,10 @@ public class ExceptionResolver {
      * 是否为测试环境
      */
     private boolean isDebug = false;
+    /**
+     * true应用程序自行处理参数验证失败异常：比如国际化参数错误消息
+     */
+    private boolean customValidationMsg = false;
 
     /**
      * 拦截所有 Exception
@@ -65,7 +76,7 @@ public class ExceptionResolver {
             if (!isDebug) {
                 base.setMsg(BaseCode.PARAM_INVALID.msg());
             } else {
-                base.setMsg(e.getMessage());
+                base.setMsg(parseParamErrDebugMsg(e));
             }
         } else if (e instanceof HttpRequestMethodNotSupportedException)// 不支持的请求方法
         {
@@ -95,15 +106,15 @@ public class ExceptionResolver {
         if (e instanceof AppException) {
             AppException info = (AppException) e;
 
-            log.error("WARN: " + info.getCode() + "-" + info.getLog(), info.getThrowable());
+            log.warn("WARN: " + info.getCode() + "-" + info.getLog(), info.getThrowable());
         } else if (isParamErr(e))// 缺少参数
         {
-            log.error("WARN: " + SpringUtils.getRequest().getRequestURI() + ": " + e.getMessage());
+            log.warn("WARN: " + SpringUtils.getRequest().getRequestURI() + ": " + e.getMessage());
         } else if (e instanceof HttpRequestMethodNotSupportedException)// 不支付的请求方法
         {
             log.warn("WARN: [{}] not supported [{}] method", SpringUtils.getRequest().getRequestURI(), SpringUtils.getRequest().getMethod());
         } else if (e instanceof NoHandlerFoundException) {
-            log.warn("WARN: [[]] not found", SpringUtils.getRequest().getRequestURI());
+            log.warn("WARN: [{}] not found", SpringUtils.getRequest().getRequestURI());
         } else {
             log.error("Error: " + e.getMessage(), e);
         }
@@ -116,11 +127,60 @@ public class ExceptionResolver {
      * @return true参数错误
      */
     private boolean isParamErr(Exception e) {
-        return e instanceof MissingServletRequestParameterException
-                || e instanceof ServletRequestBindingException
-                || e instanceof BindException
-                || e instanceof MethodArgumentTypeMismatchException
+        return e instanceof MissingServletRequestParameterException// 少参数
+                || e instanceof ServletRequestBindingException// 少参数
+                || e instanceof BindException// 少参数
+                || e instanceof MethodArgumentTypeMismatchException// 少参数
+                || e instanceof ConstraintViolationException// validation检验不通过
+                || e instanceof HttpMessageNotReadableException//没有 request body
 
                 ;
+    }
+
+    /**
+     * 解析参数错误调试信息
+     *
+     * @param e
+     * @return
+     */
+    private String parseParamErrDebugMsg(Exception e) {
+        if (e instanceof MethodArgumentNotValidException) {
+            // 自行处理还是默认处理
+            StringBuilder sb = new StringBuilder();
+            for (ObjectError item : ((MethodArgumentNotValidException) e).getAllErrors()) {
+                if (customValidationMsg)
+                    return item.getDefaultMessage();
+
+                Object[] args = item.getArguments();
+                if (!StringUtils.isNull(args)) {
+                    sb.append("[");
+                    for (Object o : args) {
+                        if (o instanceof DefaultMessageSourceResolvable) {
+                            sb.append(((DefaultMessageSourceResolvable) o).getDefaultMessage()).append(",");
+                        }
+                    }
+                    if (sb.length() > 1) {
+                        sb.deleteCharAt(sb.length() - 1);
+                        sb.append("] ");
+                    } else
+                        sb.deleteCharAt(0);
+                }
+                String objName = item.getObjectName();
+                String defMsg = item.getDefaultMessage();
+
+                log.warn("objName:{} args:{} defMsg:{}", objName, StringUtils.toStr(args), defMsg);
+                sb.append(defMsg).append(",");
+            }
+            if (sb.length() > 0) {
+                sb.deleteCharAt(sb.length() - 1);
+            }
+            return sb.toString();
+        } else if (e instanceof ConstraintViolationException) {
+            return e.getMessage();
+        } else if (e instanceof HttpMessageNotReadableException) {
+            return "Request body is missing";
+        }
+
+        return e.getMessage();
     }
 }

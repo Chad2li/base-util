@@ -38,6 +38,17 @@ public class BaseRes<T> {
     }
 
     /**
+     * 成功响应数据
+     *
+     * @param data
+     * @param <T>
+     * @return
+     */
+    public static <T> BaseRes<T> succ(T data) {
+        return resp(BaseCode.SUCC, "succ", data);
+    }
+
+    /**
      * 返回不带数据的成功消息
      *
      * @return
@@ -70,12 +81,12 @@ public class BaseRes<T> {
     /**
      * 返回带数据的成功消息
      *
-     * @param t   数据
+     * @param data 数据
      * @param <T>
      * @return
      */
-    public static <T> BaseRes<T> resp(T t) {
-        return resp(BaseCode.SUCC, "succ", t);
+    public static <T> BaseRes<T> resp(T data) {
+        return resp(BaseCode.SUCC, "succ", data);
     }
 
     /**
@@ -83,26 +94,35 @@ public class BaseRes<T> {
      *
      * @param code 状态码
      * @param msg  返回消息说明
-     * @param t    消息携带的数据
+     * @param data 消息携带的数据
      * @param <T>
      * @return
      */
-    public static <T> BaseRes<T> resp(IAppCode code, String msg, T t) {
+    public static <T> BaseRes<T> resp(IAppCode code, String msg, T data) {
         BaseRes<T> base = null;
-        if (null != t && t instanceof Page) {
-            Page p = (Page) t;
+        if (null != data && data instanceof Page) {
+            Page p = (Page) data;
             base = PagerRes.page(p.getPageNum(), p.getPageSize(), p.getTotal());
         }
 
         if (null == base)
             base = new BaseRes();
 
-        base.setCode(IAppCode.fullCode(code)).setMsg(msg).setData(t);
+        base.setCode(IAppCode.fullCode(code)).setMsg(msg).setData(data);
 
         return base;
     }
 
     public BaseRes() {
+    }
+
+    /**
+     * 是否为成功响应
+     *
+     * @return
+     */
+    public boolean isSucc() {
+        return IAppCode.fullCode(BaseCode.SUCC).equals(this.code);
     }
 
     public T getData() {

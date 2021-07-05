@@ -5,12 +5,14 @@ import org.apache.ibatis.annotations.SelectProvider;
 import tk.mybatis.mapper.common.Mapper;
 import tk.mybatis.mapper.common.MySqlMapper;
 
+import java.util.List;
+
 /**
  * 用于以后扩展
+ *
  * @param <T>
  */
-public interface MyMapper<T> extends Mapper<T>, MySqlMapper<T>
-{
+public interface MyMapper<T> extends Mapper<T>, MySqlMapper<T> {
     /**
      * 根据Example条件进行查询，并仅返回一条记录，如果有多条记录则抛异常
      *
@@ -19,4 +21,6 @@ public interface MyMapper<T> extends Mapper<T>, MySqlMapper<T>
      */
     @SelectProvider(type = MyMapperProvider.class, method = "dynamicSQL")
     T selectOneByExample(Object example);
+
+    int insertListSelective(List<T> list);
 }

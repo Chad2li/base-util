@@ -8,14 +8,14 @@ import java.util.Map;
 /**
  * 签名服务
  */
-public interface ISignService {
+public interface ISignService<H extends IHeaderService.AHeaderParam> {
 
     /**
      * 获取指定appId的缓存信息
      *
      * @return
      */
-    App app(Integer appId);
+    App app(H header);
 
     /**
      * 自行处理签名的数据
@@ -45,5 +45,11 @@ public interface ISignService {
          * app是否有效
          */
         protected boolean isValid;
+
+        public App(Integer appId, String md5key, boolean isValid) {
+            this.appId = appId;
+            this.md5key = md5key;
+            this.isValid = isValid;
+        }
     }
 }

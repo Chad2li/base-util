@@ -4,10 +4,10 @@ import cn.lyjuan.base.exception.impl.BaseCode;
 import cn.lyjuan.base.exception.util.ErrUtils;
 import cn.lyjuan.base.http.aop.service.IHeaderService;
 import cn.lyjuan.base.http.aop.service.ISignService;
-import cn.lyjuan.base.http.filter.wrapper.RequestWrapper;
+import cn.lyjuan.base.http.filter.FilterProperties;
 import cn.lyjuan.base.util.HttpSignUtil;
 import cn.lyjuan.base.util.SpringUtils;
-import lombok.AllArgsConstructor;
+import cn.lyjuan.base.util.StringUtils;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
@@ -15,8 +15,12 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.core.annotation.Order;
+import org.springframework.web.util.ContentCachingRequestWrapper;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @Slf4j
@@ -30,7 +34,9 @@ public class SignAopHandler<H extends IHeaderService.AHeaderParam> {
 
     protected IHeaderService<H> headerService;
 
-    protected ISignService signService;
+    protected ISignService<H> signService;
+
+    private FilterProperties filterProperties;
 
     public SignAopHandler(IHeaderService<H> headerService, ISignService signService) {
         this.headerService = headerService;
@@ -47,22 +53,32 @@ public class SignAopHandler<H extends IHeaderService.AHeaderParam> {
     }
 
     @Before("pointcut()")
-    public void handler(JoinPoint jp) {
+    public void handler(JoinPoint jp) throws UnsupportedEncodingException {
+        if (FilterProperties.isSkip(this.filterProperties, SpringUtils.getRequest().getRequestURI()))
+            return;
         // 不可在此处通过PropertiesConfig.IS_DEBUG跳过，下面有用到 body cache
 
         HttpServletRequest req = SpringUtils.getRequest();
         // 获取header参数
         H header = headerService.cache();
         // 获取app信息
-        ISignService.App app = signService.app(header.getAppId());
+        ISignService.App app = signService.app(header);
         if (null == app || !app.isValid())
             ErrUtils.appThrow(BaseCode.APP_ID_INVALID);
         // 获取url参数
         Map<String, String> get = SpringUtils.getParam(req);
         // 获取body参数，get方法不获取
         String body = null;
-        if (!"GET".equalsIgnoreCase(req.getMethod()))
-            body = new String(((RequestWrapper) req).toByteArray());
+        if (!"GET".equalsIgnoreCase(req.getMethod())) {
+            //            body = SpringUtils.reqBody(req);
+            body = new String(((ContentCachingRequestWrapper) req).getContentAsByteArray());
+            if (!StringUtils.isNull(body)) {
+                body = URLDecoder.decode(body, StandardCharsets.UTF_8.name());
+                // todo 防止部分框架（IOS）对URL地址字段转码
+                // 可能不太完善，后期记得完善
+                body = body.replaceAll("\\\\/", "/");
+            }
+        }
         // 拼接签名字符串
         String signStr = HttpSignUtil.appendSign(req.getRequestURI(), req.getMethod(), header, get, body, app.getMd5key());
 

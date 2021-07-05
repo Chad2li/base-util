@@ -45,6 +45,14 @@ public enum BaseCode implements IAppCode
      * 签名无效
      */
     , SIGN_INVALID("0010", "sign_invalid")
+    /**
+     * 非法访问
+     */
+    , ACCESS_ILLEGAL("0011", "access_illegal")
+    /**
+     * 网络异常
+     */
+    , NETWORK_ERROR("0012", "network_error")
     //
     ;
 

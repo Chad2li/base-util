@@ -15,11 +15,9 @@ import java.util.Objects;
 
 import static org.junit.Assert.*;
 
-public class ReflectUtilsTest
-{
+public class ReflectUtilsTest {
     @Test
-    public void setValue()
-    {
+    public void setValue() {
         User user = new User();
 
         ReflectUtils.setValue(user, "name", "张三");
@@ -31,8 +29,7 @@ public class ReflectUtilsTest
     }
 
     @Test
-    public void getValueNoThrow() throws Exception
-    {
+    public void getValueNoThrow() throws Exception {
         User user = new User("张三", 18, 183);
 
         String name = (String) ReflectUtils.getValueNoThrow(user, "name");
@@ -46,8 +43,7 @@ public class ReflectUtilsTest
     }
 
     @Test
-    public void testGenericityType()
-    {
+    public void testGenericityType() {
         Class cls = ReflectUtils.getGenericityClass(ExtendClass.class, 0);
         Assert.assertEquals(cls, User.class);
 
@@ -59,8 +55,7 @@ public class ReflectUtilsTest
     }
 
     @Test
-    public void membersToMap()
-    {
+    public void membersToMap() {
         // --- base
         User user = new User();
         user.setName("张三");
@@ -92,8 +87,7 @@ public class ReflectUtilsTest
     }
 
     @Test
-    public void field()
-    {
+    public void field() {
         // exist
         Field f = ReflectUtils.field(ExtendUser.class, "name");
         Assert.assertNotNull(f);
@@ -105,8 +99,7 @@ public class ReflectUtilsTest
 
 
     @Test
-    public void method()
-    {
+    public void method() {
         // exist
         Method m = ReflectUtils.method(ExtendUser.class, "setName", String.class);
         Assert.assertNotNull(m);
@@ -116,23 +109,19 @@ public class ReflectUtilsTest
         Assert.assertNull(m);
     }
 
-    public class ExtendUser extends User
-    {
+    public class ExtendUser extends User {
         private List<Address> addrs;
 
-        public List<Address> getAddrs()
-        {
+        public List<Address> getAddrs() {
             return addrs;
         }
 
-        public void setAddrs(List<Address> addrs)
-        {
+        public void setAddrs(List<Address> addrs) {
             this.addrs = addrs;
         }
 
         @Override
-        public String toString()
-        {
+        public String toString() {
             return "ExtendUser{" +
                     "addrs=" + addrs +
                     ", name='" + name + '\'' +
@@ -142,8 +131,7 @@ public class ReflectUtilsTest
         }
 
         @Override
-        public boolean equals(Object o)
-        {
+        public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             if (!super.equals(o)) return false;
@@ -152,110 +140,91 @@ public class ReflectUtilsTest
         }
 
         @Override
-        public int hashCode()
-        {
+        public int hashCode() {
 
             return Objects.hash(super.hashCode(), getAddrs());
         }
     }
 
-    public static class ExtendClass extends BaseGenericity<User>
-    {
+    public static class ExtendClass extends BaseGenericity<User> {
         @Override
-        public String toString()
-        {
+        public String toString() {
             return "BaseGenericity{" +
                     "obj=" + obj +
                     '}';
         }
     }
 
-    public static class BaseGenericity<T>
-    {
+    public static class BaseGenericity<T> {
         public T obj;
     }
 
-    public static class ExtendMultClass extends BaseMultGenericity<User, Address>
-    {
+    public static class ExtendMultClass extends BaseMultGenericity<User, Address> {
 
     }
 
-    public static class BaseMultGenericity<U, A>
-    {
+    public static class BaseMultGenericity<U, A> {
         public U u;
 
         public List<A> as;
     }
 
-    public class Address
-    {
+    public class Address {
         public String province;
 
         public String city;
 
-        public Address()
-        {
+        public Address() {
         }
 
-        public Address(String province, String city)
-        {
+        public Address(String province, String city) {
             this.province = province;
             this.city = city;
         }
     }
 
-    public class User
-    {
+    public static class User {
         protected String name;
 
         protected Integer age;
 
         protected int height;
 
-        public User()
-        {
+        public User() {
         }
 
-        public User(String name, Integer age, int height)
-        {
+        public User(String name, Integer age, int height) {
             this.name = name;
             this.age = age;
             this.height = height;
         }
 
-        public String getName()
-        {
+        public String getName() {
             return name;
         }
 
-        public void setName(String name)
-        {
+        public void setName(String name) {
             this.name = name;
         }
 
-        public Integer getAge()
-        {
+        public Integer getAge() {
             return age;
         }
 
-        public void setAge(Integer age)
-        {
+        public void setAge(Integer age) {
             this.age = age;
         }
 
-        public int getHeight()
-        {
+        public int getHeight() {
             return height;
         }
 
-        public void setHeight(int height)
-        {
+        public void setHeight(int height) {
             this.height = height;
         }
 
         @Override
-        public boolean equals(Object o)
-        {
+        public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             User user = (User) o;
@@ -265,8 +234,7 @@ public class ReflectUtilsTest
         }
 
         @Override
-        public int hashCode()
-        {
+        public int hashCode() {
 
             return Objects.hash(getName(), getAge(), getHeight());
         }

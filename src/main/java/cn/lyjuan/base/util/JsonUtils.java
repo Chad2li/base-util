@@ -1,8 +1,12 @@
 package cn.lyjuan.base.util;
 
+import com.alibaba.druid.sql.visitor.functions.Char;
 import com.google.gson.*;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Type;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -85,7 +89,7 @@ public class JsonUtils {
      * @return
      */
     public static <T> T from(Class<T> c, String json) {
-        return gson.fromJson(json, c);
+        return from((Type) c, json);
     }
 
     /**
@@ -97,6 +101,39 @@ public class JsonUtils {
      * @return
      */
     public static <T> T from(Type type, String json) {
+        if (StringUtils.isNull(json))
+            return null;
+
+        if (type == String.class)
+            return (T) json;
+        else if (type == Integer.class) {
+            return (T) (Integer) Integer.parseInt(json);
+        } else if (type == Byte.class)
+            return (T) (Byte) Byte.parseByte(json);
+        else if (type == Boolean.class)
+            return (T) (Boolean) Boolean.parseBoolean(json);
+        else if (type == Float.class)
+            return (T) (Float) Float.parseFloat(json);
+        else if (type == Double.class)
+            return (T) (Double) Double.parseDouble(json);
+        else if (type == Character.class)
+            return (T) (Character) json.charAt(0);
+        else if (type == Long.class)
+            return (T) (Long) Long.parseLong(json);
+        else if (type == Short.class) {
+            return (T) (Short) Short.parseShort(json);
+        } else if (type == Date.class) {
+            try {
+                return (T) new SimpleDateFormat(DateUtils.FMT_DATE_TIME).parse(json);
+            } catch (ParseException e) {
+                throw new RuntimeException(e);
+            }
+        } else if (type == LocalDate.class)
+            return (T) DateUtils.parseDate(json, DateUtils.FMT_DATE);
+        else if (type == LocalDateTime.class)
+            return (T) DateUtils.parseTime(json, DateUtils.FMT_DATE_TIME);
+        else if (type == LocalTime.class)
+            return (T) LocalTime.parse(json);
         return gson.fromJson(json, type);
     }
 }

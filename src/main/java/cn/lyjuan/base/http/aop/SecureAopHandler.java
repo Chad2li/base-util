@@ -4,8 +4,10 @@ import cn.lyjuan.base.exception.impl.BaseCode;
 import cn.lyjuan.base.exception.util.ErrUtils;
 import cn.lyjuan.base.http.aop.service.IHeaderService;
 import cn.lyjuan.base.http.aop.service.ISecureService;
+import cn.lyjuan.base.http.filter.FilterProperties;
 import cn.lyjuan.base.http.filter.HeaderFilter;
 import cn.lyjuan.base.util.DateUtils;
+import cn.lyjuan.base.util.SpringUtils;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
@@ -23,17 +25,18 @@ import java.time.LocalDateTime;
 @Data
 @Aspect
 @Order(SecureAopHandler.ORDER)
-public class SecureAopHandler {
+public class SecureAopHandler<H extends IHeaderService.AHeaderParam> {
     public static final int ORDER = 10000;
-
     /**
      * 测试环境标识
      */
     protected boolean isDebug = false;
 
-    protected IHeaderService headerService;
+    protected IHeaderService<H> headerService;
 
     private ISecureService secureService;
+
+    private FilterProperties filterProperties;
     /**
      * 时间戳超时的秒数，默认5分钟
      */
@@ -56,23 +59,27 @@ public class SecureAopHandler {
 
     @Before("pointcut()")
     public void handler(JoinPoint jp) {
+        if (FilterProperties.isSkip(this.filterProperties, SpringUtils.getRequest().getRequestURI()))
+            return;
+
         if (isDebug) {// 测试环境跳过安全认证
             log.warn("Skip secure handler for debug");
             return;
         }
-        IHeaderService.AHeaderParam header = headerService.cache();
+        H header = headerService.cache();
         // timestamp丢弃超时
         long duration = DateUtils.time2long(LocalDateTime.now()) - header.getTimestamp();
         duration /= 1000;
         if (duration > timestampTimeoutSeconds) {
             ErrUtils.appThrow(BaseCode.TIMESTAMP_TIMEOUT);
         }
+        String fullRequestId = secureService.fullRequestId(header);
         // requestId防重
-        long ttl = secureService.ttl(header.getRequestId());
-        if (-2 != ttl)
+        boolean isExists = secureService.exists(fullRequestId);
+        if (isExists)
             ErrUtils.appThrow(BaseCode.REQUESTID_DUPLICATE);
         // 缓存
-        secureService.cache(header.getRequestId(), timestampTimeoutSeconds + 10);
+        secureService.cache(fullRequestId, timestampTimeoutSeconds + 10);
         if (log.isDebugEnabled())
             log.debug("cache requestId: {}", header.getRequestId());
     }
