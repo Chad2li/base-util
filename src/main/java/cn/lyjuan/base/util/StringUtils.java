@@ -130,8 +130,8 @@ public class StringUtils {
      * @param arr
      * @return
      */
-    public static boolean isNull(Object[] arr) {
-        return null == arr || arr.length < 1;
+    public static boolean isNullArray(Object arr) {
+        return null == arr || Array.getLength(arr) <= 0;
     }
 
     /**

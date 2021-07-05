@@ -1,14 +1,17 @@
 package cn.lyjuan.base.http.filter.log;
 
-import cn.lyjuan.base.util.ArrayUtils;
 import cn.lyjuan.base.util.SpringUtils;
 import cn.lyjuan.base.util.StringUtils;
+import com.mysql.cj.x.protobuf.MysqlxDatatypes;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
-import java.io.*;
-import java.util.Arrays;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
 /**
  * 对req重复读取
@@ -49,15 +52,36 @@ public class BufferedRequestWrapper extends ContentCachingRequestWrapper {
     @Override
     public byte[] getContentAsByteArray() {
         byte[] bytes = super.getContentAsByteArray();
-        if (null != bytes && bytes.length > 0) {
-            return bytes;
+        if (StringUtils.isNullArray(bytes)) {
+            wrapperInputStream();
+            bytes = SpringUtils.reqBody(this).getBytes();
         }
-        // spring在获取 getParameters 后无法再次获取输入流数据
-        wrapperInputStream();
-        bytes = SpringUtils.reqBody(this).getBytes();
+
         return bytes;
+        // spring在获取 getParameters 后无法再次获取输入流数据
+
 //        String body = SpringUtils.reqBody(this);
 //        return StringUtils.isNull(body) ? new byte[0] : body.getBytes();
+    }
+
+    /**
+     * 获取Body内容
+     *
+     * @param charset 字符编码
+     * @return
+     */
+    public String getContent(String charset) {
+        byte[] bytes = getContentAsByteArray();
+
+        try {
+            return new String(bytes, charset);
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public String getContent() {
+        return getContent(StandardCharsets.UTF_8.name());
     }
 
     @Override

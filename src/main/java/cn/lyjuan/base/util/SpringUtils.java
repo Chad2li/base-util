@@ -1,5 +1,6 @@
 package cn.lyjuan.base.util;
 
+import cn.lyjuan.base.http.filter.log.BufferedRequestWrapper;
 import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -200,6 +201,10 @@ public class SpringUtils {
      * @return
      */
     public static String reqBody(HttpServletRequest req) {
+        if (BufferedRequestWrapper.class.isInstance(req)) {
+            return ((BufferedRequestWrapper) req).getContent();
+        }
+
         InputStream in = null;
         String str = null;
         try {
@@ -222,7 +227,6 @@ public class SpringUtils {
 
             throw new RuntimeException(e);
         }
-
 
         return str;
     }
