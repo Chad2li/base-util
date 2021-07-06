@@ -125,7 +125,11 @@ public class StringUtils {
             return true;
 
         // array
-        return isNullArray(str);
+        if (str.getClass().isArray())
+//        if (Array.class.isInstance(str))
+            return isNullArray(str);
+
+        return false;
     }
 
     /**

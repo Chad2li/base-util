@@ -103,8 +103,10 @@ public class LoggingFilter implements Filter {
         Map<String, String> params = SpringUtils.getParam(req);
         String body = null;
         if (!"GET".equalsIgnoreCase(method)) {
-            //            body = SpringUtils.reqBody(req);
-            body = new String(((ContentCachingRequestWrapper) req).getContentAsByteArray());
+            if (BufferedRequestWrapper.class.isInstance(req))
+                body = ((BufferedRequestWrapper) req).getContent();
+            else
+                body = SpringUtils.reqBody(req);
         }
         if (null != params && params.size() > 0) {
             for (Iterator<Map.Entry<String, String>> it = params.entrySet().iterator(); it.hasNext(); ) {

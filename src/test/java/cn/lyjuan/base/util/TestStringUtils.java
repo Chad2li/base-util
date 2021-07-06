@@ -132,6 +132,22 @@ public class TestStringUtils
         Assert.assertEquals(expect, result);
     }
 
+    @Test
+    public void isNullArray() {
+        String abc = "123";
+        Assert.assertFalse(StringUtils.isNull(abc));
+
+        abc = null;
+        Assert.assertTrue(StringUtils.isNull(abc));
+
+        byte[] def = null;
+        Assert.assertTrue(StringUtils.isNullArray(def));
+        def = new byte[]{1, 2};
+        Assert.assertFalse(StringUtils.isNull(def));
+        def = new byte[]{};
+        Assert.assertTrue(StringUtils.isNull(def));
+    }
+
     public static class TestToStrParent
     {
         public String name;

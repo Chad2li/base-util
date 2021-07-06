@@ -201,10 +201,6 @@ public class SpringUtils {
      * @return
      */
     public static String reqBody(HttpServletRequest req) {
-        if (BufferedRequestWrapper.class.isInstance(req)) {
-            return ((BufferedRequestWrapper) req).getContent();
-        }
-
         InputStream in = null;
         String str = null;
         try {
