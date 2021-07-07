@@ -18,6 +18,16 @@ public interface ISignService<H extends IHeaderService.AHeaderParam> {
     App app(H header);
 
     /**
+     * 是否跳过签名逻辑
+     *
+     * @param header 封装后的请求头信息
+     * @return
+     */
+    default boolean isSkip(H header) {
+        return false;
+    }
+
+    /**
      * 自行处理签名的数据
      *
      * @param header

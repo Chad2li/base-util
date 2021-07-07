@@ -5,6 +5,7 @@ import cn.lyjuan.base.exception.util.ErrUtils;
 import cn.lyjuan.base.http.aop.service.IHeaderService;
 import cn.lyjuan.base.http.aop.service.ISignService;
 import cn.lyjuan.base.http.filter.FilterProperties;
+import cn.lyjuan.base.http.filter.log.BufferedRequestWrapper;
 import cn.lyjuan.base.util.HttpSignUtil;
 import cn.lyjuan.base.util.SpringUtils;
 import cn.lyjuan.base.util.StringUtils;
@@ -54,13 +55,21 @@ public class SignAopHandler<H extends IHeaderService.AHeaderParam> {
 
     @Before("pointcut()")
     public void handler(JoinPoint jp) throws UnsupportedEncodingException {
-        if (FilterProperties.isSkip(this.filterProperties, SpringUtils.getRequest().getRequestURI()))
+        String url = SpringUtils.getRequest().getRequestURI();
+        if (FilterProperties.isSkip(this.filterProperties, url)) {
+            if (log.isDebugEnabled())
+                log.debug("Sign skip by {}", url);
             return;
+        }
         // 不可在此处通过PropertiesConfig.IS_DEBUG跳过，下面有用到 body cache
-
-        HttpServletRequest req = SpringUtils.getRequest();
         // 获取header参数
         H header = headerService.cache();
+        if (signService.isSkip(header)) {
+            if (log.isDebugEnabled())
+                log.debug("Sign skip by isSkip result");
+            return;
+        }
+        HttpServletRequest req = SpringUtils.getRequest();
         // 获取app信息
         ISignService.App app = signService.app(header);
         if (null == app || !app.isValid())
@@ -70,14 +79,16 @@ public class SignAopHandler<H extends IHeaderService.AHeaderParam> {
         // 获取body参数，get方法不获取
         String body = null;
         if (!"GET".equalsIgnoreCase(req.getMethod())) {
-            //            body = SpringUtils.reqBody(req);
-            body = new String(((ContentCachingRequestWrapper) req).getContentAsByteArray());
-            if (!StringUtils.isNull(body)) {
-                body = URLDecoder.decode(body, StandardCharsets.UTF_8.name());
-                // todo 防止部分框架（IOS）对URL地址字段转码
-                // 可能不太完善，后期记得完善
-                body = body.replaceAll("\\\\/", "/");
-            }
+            if (BufferedRequestWrapper.class.isInstance(req))
+                body = ((BufferedRequestWrapper) req).getContent();
+            else
+                body = SpringUtils.reqBody(req);
+//            if (!StringUtils.isNull(body)) {
+//                body = URLDecoder.decode(body, StandardCharsets.UTF_8.name());
+//                // todo 防止部分框架（IOS）对URL地址字段转码
+//                // 可能不太完善，后期记得完善
+//                body = body.replaceAll("\\\\/", "/");
+//            }
         }
         // 拼接签名字符串
         String signStr = HttpSignUtil.appendSign(req.getRequestURI(), req.getMethod(), header, get, body, app.getMd5key());

@@ -116,7 +116,7 @@ public class LoggingFilter implements Filter {
         }
 
         if (!StringUtils.isNull(body)) {
-            log.debug("--body {}", URLDecoder.decode(body, StandardCharsets.UTF_8.name()));
+            log.debug("--body {}", body);
         }
 
     }
