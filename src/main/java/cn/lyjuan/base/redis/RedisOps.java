@@ -437,17 +437,6 @@ public class RedisOps {
     }
 
     /**
-     * 集合添加
-     *
-     * @param k
-     * @param v
-     */
-    public <T> long add(String k, T v) {
-        SetOperations<String, String> set = redisTemplate.opsForSet();
-        return set.add(k, JsonUtils.to(v));
-    }
-
-    /**
      * 添加set元素
      *
      * @param k
