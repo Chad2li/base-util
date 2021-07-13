@@ -98,7 +98,7 @@ public class ReflectUtils
             throw new RuntimeException(e);
         } finally
         {
-            if (null == getter && null == isAcc)
+            if (null != getter && null != isAcc)
                 getter.setAccessible(isAcc);
         }
     }
