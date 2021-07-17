@@ -2,11 +2,13 @@ package cn.lyjuan.base.redis.redisson;
 
 import cn.lyjuan.base.util.ReflectUtils;
 import cn.lyjuan.base.util.StringUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.*;
 import org.redisson.client.protocol.ScoredEntry;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -23,9 +25,13 @@ public class RedissonOps {
     @Getter
     private RedissonClient client;
 
+    private ObjectMapper objectMapper;
+
     @Autowired
-    public RedissonOps(RedissonClient client) {
+    public RedissonOps(@Autowired RedissonClient client,
+                       @Autowired @Qualifier(RedissonBaseConfig.OBJECT_MAPPER_NAME) ObjectMapper objectMapper) {
         this.client = client;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -79,6 +85,18 @@ public class RedissonOps {
     }
 
     /**
+     * 批量获取键值
+     *
+     * @param keys 键值
+     * @param <V>
+     * @return
+     */
+    public <V> Map<String, V> gets(final String... keys) {
+        RBuckets rbs = client.getBuckets();
+        return rbs.get(keys);
+    }
+
+    /**
      * 强制返回结果为long型
      *
      * @param key 键
@@ -93,11 +111,6 @@ public class RedissonOps {
             return ((Integer) t).longValue();
         return (Long) t;
     }
-
-//    public <T> T get(final String key, Class<T> cls) {
-//        RBucket<T> bucket = client.getBucket(key);
-//        return bucket.get();
-//    }
 
     /**
      * 增1
@@ -132,17 +145,6 @@ public class RedissonOps {
     public long incr(final String key, long delta) {
         RAtomicLong rtl = client.getAtomicLong(key);
         return rtl.addAndGet(delta);
-    }
-
-    /**
-     * 获取多个redis键值对
-     *
-     * @param keys 键
-     * @return
-     */
-    public Map multiGet(String... keys) {
-        RBuckets rbs = client.getBuckets();
-        return rbs.get(keys);
     }
 
     /**
@@ -294,8 +296,26 @@ public class RedissonOps {
      * @param <V>
      * @return
      */
-    public <K, V> Map<K, V> hGetAll(final String key) {
+    public <K, V> Map<K, V> hGetMap(final String key) {
         return client.getMap(key);
+    }
+
+    /**
+     * 获取hash值并解析bean
+     *
+     * @param redisKey 键值
+     * @param cls
+     * @param <T>
+     * @return
+     */
+    public <T> T hGetBean(final String redisKey, Class<T> cls) {
+        Set<String> names = ReflectUtils.parseMember(cls);
+        Map<String, Object> map = hGets(redisKey, names);
+
+        if (null == map || map.isEmpty()) return null;
+
+        T t = ReflectUtils.genBean(cls, map);
+        return t;
     }
 
     /**
@@ -345,7 +365,7 @@ public class RedissonOps {
      * @param value 是否存在该值
      * @return true存在
      */
-    public boolean sExists(final String key, Object value) {
+    public boolean sContains(final String key, Object value) {
         RSet<Object> rset = client.getSet(key);
         return rset.contains(value);
     }

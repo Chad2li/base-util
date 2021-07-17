@@ -14,7 +14,7 @@ public class ReflectUtils {
      * 解析类中有 Getter 和 Setter 方法的属性
      *
      * @param clazz 需要解析的类
-     * @param clazz 解析最上级的类，该类的属性不解析
+     * @param clazz 递归解析的最上级的类（该类的属性不解析）
      * @return
      */
     public static Set<String> parseMember(Class<?> clazz) {
@@ -25,6 +25,8 @@ public class ReflectUtils {
         String getMethodName = null;// get方法名
         String setMethodName = null;// set方法名
         for (Field f : fs) {
+            if (skipField(f)) continue;
+
             getMethodName = genMemberGetSetName(f.getName(), true);
             setMethodName = genMemberGetSetName(f.getName(), false);
 
@@ -156,7 +158,7 @@ public class ReflectUtils {
     public static void setValue(Object obj, String memberName, Object value) {
         Field field = null;
         Method setter = null;
-        Boolean isAcc = null;
+        boolean isAcc = true;
         try {
             field = field(obj.getClass(), memberName);
             if (null == field)
@@ -179,7 +181,7 @@ public class ReflectUtils {
         } catch (Throwable e) {
             throw new RuntimeException(e);
         } finally {
-            if (null != isAcc) {
+            if (!isAcc) {
                 if (null != setter)
                     setter.setAccessible(isAcc);
                 else if (null != field)
@@ -271,12 +273,7 @@ public class ReflectUtils {
         String name = null;
         for (Field f : fs) {
             name = f.getName();
-            int modifiers = f.getModifiers();
-
-            if (skipTransient) {
-                if (Modifier.isTransient(modifiers) || Modifier.isStatic(modifiers))
-                    continue;
-            }
+            if (skipTransient && skipField(f)) continue;
 
             map.put(name, getValueNoThrow(from, fromClass, name));
         }
@@ -321,6 +318,7 @@ public class ReflectUtils {
 
         Field[] tmp = cls.getDeclaredFields();
         for (Field f : tmp) {
+            if (skipField(f)) continue;
             fields.put(f.getName(), f);
         }
 
@@ -353,6 +351,45 @@ public class ReflectUtils {
             m = method(cls.getSuperclass(), name, types);
 
         return m;
+    }
+
+    /**
+     * 根据类和值生成Bean
+     *
+     * @param cls    类，该类需要有public的空构造器
+     * @param values 生成类需要的值
+     * @param <T>
+     * @return
+     */
+    public static <T> T genBean(Class<T> cls, Map<String, Object> values) {
+        T t = null;
+        try {
+            t = cls.newInstance();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        for (Map.Entry<String, Object> e : values.entrySet()) {
+            ReflectUtils.setValue(t, e.getKey(), e.getValue());
+        }
+
+        return t;
+    }
+
+    /**
+     * 解析时是否跳过该属性，跳过：
+     * <p>
+     * 1. static修饰的<br/>
+     * 2. transient修饰的<br/>
+     * 3. final修饰的
+     * </P>
+     *
+     * @param field 属性
+     * @return
+     */
+    private static boolean skipField(Field field) {
+        int mod = field.getModifiers();
+        return Modifier.isStatic(mod) || Modifier.isTransient(mod) || Modifier.isFinal(mod);
     }
 
     /**

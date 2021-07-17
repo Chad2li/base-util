@@ -4,24 +4,17 @@ import cn.lyjuan.base.redis.lua.ARedisLua;
 import cn.lyjuan.base.redis.redisson.RedissonOps;
 import cn.lyjuan.base.util.JsonUtils;
 import cn.lyjuan.base.util.StringUtils;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Data;
-import org.redisson.api.RScript;
-import org.redisson.config.ReadMode;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
-import org.springframework.scripting.support.ResourceScriptSource;
 import org.springframework.util.CollectionUtils;
 
-import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.*;
 
 /**
  * 集群环境下，所有的redisKey需要定位到同一个slot<br/>
- * 可使用 {slotKey}:yourIdentify，redis只使用 {} 中的值来计算 slot值
+ * 可使用 {slotKey}:yourIdentify，redis只使用 {} 中的值来计算 slot值<br/>
+ * 不支持redisson，获取多值请使用{@link RedissonOps#hGets(String, Set)}或{@link RedissonOps#hGets(String, Object[])}或{@link RedissonOps#gets(String...)}
  */
 public class RedisMultiGetOps extends ARedisLua {
     public static final String BEAN_NAME = "appApiRedisMultiGetOps";

@@ -137,7 +137,7 @@ public class RedissonReplicaConfig {
     @Bean
     public RedissonOps redissonOps(@Autowired ObjectMapper objectMapper) {
         RedissonClient client = redissonClient(objectMapper);
-        return new RedissonOps(client);
+        return new RedissonOps(client, objectMapper);
     }
 
     public RedissonClient redissonClient(ObjectMapper objectMapper) {

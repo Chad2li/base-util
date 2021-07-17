@@ -13,6 +13,9 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -90,7 +93,7 @@ public class RedissonOpsTest {
         ;
 
         RedissonClient client = Redisson.create(config);
-        redissonOps = new RedissonOps(client);
+        redissonOps = new RedissonOps(client, mapper);
     }
 
     @Test
@@ -153,6 +156,8 @@ public class RedissonOpsTest {
         String[] arr = new String[]{"a", "b", "c"};
         redissonOps.set(key, arr);
 
+
+        redissonOps.del(key);
     }
 
     @Test
@@ -190,10 +195,10 @@ public class RedissonOpsTest {
         Assert.assertTrue(1 == longVal);
 
         // incr long
-//        longVal = redissonOps.incr(key, Integer.MAX_VALUE);
-//        Assert.assertEquals(1L + Integer.MAX_VALUE, longVal);
-//        longVal = redissonOps.get(key);
-//        Assert.assertEquals(1L + Integer.MAX_VALUE, longVal);
+        longVal = redissonOps.incr(key, Integer.MAX_VALUE);
+        Assert.assertTrue(1L + Integer.MAX_VALUE == longVal);
+        longVal = redissonOps.get(key);
+        Assert.assertTrue(1L + Integer.MAX_VALUE == longVal);
     }
 
     @Test
@@ -229,6 +234,7 @@ public class RedissonOpsTest {
         String stringK = "string";
         String intK = "int";
 
+        // set map
         Map<String, Object> map = new HashMap<>(4);
         map.put(intK, 1);
         map.put(stringK, "str");
@@ -237,10 +243,10 @@ public class RedissonOpsTest {
         Map subMap = new HashMap();
         subMap.put("string2", "str2");
         map.put("map", subMap);
-
         redissonOps.hSetMap(key, map);
 
-        Map result = redissonOps.hGetAll(key);
+        // get all
+        Map result = redissonOps.hGetMap(key);
         System.out.println("result ==> " + JsonUtils.to(result));
         Assert.assertEquals("str", result.get(stringK));
 
@@ -268,6 +274,31 @@ public class RedissonOpsTest {
         // gets with non exists hask key
         result = redissonOps.hGets(key, intK, stringK, "nonExistsKey");
         Assert.assertTrue(2 == result.size());
+
+        // set bean
+        redissonOps.del(key);
+        User.UserAttr attr = new User.UserAttr(175, 65);
+        List<User.UserAttr> attrs = new ArrayList<>(2);
+        User.UserAttr attr1 = new User.UserAttr(176, 66);
+        User.UserAttr attr2 = new User.UserAttr(177, 67);
+        attrs.add(attr1);
+        attrs.add(attr2);
+        User<User.UserAttr> userVal = new User("CacheVal", "Zhangsan", 18, "test@mail.com", attr, attrs);
+        redissonOps.hSetBean(key, userVal);
+        Map mapVal = redissonOps.hGetMap(key);
+        Assert.assertEquals(5, mapVal.size());
+        Assert.assertEquals("Zhangsan", mapVal.get("name"));
+        Assert.assertNull(mapVal.get("cache"));
+        Assert.assertNull(mapVal.get("staticTest"));
+
+        // get bean
+        User<User.UserAttr> userVal2 = redissonOps.hGetBean(key, User.class);
+        Assert.assertNotNull(userVal2);
+        Assert.assertEquals(userVal.name, userVal2.name);
+        Assert.assertEquals(userVal.age, userVal2.age);
+        Assert.assertEquals(userVal.email, userVal2.email);
+
+        redissonOps.del(key);
     }
 
     @Test
@@ -324,6 +355,33 @@ public class RedissonOpsTest {
         Assert.assertTrue(1 == scoreVal.size());
         scoreVal = redissonOps.zRangeWithScore(key, 2D, 4D);
         Assert.assertTrue(2 == scoreVal.size());
+
+
+        redissonOps.del(key);
+    }
+
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Data
+    public static class User<T> {
+        /**
+         * 不缓存
+         */
+        public static String staticTest = "staticTest";
+        public transient String cache;
+        public String name;
+        public int age;
+        public String email;
+        public T attr;
+        public List<T> attrs;
+
+        @Data
+        @AllArgsConstructor
+        @NoArgsConstructor
+        public static class UserAttr {
+            public int tail;
+            public int weight;
+        }
     }
 
 }

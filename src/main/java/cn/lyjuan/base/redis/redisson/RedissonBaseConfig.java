@@ -23,7 +23,9 @@ import java.time.format.DateTimeFormatter;
  * redisson通用配置
  */
 public class RedissonBaseConfig {
-    @Bean
+    public static final String OBJECT_MAPPER_NAME = "redissonBaseConfigObjectMapper";
+
+    @Bean(OBJECT_MAPPER_NAME)
     private ObjectMapper createObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
         // 为null的数据不序列化

@@ -28,3 +28,5 @@ logs/
 */logs/
 .gitignore
 README.md.bak
+
+**/*.versionsBackup
