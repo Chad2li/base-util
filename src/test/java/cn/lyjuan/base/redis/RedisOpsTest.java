@@ -1,12 +1,18 @@
 package cn.lyjuan.base.redis;
 
+import io.lettuce.core.ReadFrom;
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
+import org.springframework.data.redis.connection.lettuce.LettucePoolingClientConfiguration;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.serializer.RedisSerializer;
-import org.springframework.data.redis.serializer.StringRedisSerializer;
+
+import java.time.Duration;
+import java.util.Map;
 
 public class RedisOpsTest {
 
@@ -19,44 +25,38 @@ public class RedisOpsTest {
     @Before
     public void before() {
         rt = new StringRedisTemplate();
+        String host = "192.168.1.201";
+        int port = 7101;
 
-
-        RedisReplicaConfig config = new RedisReplicaConfig();
-        config.setAuth(pwd);
-        config.setCommandTimeout(10);
-        config.setDatabase(1);
-        config.setHostname("redis.test.hehewang.com");
-        config.setPort(7101);
-        config.setMaxActive(1);
+        GenericObjectPoolConfig<?> config = new GenericObjectPoolConfig<>();
+        config.setMaxTotal(1);
         config.setMaxIdle(1);
+        config.setMinIdle(1);
         config.setMaxWaitMillis(3 * 1000);
 
-        LettuceConnectionFactory lcf = config.lettuceConnectionFactory();
-        rt.setConnectionFactory(lcf);
+        LettuceClientConfiguration clientConfig = LettucePoolingClientConfiguration.builder()
+                .poolConfig(config)
+                .readFrom(ReadFrom.UPSTREAM_PREFERRED)
+//                .clientOptions(clientOptions)
+                .commandTimeout(Duration.ofSeconds(3)) //默认RedisURI.DEFAULT_TIMEOUT 60
+                .build();
 
+        RedisStandaloneConfiguration serverConfig = new RedisStandaloneConfiguration(host, port);
+        serverConfig.setPassword(pwd);
+        serverConfig.setDatabase(0);
 
-        RedisSerializer<?> stringSerializer = new StringRedisSerializer();
-
-        rt.setKeySerializer(stringSerializer);// key序列化
-        rt.setValueSerializer(stringSerializer);// value序列化
-        rt.setHashKeySerializer(stringSerializer);// Hash key序列化
-        rt.setHashValueSerializer(stringSerializer);// Hash value序列化
-
+        LettuceConnectionFactory rcf = new LettuceConnectionFactory(serverConfig);
+        rcf.afterPropertiesSet();
+        rt.setConnectionFactory(rcf);
         rt.afterPropertiesSet();
-
-
-
         redisOps = new RedisOps(rt);
+    }
 
-
-//        RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
-//        config.setHostName("redis.test.hehewang.com");
-//        config.setPort(7001);
-//        config.setPassword(pwd);
-//        config.setDatabase(1);
-//        RedisConnectionFactory rcf = new LettuceConnectionFactory(config);
-//        rt.setConnectionFactory(lcf);
-//        redisOps = new RedisOps(rt);
+    @Test
+    public void setAndGet() {
+        String key = "test:for:redisson";
+        Map val = redisOps.get(key, Map.class);
+        System.out.println("result ==> " + val);
     }
 
     @Test

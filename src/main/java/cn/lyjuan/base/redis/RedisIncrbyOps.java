@@ -1,36 +1,46 @@
 package cn.lyjuan.base.redis;
 
+import cn.lyjuan.base.redis.lua.ARedisLua;
+import cn.lyjuan.base.redis.redisson.RedissonOps;
 import cn.lyjuan.base.util.JsonUtils;
 import cn.lyjuan.base.util.StringUtils;
-import lombok.Data;
+import org.redisson.api.RScript;
+import org.redisson.config.ReadMode;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
-import org.springframework.data.redis.core.script.DefaultScriptExecutor;
-import org.springframework.scripting.support.ResourceScriptSource;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Data
-public class RedisIncrbyOps {
+/**
+ * 扩展redis incr和 hincr 命令
+ * <p>
+ *     1. 同时支持 incrby 和hash的 hincrby 命令。{@code hashKey}为null时使用 incrby，不为null时使用 hincrby<br/>
+ *     2. 默认增值为1<br/>
+ *     3. 支持限制{@code limitEqMax}(最大值，包含)和{@code limitEqMin}(最小值，包含)，当超出限制时不改变原值，并返回具体的操作失败原因<br/>
+ *     4. {@code exists} 强制操作key存在或不存在，可用的值为{@link Exists}。该值为null表示不要求原值是否存在（当不存在默认原值为0）。
+ *     原值不符合{@code exists}强制要求时，不改变原值，并返回具体操作失败原因<br/>
+ *     5. 失败原因查看{@link Result}
+ *
+ * </p>
+ */
+public class RedisIncrbyOps extends ARedisLua {
     public static final String BEAN_NAME = "appApiRedisIncrbyOps";
 
-    private static DefaultRedisScript<List> incrbyScript = new DefaultRedisScript<>();
+    /**
+     * 脚本资源
+     */
+    private static final String LUA_SCRIPT_FILE = "lua/other/incrby.lua";
 
-    private RedisTemplate<String, String> redisTemplate;
 
-    @Autowired
-    public RedisIncrbyOps(RedisTemplate<String, String> redisTemplate) {
+    public RedisIncrbyOps(@Autowired(required = false) RedisTemplate<String, String> redisTemplate
+            , @Autowired(required = false) RedissonOps redissonOps) {
+        super(redisTemplate, redissonOps, LUA_SCRIPT_FILE);
         this.redisTemplate = redisTemplate;
-    }
-
-    static {
-        incrbyScript.setResultType(List.class);
-        incrbyScript.setScriptSource(new ResourceScriptSource(new ClassPathResource("lua/other/incrby.lua")));
+        this.redissonOps = redissonOps;
+        this.rScriptMode = RScript.Mode.READ_WRITE;
     }
 
     public Result incrby(String redisKey, Object hashKey, Exists exists) {
@@ -80,12 +90,12 @@ public class RedisIncrbyOps {
     /**
      * 对redis值做增值操作
      *
-     * @param redisKey redis键
-     * @param hashKey  hash键，空表示sds结构
-     * @param incrby    增加的步长，不传表示默认值 1
-     * @param limitEqMax    限制最大值，当改变后的值超过最大值，此次操作失败；为空不限制
-     * @param limitEqMin    限制最小值，当改变后的值小于最小值，此次操作失败；为空不限制
-     * @param exists        空表示不对值的存在性作校验，NX强制不存在才操作，XX强制存在才操作
+     * @param redisKey   redis键
+     * @param hashKey    hash键，空表示sds结构
+     * @param incrby     增加的步长，不传表示默认值 1
+     * @param limitEqMax 限制最大值，当改变后的值超过最大值，此次操作失败；为空不限制
+     * @param limitEqMin 限制最小值，当改变后的值小于最小值，此次操作失败；为空不限制
+     * @param exists     空表示不对值的存在性作校验，NX强制不存在才操作，XX强制存在才操作
      * @return
      */
     public Result incrby(String redisKey, Object hashKey, Integer incrby, Long limitEqMax, Long limitEqMin, Exists exists) {
@@ -115,9 +125,13 @@ public class RedisIncrbyOps {
         /**
          * 调用脚本并执行
          */
-        List list = redisTemplate.execute(incrbyScript, keyList, json);
-        System.out.println(list);
-
+//        List list = (List) execute(keyList, json);
+        String incrStr = String.valueOf(null == incrby ? 1 : incrby);
+        String existCtl = null == exists ? null : exists.name();
+        List list = (List) execute(keyList, JsonUtils.to(hashKey), incrStr,
+                String.valueOf(limitEqMax), String.valueOf(limitEqMin), existCtl);
+        System.out.println("result ==> " + JsonUtils.to(list));
+//
         Result result = new Result();
         result.code = Integer.parseInt(list.get(0).toString());
         result.value = Long.parseLong(list.get(1).toString());

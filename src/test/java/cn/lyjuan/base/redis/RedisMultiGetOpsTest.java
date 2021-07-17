@@ -2,9 +2,9 @@ package cn.lyjuan.base.redis;
 
 import cn.lyjuan.base.test.BaseSpringTest;
 import cn.lyjuan.base.util.DateUtils;
-import cn.lyjuan.base.util.JsonUtils;
 import cn.lyjuan.base.util.RandomUtils;
 import cn.lyjuan.base.util.ReflectUtilsTest;
+import lombok.Data;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.dao.DataAccessException;
@@ -201,7 +201,7 @@ public class RedisMultiGetOpsTest extends BaseSpringTest {
      */
     @Test
     public void genSdsDate() {
-        int i = 100 * 10000;
+        int i = 10000;
 
         LocalDateTime start = LocalDateTime.now();
 

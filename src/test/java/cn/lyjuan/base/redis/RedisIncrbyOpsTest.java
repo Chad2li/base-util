@@ -30,8 +30,10 @@ public class RedisIncrbyOpsTest extends BaseSpringTest {
 
     @Test
     public void incrby() {
+        RedisIncrbyOps.Result result = null;
+
         // 强制存在，不存在则失败
-        RedisIncrbyOps.Result result = redisIncrbyOps.incrby(redisKey, null, null, null, null, RedisIncrbyOps.Exists.XX);
+        result = redisIncrbyOps.incrby(redisKey, null, 5, null, null, RedisIncrbyOps.Exists.XX);
         Assert.assertFalse(result.isSucc());
         Assert.assertTrue(result.isXXFail());
 
@@ -65,8 +67,10 @@ public class RedisIncrbyOpsTest extends BaseSpringTest {
 
     @Test
     public void hashIncrby() {
+        redisOps.del(redisKey);
+        RedisIncrbyOps.Result result = null;
         // 强制存在，不存在则失败
-        RedisIncrbyOps.Result result = redisIncrbyOps.incrby(redisKey, hashKey, null, null, null, RedisIncrbyOps.Exists.XX);
+        result =  redisIncrbyOps.incrby(redisKey, hashKey, null, null, null, RedisIncrbyOps.Exists.XX);
         Assert.assertFalse(result.isSucc());
         Assert.assertTrue(result.isXXFail());
 
@@ -75,6 +79,7 @@ public class RedisIncrbyOpsTest extends BaseSpringTest {
         Assert.assertEquals(1L, result.value());
 
         // 强制不存在，存在则失败
+        redisOps.hmSet(redisKey, hashKey, 1);
         result = redisIncrbyOps.incrby(redisKey, hashKey, 1, null, null, RedisIncrbyOps.Exists.NX);
         Assert.assertFalse(result.isSucc());
         Assert.assertTrue(result.isNXFail());

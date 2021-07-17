@@ -148,8 +148,6 @@ public class RedisOps {
             result = oper.setIfPresent(key, JsonUtils.to(value), expireSeconds, TimeUnit.SECONDS);
         else// 不存在才改变值
             result = oper.setIfAbsent(key, JsonUtils.to(value), expireSeconds, TimeUnit.SECONDS);
-
-
         return result;
     }
 

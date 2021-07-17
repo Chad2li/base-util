@@ -52,8 +52,8 @@ public class RedissonDelayQueueTest {
 
         client = Redisson.create(config);
 
-//        blockQueue = client.getBlockingQueue("test_block_queue");
-//        delayQueue = client.getDelayedQueue(blockQueue);
+        blockQueue = client.getBlockingQueue("test_block_queue");
+        delayQueue = client.getDelayedQueue(blockQueue);
     }
 
     @Test
@@ -121,20 +121,20 @@ public class RedissonDelayQueueTest {
             int delay = 0;
             int i = 0;
             List<RFuture> list = new ArrayList<>(1 * 10000);
-            while (i < (1 * 10000)) {
+            while (i < (1)) {
                 ALL_COUNTER.incrementAndGet();
                 delay = RandomUtils.randomInt(100, 30 * 1000);
                 time = DateUtils.long2Time(System.currentTimeMillis() + delay);
-                RFuture f = queue.offerAsync(new DemoInfo(this.getName() + "-" + i++, time, delay), delay, TimeUnit.MILLISECONDS);
-                list.add(f);
+                queue.offer(new DemoInfo(this.getName() + "-" + i++, time, delay), delay, TimeUnit.MILLISECONDS);
+//                list.add(f);
                 System.out.println("[" + this.getName() + "]-[" + i + "] delay to add: " + delay / 1000);
 //                Thread.sleep(RandomUtils.randomInt(100, 1000));
             }
             i = 0;
-            for (RFuture f : list) {
-                f.isSuccess();
-                System.out.println("[" + this.getName() + "]-[" + i++ + "] delay to done");
-            }
+//            for (RFuture f : list) {
+//                f.isSuccess();
+//                System.out.println("[" + this.getName() + "]-[" + i++ + "] delay to done");
+//            }
 
             ADD_DOWN_LATCH.countDown();
         }
@@ -142,7 +142,7 @@ public class RedissonDelayQueueTest {
 
     @Test
     public void covert16() {
-        String xlf = "2nQ\\x1b\\xd6\\xdb\\xc3\\x06\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x04>\\x03abc";
+        String xlf = "\\x04>\\x1B";
         String[] arr = xlf.split("\\\\x");
         String result = "";
         for (String s : arr) {

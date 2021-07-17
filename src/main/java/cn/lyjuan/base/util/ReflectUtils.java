@@ -1,13 +1,15 @@
 package cn.lyjuan.base.util;
 
 import java.lang.reflect.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 
 /**
  * Created by ly on 2014/12/23.
  */
-public class ReflectUtils
-{
+public class ReflectUtils {
     /**
      * 解析类中有 Getter 和 Setter 方法的属性
      *
@@ -15,16 +17,14 @@ public class ReflectUtils
      * @param clazz 解析最上级的类，该类的属性不解析
      * @return
      */
-    public static Set<String> parseMember(Class<?> clazz)
-    {
+    public static Set<String> parseMember(Class<?> clazz) {
         Set<String> members = new HashSet<String>();
         Field[] fs = clazz.getDeclaredFields();
         boolean hasGetMethod = false;// 是否有get方法
         boolean hasSetMethod = false;// 是否有set方法
         String getMethodName = null;// get方法名
         String setMethodName = null;// set方法名
-        for (Field f : fs)
-        {
+        for (Field f : fs) {
             getMethodName = genMemberGetSetName(f.getName(), true);
             setMethodName = genMemberGetSetName(f.getName(), false);
 
@@ -46,16 +46,13 @@ public class ReflectUtils
      * @param types  方法参数值
      * @return true有该方法，false无该方法
      */
-    public static boolean hasMethod(Class<?> clazz, String method, Class<?>... types)
-    {
-        try
-        {
+    public static boolean hasMethod(Class<?> clazz, String method, Class<?>... types) {
+        try {
             Method m = method(clazz, method, types);
 
             return null != m;
 
-        } catch (Throwable e)
-        {
+        } catch (Throwable e) {
             return false;
         }
     }
@@ -70,41 +67,34 @@ public class ReflectUtils
      * @throws java.lang.reflect.InvocationTargetException
      * @throws IllegalAccessException
      */
-    public static Object getValue(Object obj, String memberName)
-    {
+    public static Object getValue(Object obj, String memberName) {
         // getter 方法名
         memberName = genMemberGetSetName(memberName, true);
 
         Method getter = null;
         Boolean isAcc = null;
-        try
-        {
+        try {
             getter = obj.getClass().getMethod(memberName);
             isAcc = getter.isAccessible();// 改变访问控制
             getter.setAccessible(true);
 
             return getter.invoke(obj);
-        } catch (NoSuchMethodException e)
-        {
+        } catch (NoSuchMethodException e) {
             // do not have this method
             throw new RuntimeException(e);
-        } catch (InvocationTargetException e)
-        {
+        } catch (InvocationTargetException e) {
             // this method invoke error
             throw new RuntimeException(e);
-        } catch (IllegalAccessException e)
-        {
+        } catch (IllegalAccessException e) {
             // this method parameters error
             throw new RuntimeException(e);
-        } finally
-        {
+        } finally {
             if (null != getter && null != isAcc)
                 getter.setAccessible(isAcc);
         }
     }
 
-    public static <T> Object getValueNoThrow(T obj, String memeberName)
-    {
+    public static <T> Object getValueNoThrow(T obj, String memeberName) {
         return getValueNoThrow(obj, (Class<? super T>) obj.getClass(), memeberName);
     }
 
@@ -116,15 +106,13 @@ public class ReflectUtils
      * @param memberName
      * @return
      */
-    public static <T> Object getValueNoThrow(T obj, Class<? super T> fromClass, String memberName)
-    {
+    public static <T> Object getValueNoThrow(T obj, Class<? super T> fromClass, String memberName) {
         Method getter = null;
         Boolean isAccMethod = null;
         Field field = null;
         Boolean isAccAttribute = null;
 
-        try
-        {
+        try {
             field = fromClass.getDeclaredField(memberName);
 
             // getter 方法名
@@ -132,8 +120,7 @@ public class ReflectUtils
 
             boolean hasGet = hasMethod(obj.getClass(), memberName, field.getType());
 
-            if (hasGet)
-            {
+            if (hasGet) {
                 getter = fromClass.getMethod(getName, null);
                 isAccMethod = getter.isAccessible();
                 getter.setAccessible(true);
@@ -146,11 +133,9 @@ public class ReflectUtils
             field.setAccessible(true);
             Object val = field.get(obj);
             return val;
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
             return null;
-        } finally
-        {
+        } finally {
             if (null != getter && null != isAccMethod)
                 getter.setAccessible(isAccMethod);
             if (null != field && null != isAccAttribute)
@@ -168,13 +153,11 @@ public class ReflectUtils
      * @throws java.lang.reflect.InvocationTargetException
      * @throws IllegalAccessException
      */
-    public static void setValue(Object obj, String memberName, Object value)
-    {
+    public static void setValue(Object obj, String memberName, Object value) {
         Field field = null;
         Method setter = null;
         Boolean isAcc = null;
-        try
-        {
+        try {
             field = field(obj.getClass(), memberName);
             if (null == field)
                 throw new RuntimeException("not " + memberName + " in " + obj.getClass().getName());
@@ -193,13 +176,10 @@ public class ReflectUtils
                 field.setAccessible(true);
                 field.set(obj, value);
             }
-        } catch (Throwable e)
-        {
+        } catch (Throwable e) {
             throw new RuntimeException(e);
-        } finally
-        {
-            if (null != isAcc)
-            {
+        } finally {
+            if (null != isAcc) {
                 if (null != setter)
                     setter.setAccessible(isAcc);
                 else if (null != field)
@@ -215,8 +195,7 @@ public class ReflectUtils
      * @param isGet      为 true 表示获取 Getter 方法名;为 false 表示获取 Setter 方法名
      * @return
      */
-    public static String genMemberGetSetName(String memberName, boolean isGet)
-    {
+    public static String genMemberGetSetName(String memberName, boolean isGet) {
         if (memberName.length() > 1)
             memberName = memberName.substring(0, 1).toUpperCase() + memberName.substring(1);
         else
@@ -235,26 +214,22 @@ public class ReflectUtils
      * @param index 第几个泛型
      * @return
      */
-    public static Class<Object> getGenericityClass(Class cls, int index)
-    {
+    public static Class<Object> getGenericityClass(Class cls, int index) {
         //返回表示此 Class 所表示的实体（类、接口、基本类型或 void）的直接超类的 Type。
         Type genType = cls.getGenericSuperclass();
 
         if (null == genType) return null;
 
-        if (!(genType instanceof ParameterizedType))
-        {
+        if (!(genType instanceof ParameterizedType)) {
             return Object.class;
         }
         //返回表示此类型实际类型参数的 Type 对象的数组。
         Type[] params = ((ParameterizedType) genType).getActualTypeArguments();
 
-        if (index >= params.length || index < 0)
-        {
+        if (index >= params.length || index < 0) {
             return null;
         }
-        if (!(params[index] instanceof Class))
-        {
+        if (!(params[index] instanceof Class)) {
             return Object.class;
         }
 
@@ -267,8 +242,7 @@ public class ReflectUtils
      * @param from
      * @return
      */
-    public static Map<String, Object> membersToMap(Object from)
-    {
+    public static Map<String, Object> membersToMap(Object from) {
         return membersToMap(from, null == from ? null : from.getClass(), Object.class, true);
     }
 
@@ -281,12 +255,10 @@ public class ReflectUtils
      * @param skipTransient 是否跳过{@code transient修饰的属性}
      * @return 包含该类及其父类的所有属性。如果对象为空，则返回包含0个元素的Map
      */
-    public static Map<String, Object> membersToMap(Object from, Class fromClass, Class targetClass, boolean skipTransient)
-    {
+    public static Map<String, Object> membersToMap(Object from, Class fromClass, Class targetClass, boolean skipTransient) {
         if (null == from || null == fromClass) return new HashMap<>(0);
 
-        if (null != targetClass)
-        {
+        if (null != targetClass) {
             if (from.getClass().isAssignableFrom(targetClass)
                     || fromClass == targetClass)
                 return new HashMap<>(0);
@@ -297,12 +269,14 @@ public class ReflectUtils
         Field[] fs = fromClass.getDeclaredFields();
 
         String name = null;
-        for (Field f : fs)
-        {
+        for (Field f : fs) {
             name = f.getName();
+            int modifiers = f.getModifiers();
 
-            if (skipTransient && Modifier.isTransient(f.getModifiers()))
-                continue;
+            if (skipTransient) {
+                if (Modifier.isTransient(modifiers) || Modifier.isStatic(modifiers))
+                    continue;
+            }
 
             map.put(name, getValueNoThrow(from, fromClass, name));
         }
@@ -319,17 +293,14 @@ public class ReflectUtils
      * @param name
      * @return
      */
-    public static Field field(Class cls, String name)
-    {
+    public static Field field(Class cls, String name) {
         Field f = null;
 
-        try
-        {
+        try {
             if (null == cls)
                 return null;
             f = cls.getDeclaredField(name);
-        } catch (NoSuchFieldException e)
-        {
+        } catch (NoSuchFieldException e) {
             // ignore
         }
 
@@ -345,13 +316,11 @@ public class ReflectUtils
      * @param cls
      * @return
      */
-    public static Map<String, Field> fields(Class cls)
-    {
+    public static Map<String, Field> fields(Class cls) {
         Map<String, Field> fields = new HashMap();
 
         Field[] tmp = cls.getDeclaredFields();
-        for (Field f : tmp)
-        {
+        for (Field f : tmp) {
             fields.put(f.getName(), f);
         }
 
@@ -368,18 +337,15 @@ public class ReflectUtils
      * @param name
      * @return
      */
-    public static Method method(Class cls, String name, Class... types)
-    {
+    public static Method method(Class cls, String name, Class... types) {
         Method m = null;
 
-        try
-        {
+        try {
             if (null == cls)
                 throw new NoSuchMethodException("no such method " + name + " with parameters: " + Arrays.toString(types));
 
             m = cls.getDeclaredMethod(name, types);
-        } catch (NoSuchMethodException e)
-        {
+        } catch (NoSuchMethodException e) {
             // ignore
         }
 
@@ -387,5 +353,34 @@ public class ReflectUtils
             m = method(cls.getSuperclass(), name, types);
 
         return m;
+    }
+
+    /**
+     * 是否Java基础类型
+     *
+     * @param obj 该对象/类是否为Java基础类
+     * @return
+     */
+    public static boolean isBaseClass(Object obj) {
+        if (null == obj)
+            return false;
+        Class<?> cls = obj.getClass();
+        return
+                // 基本类型
+                Integer.class == cls ||
+                        Boolean.class == cls ||
+                        Byte.class == cls ||
+                        Short.class == cls ||
+                        Long.class == cls ||
+                        Double.class == cls ||
+                        Float.class == cls ||
+                        String.class == cls ||
+                        // 时间类型
+                        LocalDateTime.class == cls ||
+                        LocalDate.class == cls ||
+                        LocalTime.class == cls ||
+                        Date.class == cls
+                //
+                ;
     }
 }
