@@ -1,13 +1,11 @@
 package cn.lyjuan.base.redis;
 
+import cn.lyjuan.base.redis.lua.ARedisLua;
+import cn.lyjuan.base.redis.redisson.RedissonOps;
 import cn.lyjuan.base.util.JsonUtils;
 import cn.lyjuan.base.util.StringUtils;
-import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
-import org.springframework.scripting.support.ResourceScriptSource;
 import org.springframework.util.CollectionUtils;
 
 import java.lang.reflect.Type;
@@ -15,25 +13,27 @@ import java.util.*;
 
 /**
  * 集群环境下，所有的redisKey需要定位到同一个slot<br/>
- * 可使用 {slotKey}:yourIdentify，redis只使用 {} 中的值来计算 slot值
+ * 可使用 {slotKey}:yourIdentify，redis只使用 {} 中的值来计算 slot值<br/>
+ * 不支持redisson，获取多值请使用{@link RedissonOps#hGets(String, Set)}或{@link RedissonOps#hGets(String, Object[])}或{@link RedissonOps#gets(String...)}
  */
-@Data
-public class RedisMultiGetOps {
+public class RedisMultiGetOps extends ARedisLua {
     public static final String BEAN_NAME = "appApiRedisMultiGetOps";
 
-    private static DefaultRedisScript<List> multiGetScript = new DefaultRedisScript<>();
+    /**
+     * 脚本资源
+     */
+    private static final String LUA_SCRIPT_FILE = "lua/other/MultiGet.lua";
 
-    private RedisTemplate<String, String> redisTemplate;
-
-    @Autowired
-    public RedisMultiGetOps(RedisTemplate<String, String> redisTemplate) {
+    /**
+     * 仅支持RedisTemplate方式
+     *
+     * @param redisTemplate
+     */
+    public RedisMultiGetOps(@Autowired(required = false) RedisTemplate<String, String> redisTemplate) {
+        super(redisTemplate, null, LUA_SCRIPT_FILE);
         this.redisTemplate = redisTemplate;
     }
 
-    static {
-        multiGetScript.setResultType(List.class);
-        multiGetScript.setScriptSource(new ResourceScriptSource(new ClassPathResource("lua/other/MultiGet.lua")));
-    }
 
     /**
      * 返回所有 {keys} 的值，并解析成指定的 {type}类
@@ -73,9 +73,9 @@ public class RedisMultiGetOps {
         /**
          * 调用脚本并执行
          */
-        List list = redisTemplate.execute(multiGetScript, keyList, json);
+        Object obj = execute(keyList, json);
 
-        return list;
+        return (List<String>) obj;
     }
 
     /**
@@ -122,9 +122,8 @@ public class RedisMultiGetOps {
         /**
          * 调用脚本并执行
          */
-        List list = redisTemplate.execute(multiGetScript, keyList, json);
-
-        return list;
+        Object obj = execute(keyList, json);
+        return (List) obj;
     }
 
     /**
@@ -167,9 +166,9 @@ public class RedisMultiGetOps {
         /**
          * 调用脚本并执行
          */
-        List<String> list = redisTemplate.execute(multiGetScript, keyList, json);
+        Object obj = execute(keyList, json);
 
-        return list;
+        return (List<String>) obj;
     }
 
     /**

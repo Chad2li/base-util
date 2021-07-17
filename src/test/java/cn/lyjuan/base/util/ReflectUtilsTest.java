@@ -8,10 +8,10 @@ import org.springframework.security.core.userdetails.User;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -107,6 +107,52 @@ public class ReflectUtilsTest {
         // not exist
         m = ReflectUtils.method(ExtendUser.class, "abc");
         Assert.assertNull(m);
+    }
+
+    @Test
+    public void isBaseClass() {
+        int intv = 1;
+        Assert.assertTrue(ReflectUtils.isBaseClass(intv));
+        Integer intv2 = 1;
+        Assert.assertTrue(ReflectUtils.isBaseClass(intv2));
+        byte bv = 1;
+        Assert.assertTrue(ReflectUtils.isBaseClass(bv));
+        Byte bv2 = 1;
+        Assert.assertTrue(ReflectUtils.isBaseClass(bv2));
+        short sv = 1;
+        Assert.assertTrue(ReflectUtils.isBaseClass(sv));
+        Short sv2 = 1;
+        Assert.assertTrue(ReflectUtils.isBaseClass(sv2));
+        float fv = 1;
+        Assert.assertTrue(ReflectUtils.isBaseClass(fv));
+        Float fv2 = 1F;
+        Assert.assertTrue(ReflectUtils.isBaseClass(fv2));
+        double dv = 1;
+        Assert.assertTrue(ReflectUtils.isBaseClass(dv));
+        Double dv2 = 1D;
+        Assert.assertTrue(ReflectUtils.isBaseClass(dv2));
+        String strv = "a";
+        Assert.assertTrue(ReflectUtils.isBaseClass(strv));
+        boolean boov = false;
+        Assert.assertTrue(ReflectUtils.isBaseClass(boov));
+        boolean boov2 = true;
+        Assert.assertTrue(ReflectUtils.isBaseClass(boov2));
+        long lv = 1;
+        Assert.assertTrue(ReflectUtils.isBaseClass(lv));
+        Long lv2 = 1L;
+        Assert.assertTrue(ReflectUtils.isBaseClass(lv2));
+        LocalDateTime ldtv = LocalDateTime.now();
+        Assert.assertTrue(ReflectUtils.isBaseClass(ldtv));
+        LocalDate ldv = LocalDate.now();
+        Assert.assertTrue(ReflectUtils.isBaseClass(ldv));
+        LocalTime ltv = LocalTime.now();
+        Assert.assertTrue(ReflectUtils.isBaseClass(ltv));
+        Date datev = new Date();
+        Assert.assertTrue(ReflectUtils.isBaseClass(datev));
+    }
+
+    private void checkIsBaseClass(Object obj) {
+        Assert.assertTrue(ReflectUtils.isBaseClass(obj));
     }
 
     public class ExtendUser extends User {

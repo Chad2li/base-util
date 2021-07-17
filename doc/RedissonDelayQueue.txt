@@ -1,0 +1,42 @@
+
+-- add
+1625759094.405927 [0 192.168.1.2:63476] "PING"
+1625759094.475359 [0 192.168.1.2:63476] "SUBSCRIBE" "redisson_delay_queue_channel:{test:for:delayQueue:duplicate}"
+1625759094.487719 [0 192.168.1.2:63475] "EVAL" "local expiredValues = redis.call('zrangebyscore', KEYS[2], 0, ARGV[1], 'limit', 0, ARGV[2]); if #expiredValues > 0 then for i, v in ipairs(expiredValues) do local randomId, value = struct.unpack('dLc0', v);redis.call('rpush', KEYS[1], value);redis.call('lrem', KEYS[3], 1, v);end; redis.call('zrem', KEYS[2], unpack(expiredValues));end; local v = redis.call('zrange', KEYS[2], 0, 0, 'WITHSCORES'); if v[1] ~= nil then return v[2]; end return nil;" "3" "test:for:delayQueue:duplicate" "redisson_delay_queue_timeout:{test:for:delayQueue:duplicate}" "redisson_delay_queue:{test:for:delayQueue:duplicate}" "1625759094480" "100"
+1625759094.487826 [0 lua] "zrangebyscore" "redisson_delay_queue_timeout:{test:for:delayQueue:duplicate}" "0" "1625759094480" "limit" "0" "100"
+1625759094.487866 [0 lua] "zrange" "redisson_delay_queue_timeout:{test:for:delayQueue:duplicate}" "0" "0" "WITHSCORES"
+1625759094.521688 [0 192.168.1.2:63475] "EVAL" "local value = struct.pack('dLc0', tonumber(ARGV[2]), string.len(ARGV[3]), ARGV[3]);redis.call('zadd', KEYS[2], ARGV[1], value);redis.call('rpush', KEYS[3], value);local v = redis.call('zrange', KEYS[2], 0, 0); if v[1] == value then redis.call('publish', KEYS[4], ARGV[1]); end;" "4" "test:for:delayQueue:duplicate" "redisson_delay_queue_timeout:{test:for:delayQueue:duplicate}" "redisson_delay_queue:{test:for:delayQueue:duplicate}" "redisson_delay_queue_channel:{test:for:delayQueue:duplicate}" "1625759104487" "-3653369272326828856" "\x04>\x011"
+1625759094.521768 [0 lua] "zadd" "redisson_delay_queue_timeout:{test:for:delayQueue:duplicate}" "1625759104487" "\x1a/\x97\xff\xafY\xc9\xc3\x04\x00\x00\x00\x00\x00\x00\x00\x04>\x011"
+1625759094.521794 [0 lua] "rpush" "redisson_delay_queue:{test:for:delayQueue:duplicate}" "\x1a/\x97\xff\xafY\xc9\xc3\x04\x00\x00\x00\x00\x00\x00\x00\x04>\x011"
+1625759094.521811 [0 lua] "zrange" "redisson_delay_queue_timeout:{test:for:delayQueue:duplicate}" "0" "0"
+1625759094.521823 [0 lua] "publish" "redisson_delay_queue_channel:{test:for:delayQueue:duplicate}" "1625759104487"
+1625759094.525622 [0 192.168.1.2:63475] "EVAL" "local value = struct.pack('dLc0', tonumber(ARGV[2]), string.len(ARGV[3]), ARGV[3]);redis.call('zadd', KEYS[2], ARGV[1], value);redis.call('rpush', KEYS[3], value);local v = redis.call('zrange', KEYS[2], 0, 0); if v[1] == value then redis.call('publish', KEYS[4], ARGV[1]); end;" "4" "test:for:delayQueue:duplicate" "redisson_delay_queue_timeout:{test:for:delayQueue:duplicate}" "redisson_delay_queue:{test:for:delayQueue:duplicate}" "redisson_delay_queue_channel:{test:for:delayQueue:duplicate}" "1625759104523" "-1811395641200585888" "\x04>\x012"
+1625759094.525720 [0 lua] "zadd" "redisson_delay_queue_timeout:{test:for:delayQueue:duplicate}" "1625759104523" "\xads\r\xbd^#\xb9\xc3\x04\x00\x00\x00\x00\x00\x00\x00\x04>\x012"
+1625759094.525745 [0 lua] "rpush" "redisson_delay_queue:{test:for:delayQueue:duplicate}" "\xads\r\xbd^#\xb9\xc3\x04\x00\x00\x00\x00\x00\x00\x00\x04>\x012"
+1625759094.525763 [0 lua] "zrange" "redisson_delay_queue_timeout:{test:for:delayQueue:duplicate}" "0" "0"
+1625759094.530183 [0 192.168.1.2:63475] "EVAL" "local value = struct.pack('dLc0', tonumber(ARGV[2]), string.len(ARGV[3]), ARGV[3]);redis.call('zadd', KEYS[2], ARGV[1], value);redis.call('rpush', KEYS[3], value);local v = redis.call('zrange', KEYS[2], 0, 0); if v[1] == value then redis.call('publish', KEYS[4], ARGV[1]); end;" "4" "test:for:delayQueue:duplicate" "redisson_delay_queue_timeout:{test:for:delayQueue:duplicate}" "redisson_delay_queue:{test:for:delayQueue:duplicate}" "redisson_delay_queue_channel:{test:for:delayQueue:duplicate}" "1625759099527" "4141231640622616774" "\x04>\x011"
+1625759094.530259 [0 lua] "zadd" "redisson_delay_queue_timeout:{test:for:delayQueue:duplicate}" "1625759099527" "\xa8\xf53\x1eN\xbc\xccC\x04\x00\x00\x00\x00\x00\x00\x00\x04>\x011"
+1625759094.530281 [0 lua] "rpush" "redisson_delay_queue:{test:for:delayQueue:duplicate}" "\xa8\xf53\x1eN\xbc\xccC\x04\x00\x00\x00\x00\x00\x00\x00\x04>\x011"
+1625759094.530297 [0 lua] "zrange" "redisson_delay_queue_timeout:{test:for:delayQueue:duplicate}" "0" "0"
+1625759094.530308 [0 lua] "publish" "redisson_delay_queue_channel:{test:for:delayQueue:duplicate}" "1625759099527"
+
+-- take
+1625759185.658587 [0 192.168.1.2:63523] "SUBSCRIBE" "redisson_delay_queue_channel:{test:for:delayQueue:duplicate}"
+1625759185.672629 [0 192.168.1.2:63522] "EVAL" "local expiredValues = redis.call('zrangebyscore', KEYS[2], 0, ARGV[1], 'limit', 0, ARGV[2]); if #expiredValues > 0 then for i, v in ipairs(expiredValues) do local randomId, value = struct.unpack('dLc0', v);redis.call('rpush', KEYS[1], value);redis.call('lrem', KEYS[3], 1, v);end; redis.call('zrem', KEYS[2], unpack(expiredValues));end; local v = redis.call('zrange', KEYS[2], 0, 0, 'WITHSCORES'); if v[1] ~= nil then return v[2]; end return nil;" "3" "test:for:delayQueue:duplicate" "redisson_delay_queue_timeout:{test:for:delayQueue:duplicate}" "redisson_delay_queue:{test:for:delayQueue:duplicate}" "1625759185664" "100"
+1625759185.672762 [0 lua] "zrangebyscore" "redisson_delay_queue_timeout:{test:for:delayQueue:duplicate}" "0" "1625759185664" "limit" "0" "100"
+1625759185.672822 [0 lua] "rpush" "test:for:delayQueue:duplicate" "\x04>\x011"
+1625759185.672858 [0 lua] "lrem" "redisson_delay_queue:{test:for:delayQueue:duplicate}" "1" "\xa8\xf53\x1eN\xbc\xccC\x04\x00\x00\x00\x00\x00\x00\x00\x04>\x011"
+1625759185.672884 [0 lua] "rpush" "test:for:delayQueue:duplicate" "\x04>\x011"
+1625759185.672893 [0 lua] "lrem" "redisson_delay_queue:{test:for:delayQueue:duplicate}" "1" "\x1a/\x97\xff\xafY\xc9\xc3\x04\x00\x00\x00\x00\x00\x00\x00\x04>\x011"
+1625759185.672921 [0 lua] "rpush" "test:for:delayQueue:duplicate" "\x04>\x012"
+1625759185.672954 [0 lua] "lrem" "redisson_delay_queue:{test:for:delayQueue:duplicate}" "1" "\xads\r\xbd^#\xb9\xc3\x04\x00\x00\x00\x00\x00\x00\x00\x04>\x012"
+1625759185.672982 [0 lua] "zrem" "redisson_delay_queue_timeout:{test:for:delayQueue:duplicate}" "\xa8\xf53\x1eN\xbc\xccC\x04\x00\x00\x00\x00\x00\x00\x00\x04>\x011" "\x1a/\x97\xff\xafY\xc9\xc3\x04\x00\x00\x00\x00\x00\x00\x00\x04>\x011" "\xads\r\xbd^#\xb9\xc3\x04\x00\x00\x00\x00\x00\x00\x00\x04>\x012"
+1625759185.673009 [0 lua] "zrange" "redisson_delay_queue_timeout:{test:for:delayQueue:duplicate}" "0" "0" "WITHSCORES"
+1625759185.678801 [0 192.168.1.2:63522] "BLPOP" "test:for:delayQueue:duplicate" "0"
+1625759185.695557 [0 192.168.1.2:63522] "BLPOP" "test:for:delayQueue:duplicate" "0"
+1625759185.699593 [0 192.168.1.2:63522] "BLPOP" "test:for:delayQueue:duplicate" "0"
+1625759185.702943 [0 192.168.1.2:63522] "BLPOP" "test:for:delayQueue:duplicate" "0"
+
+
+-- add lua
+local expiredValues = redis.call('zrangebyscore', KEYS[2], 0, ARGV[1], 'limit', 0, ARGV[2]); if #expiredValues > 0 then for i, v in ipairs(expiredValues) do local randomId, value = struct.unpack('dLc0', v);redis.call('rpush', KEYS[1], value);redis.call('lrem', KEYS[3], 1, v);end; redis.call('zrem', KEYS[2], unpack(expiredValues));end; local v = redis.call('zrange', KEYS[2], 0, 0, 'WITHSCORES'); if v[1] ~= nil then return v[2]; end return nil;
