@@ -10,10 +10,7 @@ import org.redisson.client.protocol.ScoredEntry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -50,14 +47,19 @@ public class RedissonOps {
      *
      * @param key
      * @param value
-     * @param xx            true强制存在才设置；false强制不存在才设置
+     * @param xx            true强制存在才设置；false强制不存在才设置；null不作要求，不存在则创建，存在则覆盖
      * @param expireSeconds 过期秒数，小于等于0不设置过期时间
      * @return true设置成功
      */
-    public boolean set(final String key, Object value, boolean xx, Integer expireSeconds) {
+    public boolean set(final String key, Object value, Boolean xx, Integer expireSeconds) {
         RBucket<Object> rb = client.getBucket(key);
         boolean result = false;
-        if (xx) {// 强制存在
+        if (null == xx) {
+            if (expireSeconds > 0)
+                rb.set(value, expireSeconds, TimeUnit.SECONDS);
+            else
+                rb.set(value);
+        } else if (xx) {// 强制存在
             if (expireSeconds > 0)
                 result = rb.setIfExists(value, expireSeconds, TimeUnit.SECONDS);
             else
@@ -239,6 +241,11 @@ public class RedissonOps {
         if (ReflectUtils.isBaseClass(obj.getClass()))
             throw new IllegalArgumentException("Java base class cannot save by hash: " + obj.getClass().getName());
         Map map = ReflectUtils.membersToMap(obj);
+        for (Iterator<Map.Entry> it = map.entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry e = it.next();
+            if (null == e.getValue())
+                it.remove();
+        }
         RMap rmap = client.getMap(key);
         rmap.putAll(map);
     }
@@ -309,11 +316,12 @@ public class RedissonOps {
      * @return
      */
     public <T> T hGetBean(final String redisKey, Class<T> cls) {
-        Set<String> names = ReflectUtils.parseMember(cls);
-        Map<String, Object> map = hGets(redisKey, names);
+//        Set<String> names = ReflectUtils.parseMember(cls);
+        Map<String, Object> map = hGetMap(redisKey);
 
         if (null == map || map.isEmpty()) return null;
 
+//        T t = objectMapper.convertValue(map, type);
         T t = ReflectUtils.genBean(cls, map);
         return t;
     }
