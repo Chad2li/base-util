@@ -3,9 +3,14 @@ package cn.lyjuan.base.redis.redisson;
 import cn.lyjuan.base.util.DateUtils;
 import cn.lyjuan.base.util.JsonUtils;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.jsontype.TypeResolverBuilder;
+import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
@@ -13,6 +18,8 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
+import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
+import io.netty.buffer.ByteBuf;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,10 +28,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
+import org.redisson.client.protocol.Encoder;
 import org.redisson.client.protocol.ScoredEntry;
 import org.redisson.codec.JsonJacksonCodec;
 import org.redisson.config.Config;
 
+import javax.xml.datatype.XMLGregorianCalendar;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -38,23 +48,22 @@ public class RedissonOpsTest {
     private static final String SLAVER = "redis://192.168.1.202:7102";
     private static final String PWD = "XXWck7QQQghPbittPNQErNyzxtOhcikVP0KifN3VsKjw8oht4gxN6RgSh3FGbVsPOskBF9AVQMXmjtCIDCrkUx8h10ifWSBcecd";
 
+    private JsonJacksonCodec codec;
+
 
     private ObjectMapper createObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
         // 为null的数据不序列化
-//        objectMapper.getSerializerProvider().setNullValueSerializer(new JsonSerializer<Object>() {
-//            @Override
-//            public void serialize(Object value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-//                //设置返回null转为 空字符串""
-//                gen.writeString("");
-//            }
-//        });
 //        mapper.setDateFormat(new SimpleDateFormat(DateUtils.FMT_DATE_TIME));
         // 如果json中有新增的字段并且是实体类类中不存在的，不报错
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         // 下面配置解决LocalDateTime序列化的问题
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         JavaTimeModule javaTimeModule = new JavaTimeModule();
+
+        // 生成带有有类型的json
+        mapper.activateDefaultTyping(LaissezFaireSubTypeValidator.instance, ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.WRAPPER_ARRAY);
+//        mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.EVERYTHING);
 
         //日期序列化
         javaTimeModule.addSerializer(LocalDateTime.class, new LocalDateTimeSerializer(DateTimeFormatter.ofPattern(DateUtils.FMT_DATE_TIME)));
@@ -66,7 +75,11 @@ public class RedissonOpsTest {
         javaTimeModule.addDeserializer(LocalDate.class, new LocalDateDeserializer(DateTimeFormatter.ofPattern(DateUtils.FMT_DATE)));
         javaTimeModule.addDeserializer(LocalTime.class, new LocalTimeDeserializer(DateTimeFormatter.ofPattern(DateUtils.FMT_TIME)));
 
-        mapper.registerModule(javaTimeModule);
+        mapper.registerModule(new Jdk8Module())
+                .registerModule(javaTimeModule)
+                .registerModule(new ParameterNamesModule())
+        //
+        ;
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
         return mapper;
@@ -76,7 +89,7 @@ public class RedissonOpsTest {
     public void before() {
         Config config = new Config();
         ObjectMapper mapper = createObjectMapper();
-        JsonJacksonCodec codec = new JsonJacksonCodec(mapper);
+        codec = new CustomJsonJacksonCodec(mapper);
         config.setCodec(codec)
                 .useReplicatedServers()
                 .setDatabase(0)
@@ -109,6 +122,12 @@ public class RedissonOpsTest {
         Map val = redissonOps.get(key);
         System.out.println("result map ==> " + JsonUtils.to(val));
         Assert.assertEquals(map.get("name"), val.get("name"));
+
+        // localDateTime -> no
+//        LocalDateTime now = LocalDateTime.now();
+//        redissonOps.set(key, now);
+//        LocalDateTime now2 = redissonOps.get(key);
+//        Assert.assertEquals(now, now2);
 
         // string
         redissonOps.set(key, "abc");
@@ -156,6 +175,14 @@ public class RedissonOpsTest {
         String[] arr = new String[]{"a", "b", "c"};
         redissonOps.set(key, arr);
 
+
+        // bean
+        User userVal = user();
+        redissonOps.set(key, userVal);
+        User userVal2 = redissonOps.get(key);
+        Assert.assertEquals(userVal.getName(), userVal2.getName());
+        Assert.assertEquals(DateUtils.format(userVal.getCreateTime(), DateUtils.FMT_DATE_TIME),
+                DateUtils.format(userVal2.getCreateTime(), DateUtils.FMT_DATE_TIME));
 
         redissonOps.del(key);
     }
@@ -231,6 +258,8 @@ public class RedissonOpsTest {
     public void hash() {
         String key = "test:for:redisson:hash";
         redissonOps.del(key);
+
+
         String stringK = "string";
         String intK = "int";
 
@@ -240,6 +269,7 @@ public class RedissonOpsTest {
         map.put(stringK, "str");
         map.put("double", 1.0);
         map.put("boolean", false);
+        map.put("localDateTime", LocalDateTime.now());
         Map subMap = new HashMap();
         subMap.put("string2", "str2");
         map.put("map", subMap);
@@ -276,17 +306,16 @@ public class RedissonOpsTest {
         Assert.assertTrue(2 == result.size());
 
         // set bean
+        // set with null
+        User<User.UserAttr> userVal = null;
+        userVal = new User("CacheVal", null, 18, "test@mail.com", null, null, null);
+        redissonOps.hSetBean(key, userVal);
         redissonOps.del(key);
-        User.UserAttr attr = new User.UserAttr(175, 65);
-        List<User.UserAttr> attrs = new ArrayList<>(2);
-        User.UserAttr attr1 = new User.UserAttr(176, 66);
-        User.UserAttr attr2 = new User.UserAttr(177, 67);
-        attrs.add(attr1);
-        attrs.add(attr2);
-        User<User.UserAttr> userVal = new User("CacheVal", "Zhangsan", 18, "test@mail.com", attr, attrs);
+
+        userVal = user();
         redissonOps.hSetBean(key, userVal);
         Map mapVal = redissonOps.hGetMap(key);
-        Assert.assertEquals(5, mapVal.size());
+        Assert.assertEquals(6, mapVal.size());
         Assert.assertEquals("Zhangsan", mapVal.get("name"));
         Assert.assertNull(mapVal.get("cache"));
         Assert.assertNull(mapVal.get("staticTest"));
@@ -360,6 +389,95 @@ public class RedissonOpsTest {
         redissonOps.del(key);
     }
 
+    private User user() {
+        User userVal = null;
+        User.UserAttr attr = new User.UserAttr(175, 65);
+        List<User.UserAttr> attrs = new ArrayList<>(2);
+        User.UserAttr attr1 = new User.UserAttr(176, 66);
+        User.UserAttr attr2 = new User.UserAttr(177, 67);
+        attrs.add(attr1);
+        attrs.add(attr2);
+        userVal = new User("CacheVal", "Zhangsan", 18, "test@mail.com", attr, attrs, LocalDateTime.now());
+
+        return userVal;
+    }
+
+
+    @Test
+    public void json() throws Exception {
+        Encoder encoder = codec.getValueEncoder();
+
+        // int
+        long a = 1;
+        print("int", encoder.encode(a));
+
+        // sample -> no ????
+        LocalDateTime now = LocalDateTime.now();
+        print("now", encoder.encode(now));
+
+        // obj -> ok
+        User user = user();
+        print("user", encoder.encode(user));
+
+        // map -> ok
+        Map map = new HashMap(2);
+        map.put("int", 1);
+        map.put("time", now);
+        print("map", encoder.encode(map));
+    }
+
+    private void print(String title, ByteBuf b) {
+        System.out.println(title + " ==> " + b.toString(StandardCharsets.UTF_8));
+    }
+
+
+    public class CustomJsonJacksonCodec extends JsonJacksonCodec {
+
+        public CustomJsonJacksonCodec(ObjectMapper mapObjectMapper) {
+            super(mapObjectMapper);
+        }
+
+        @Override
+        protected void initTypeInclusion(ObjectMapper mapObjectMapper) {
+            TypeResolverBuilder<?> mapTyper = new ObjectMapper.DefaultTypeResolverBuilder(ObjectMapper.DefaultTyping.NON_FINAL) {
+                public boolean useForType(JavaType t) {
+                    Class cls = t.getRawClass();
+                    switch (_appliesFor) {
+                        case NON_CONCRETE_AND_ARRAYS:
+                            while (t.isArrayType()) {
+                                t = t.getContentType();
+                            }
+                            // fall through
+                        case OBJECT_AND_NON_CONCRETE:
+                            return (t.getRawClass() == Object.class) || !t.isConcrete();
+                        case NON_FINAL:
+                            while (t.isArrayType()) {
+                                t = t.getContentType();
+                            }
+                            // to fix problem with wrong long to int conversion
+                            if (cls == Long.class) {
+                                return true;
+                            }
+                            if (cls == LocalDateTime.class ||
+                                    cls == LocalDate.class ||
+                                    cls == LocalTime.class)
+                                return true;
+                            if (cls == XMLGregorianCalendar.class) {
+                                return false;
+                            }
+                            return !t.isFinal(); // includes Object.class
+                        default:
+                            // case JAVA_LANG_OBJECT:
+                            return cls == Object.class;
+                    }
+                }
+            };
+            mapTyper.init(JsonTypeInfo.Id.CLASS, null);
+            mapTyper.inclusion(JsonTypeInfo.As.PROPERTY);
+            mapObjectMapper.setDefaultTyping(mapTyper);
+        }
+    }
+
     @NoArgsConstructor
     @AllArgsConstructor
     @Data
@@ -374,6 +492,8 @@ public class RedissonOpsTest {
         public String email;
         public T attr;
         public List<T> attrs;
+        @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
+        public LocalDateTime createTime;
 
         @Data
         @AllArgsConstructor

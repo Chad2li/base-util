@@ -1,14 +1,16 @@
 package cn.lyjuan.base.redis.redisson;
 
+import cn.lyjuan.base.redis.redisson.codec.CustomJsonJacksonCodec;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
-import org.redisson.codec.JsonJacksonCodec;
+import org.redisson.client.codec.BaseCodec;
 import org.redisson.config.Config;
 import org.redisson.config.ReadMode;
 import org.redisson.config.TransportMode;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -135,13 +137,13 @@ public class RedissonReplicaConfig {
     private String clientName;
 
     @Bean
-    public RedissonOps redissonOps(@Autowired ObjectMapper objectMapper) {
+    public RedissonOps redissonOps(@Autowired @Qualifier(RedissonBaseConfig.OBJECT_MAPPER_NAME) ObjectMapper objectMapper) {
         RedissonClient client = redissonClient(objectMapper);
         return new RedissonOps(client, objectMapper);
     }
 
     public RedissonClient redissonClient(ObjectMapper objectMapper) {
-        JsonJacksonCodec codec = new JsonJacksonCodec(objectMapper);
+        BaseCodec codec = new CustomJsonJacksonCodec(objectMapper);
 
         Set<String> slaverSet = new HashSet<>(this.slavers.length);
         for (String s : this.slavers)
