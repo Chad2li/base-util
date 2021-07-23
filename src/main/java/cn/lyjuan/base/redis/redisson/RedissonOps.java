@@ -10,6 +10,7 @@ import org.redisson.client.protocol.ScoredEntry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
+import java.security.cert.CollectionCertStoreParameters;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -430,12 +431,12 @@ public class RedissonOps {
     }
 
     /**
-     * 往redis zset中新增 member，如果member已存在，则覆盖 score
+     * 往redis zset中新增 member
      *
      * @param redisKey redis键
      * @param member   成员
      * @param score    排序分数
-     * @return true增加成功；false增加失败
+     * @return true增加成功；false 如果member已存在，则增加失败
      */
     public boolean zAdd(final String redisKey, Object member, double score) {
         RScoredSortedSet rs = client.getScoredSortedSet(redisKey);
@@ -518,6 +519,60 @@ public class RedissonOps {
     }
 
     /**
+     * 取Zset中score最小者
+     *
+     * @param key redis键
+     * @param <T>
+     * @return 最小成员，zset无成员返回 null
+     */
+    public <T> T zMin(final String key) {
+        RScoredSortedSet<T> rs = client.getScoredSortedSet(key);
+        Collection<T> cs = rs.valueRange(0, 0);
+        if (null == cs || cs.isEmpty())
+            return null;
+        return cs.iterator().next();
+    }
+
+    /**
+     * 取Zset中score最大者
+     *
+     * @param key redis键
+     * @param <T>
+     * @return 最大成员，zset无成员返回 null
+     */
+    public <T> T zMax(final String key) {
+        RScoredSortedSet<T> rs = client.getScoredSortedSet(key);
+        Collection<T> cs = rs.valueRange(-1, -1);
+        if (null == cs || cs.isEmpty())
+            return null;
+        return cs.iterator().next();
+    }
+
+    /**
+     * zset成员score自增
+     *
+     * @param key    键
+     * @param member 成员
+     * @return 返回score值改变后的排名，从0开始升序，如果score相同，后加入的排序后
+     */
+    public double zIncr(final String key, Object member) {
+        RScoredSortedSet rs = client.getScoredSortedSet(key);
+        return rs.addScore(member, 1);
+    }
+
+    /**
+     * zset成员score自减
+     *
+     * @param key    键
+     * @param member 成员
+     * @return 返回score改变后的排名，从0开始升序
+     */
+    public double zDecrAndRank(final String key, Object member) {
+        RScoredSortedSet rs = client.getScoredSortedSet(key);
+        return rs.addScore(member, -1);
+    }
+
+    /**
      * 根据score获取redis zset成员及分数
      *
      * @param redisKey   键
@@ -567,5 +622,27 @@ public class RedissonOps {
      */
     public RScript getScript() {
         return client.getScript();
+    }
+
+    /**
+     * 获取阻塞队列
+     *
+     * @param queueName 队列名称，全局唯一
+     * @param <T>
+     * @return
+     */
+    public <T> RBlockingQueue<T> getBlockingQueue(final String queueName) {
+        return client.getBlockingQueue(queueName);
+    }
+
+    /**
+     * 获取指定阻塞队列的延迟队列
+     *
+     * @param queue 阻塞队列
+     * @param <T>
+     * @return
+     */
+    public <T> RDelayedQueue<T> getDelayQueue(RBlockingQueue<T> queue) {
+        return client.getDelayedQueue(queue);
     }
 }
