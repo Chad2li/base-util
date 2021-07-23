@@ -386,6 +386,40 @@ public class RedissonOpsTest {
         Assert.assertTrue(2 == scoreVal.size());
 
 
+        // min & max - null
+        redissonOps.del(key);
+        Object obj = redissonOps.zMax(key);
+        Assert.assertNull(obj);
+        // min & max
+        booleanVal = redissonOps.zAdd(key, member1, 1);
+        Assert.assertTrue(booleanVal);
+        booleanVal = redissonOps.zAdd(key, member2, 2);
+        Assert.assertTrue(booleanVal);
+        String strVal = redissonOps.zMax(key);// max
+        Assert.assertEquals(member2, strVal);
+        strVal = redissonOps.zMin(key);// min
+        Assert.assertEquals(member1, strVal);
+
+        // incr
+        redissonOps.del(key);
+        doubleVal = redissonOps.zIncr(key, member1);
+        Assert.assertEquals(1, doubleVal, 0);
+        doubleVal = redissonOps.zIncr(key, member2);
+        Assert.assertEquals(1, doubleVal, 0);
+        // 相同score顺序不变
+        doubleVal = redissonOps.zIncr(key, member2);
+        Assert.assertEquals(2, doubleVal, 0);
+        doubleVal = redissonOps.zIncr(key, member1);
+        Assert.assertEquals(2, doubleVal, 0);
+
+        // decr
+        redissonOps.del(key);
+        doubleVal = redissonOps.zDecrAndRank(key, member1);
+        Assert.assertEquals(-1, doubleVal, 0);
+        doubleVal = redissonOps.zScore(key, member1);
+        Assert.assertEquals(-1D, doubleVal, 0);
+        redissonOps.zIncr(key, member1);
+
         redissonOps.del(key);
     }
 
