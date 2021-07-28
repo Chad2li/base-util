@@ -1,6 +1,7 @@
 package cn.lyjuan.base.util;
 
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
@@ -85,7 +86,11 @@ public class DFAStore {
             }
 
             if (findEnd) {// 有找到isEnd标识元素
-                DFAResult result = new DFAResult(i, findLen);
+                char[] cs = new char[findLen];
+                for (int j = 0; j < findLen; j++)
+                    cs[j] = arr[j + i];
+
+                DFAResult result = new DFAResult(i, findLen, new String(cs));
                 results.add(result);
             }
 
@@ -135,13 +140,25 @@ public class DFAStore {
     /**
      * 过滤结果
      */
+    @Getter
     public static class DFAResult {
+        /**
+         * 原词开始索引
+         */
         int start;
+        /**
+         * 关键词长度
+         */
         int len;
+        /**
+         * 命中的词，包含跳过的无效词
+         */
+        String key;
 
-        DFAResult(int start, int len) {
+        DFAResult(int start, int len, String key) {
             this.start = start;
             this.len = len;
+            this.key = key;
         }
     }
 
