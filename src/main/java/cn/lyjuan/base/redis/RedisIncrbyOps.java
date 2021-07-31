@@ -4,6 +4,7 @@ import cn.lyjuan.base.redis.lua.ARedisLua;
 import cn.lyjuan.base.redis.redisson.RedissonOps;
 import cn.lyjuan.base.util.JsonUtils;
 import cn.lyjuan.base.util.StringUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RScript;
 import org.redisson.config.ReadMode;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,15 +18,16 @@ import java.util.Map;
 /**
  * 扩展redis incr和 hincr 命令
  * <p>
- *     1. 同时支持 incrby 和hash的 hincrby 命令。{@code hashKey}为null时使用 incrby，不为null时使用 hincrby<br/>
- *     2. 默认增值为1<br/>
- *     3. 支持限制{@code limitEqMax}(最大值，包含)和{@code limitEqMin}(最小值，包含)，当超出限制时不改变原值，并返回具体的操作失败原因<br/>
- *     4. {@code exists} 强制操作key存在或不存在，可用的值为{@link Exists}。该值为null表示不要求原值是否存在（当不存在默认原值为0）。
- *     原值不符合{@code exists}强制要求时，不改变原值，并返回具体操作失败原因<br/>
- *     5. 失败原因查看{@link Result}
+ * 1. 同时支持 incrby 和hash的 hincrby 命令。{@code hashKey}为null时使用 incrby，不为null时使用 hincrby<br/>
+ * 2. 默认增值为1<br/>
+ * 3. 支持限制{@code limitEqMax}(最大值，包含)和{@code limitEqMin}(最小值，包含)，当超出限制时不改变原值，并返回具体的操作失败原因<br/>
+ * 4. {@code exists} 强制操作key存在或不存在，可用的值为{@link Exists}。该值为null表示不要求原值是否存在（当不存在默认原值为0）。
+ * 原值不符合{@code exists}强制要求时，不改变原值，并返回具体操作失败原因<br/>
+ * 5. 失败原因查看{@link Result}
  *
  * </p>
  */
+@Slf4j
 public class RedisIncrbyOps extends ARedisLua {
     public static final String BEAN_NAME = "appApiRedisIncrbyOps";
 
@@ -120,7 +122,7 @@ public class RedisIncrbyOps extends ARedisLua {
             argvMap.put("exists", exists.name());
 
         String json = JsonUtils.to(argvMap);
-        System.out.println("Redis lua script argvObj: " + json);
+//        log.debug("Redis lua script argvObj: " + json);
 
         /**
          * 调用脚本并执行
@@ -128,9 +130,10 @@ public class RedisIncrbyOps extends ARedisLua {
 //        List list = (List) execute(keyList, json);
         String incrStr = String.valueOf(null == incrby ? 1 : incrby);
         String existCtl = null == exists ? null : exists.name();
-        List list = (List) execute(keyList, JsonUtils.to(hashKey), incrStr,
+        // hashKey为null会出错，必须在null会加双引号
+        List list = (List) execute(keyList, String.valueOf(JsonUtils.to(hashKey)), incrStr,
                 String.valueOf(limitEqMax), String.valueOf(limitEqMin), existCtl);
-        System.out.println("result ==> " + JsonUtils.to(list));
+//        log.debug("result ==> " + JsonUtils.to(list));
 //
         Result result = new Result();
         result.code = Integer.parseInt(list.get(0).toString());

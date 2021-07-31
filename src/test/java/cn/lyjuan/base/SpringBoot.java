@@ -17,7 +17,7 @@ import javax.annotation.Resource;
 
 @SpringBootApplication
 @ImportAutoConfiguration(classes = {RedisReplicaConfig.class
-        , RedissonReplicaConfig.class
+//        , RedissonReplicaConfig.class
 })
 @EnableConfigurationProperties
 public class SpringBoot {

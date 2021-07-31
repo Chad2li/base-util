@@ -1,6 +1,5 @@
 package cn.lyjuan.base.util;
 
-import cn.lyjuan.base.http.filter.log.BufferedRequestWrapper;
 import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -15,7 +14,6 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Type;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;

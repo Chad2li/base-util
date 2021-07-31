@@ -55,8 +55,8 @@ if exists and string.sub(exists, 1, 1) == '"' then
 end
 
 local value
-if hashKey then
---    redis.call('set', 'test:for:incrby:hashKey', hashKey)
+if hashKey and not '' == hashKey then
+    redis.call('set', 'test:for:incrby:hashKey', hashKey)
     value = redis.call("hget", redisKey, tostring(hashKey))
 else
     value = redis.call("get", redisKey)

@@ -255,10 +255,43 @@ public class RedissonOpsTest {
     }
 
     @Test
+    public void set() {
+        String key1 = "test:for:redisson:set1";
+        String key2 = "test:for:redisson:set2";
+        String key3 = "test:for:redisson:set3";
+        String key4 = "test:for:redisson:set4";
+        redissonOps.del(key1, key2, key3, key4);
+
+        int m1 = 1;
+        int m2 = 2;
+        int m3 = 3;
+
+        // add & random
+        redissonOps.sAdd(key1, m1);
+        int intVal = redissonOps.sRandom(key1);
+        Assert.assertTrue(m1 == intVal);
+
+        // diffStore
+        redissonOps.sAdds(key1, m1, m2);
+        redissonOps.sAdd(key2, m2);
+        redissonOps.sDiffStore(key3, key1, key2);
+        intVal = redissonOps.sSize(key3);
+        Assert.assertTrue(1 == intVal);
+
+        // adds
+        redissonOps.del(key1);
+        boolean booleanVal = redissonOps.sAdds(key1, m1, m2);
+        Assert.assertTrue(booleanVal);
+        booleanVal = redissonOps.sAdds(key1, m1, m2);
+        Assert.assertFalse(booleanVal);
+        booleanVal = redissonOps.sAdds(key2, m1, m2, 3, 4);
+        Assert.assertTrue(booleanVal);
+    }
+
+    @Test
     public void hash() {
         String key = "test:for:redisson:hash";
         redissonOps.del(key);
-
 
         String stringK = "string";
         String intK = "int";

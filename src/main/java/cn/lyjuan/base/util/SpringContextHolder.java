@@ -81,4 +81,10 @@ public class SpringContextHolder implements ApplicationContextAware {
         }
     }
 
+    public SpringContextHolder(ApplicationContext applicationContext) {
+        setApplicationContext(applicationContext);
+    }
+
+    public SpringContextHolder() {
+    }
 }

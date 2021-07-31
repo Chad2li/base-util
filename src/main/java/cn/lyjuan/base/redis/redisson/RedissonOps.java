@@ -363,8 +363,37 @@ public class RedissonOps {
     public boolean sAdd(final String key, Object value) {
         if (StringUtils.isNull(value))
             throw new NullPointerException("Redis cannot set null to set");
-        RSet<Object> rset = client.getSet(key);
-        return rset.add(value);
+        RSet<Object> rs = client.getSet(key);
+        return rs.add(value);
+    }
+
+    /**
+     * 批量给指定Set增加元素，如果该Set已存在，则执行union（并集）操作
+     *
+     * @param key    redis键
+     * @param values 新增元素
+     * @return true如果该Set元素内容发生变化
+     */
+    public boolean sAdds(final String key, Collection values) {
+        if (StringUtils.isNull(values))
+            return false;
+
+        RSet rs = client.getSet(key);
+        return rs.addAll(values);
+    }
+
+    /**
+     * 批量给指定Set增加元素，如果该Set已存在，则执行union（并集）操作
+     *
+     * @param key    redis键
+     * @param values 新增元素
+     * @return true如果该Set元素内容发生变化
+     */
+    public boolean sAdds(final String key, Object... values) {
+        if (StringUtils.isNullArray(values))
+            return false;
+
+        return sAdds(key, Arrays.asList(values));
     }
 
     /**
@@ -428,6 +457,30 @@ public class RedissonOps {
     public <T> T sRandom(final String key) {
         RSet<T> rset = client.getSet(key);
         return rset.random();
+    }
+
+    /**
+     * 随机取 count 个元素
+     *
+     * @param key   redis键
+     * @param count 随机取出的数量
+     * @param <T>
+     * @return
+     */
+    public <T> Set<T> sRandom(final String key, int count) {
+        RSet<T> rs = client.getSet(key);
+        return rs.random(count);
+    }
+
+    /**
+     * 取 {@code diffKeys} 的差集，并存入 {@code dest}中，如果 dest存在则覆盖<br/>
+     * 以 diffKeys 第1个key指定的Set为主，对比其后的Set，找出1中所有不存在于其他set的元素，放入dest
+     *
+     * @param dest
+     * @param diffKeys
+     */
+    public void sDiffStore(final String dest, final String... diffKeys) {
+        client.getSet(dest).diff(diffKeys);
     }
 
     /**
