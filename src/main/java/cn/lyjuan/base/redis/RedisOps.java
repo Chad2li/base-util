@@ -2,7 +2,6 @@ package cn.lyjuan.base.redis;
 
 import cn.lyjuan.base.util.JsonUtils;
 import cn.lyjuan.base.util.StringUtils;
-import lombok.Data;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.*;
@@ -204,6 +203,33 @@ public class RedisOps {
     public String get(final String key) {
         ValueOperations<String, String> operations = redisTemplate.opsForValue();
         return operations.get(key);
+    }
+
+    /**
+     * 获取值，如果键不存在，则设置为默认值，并返回
+     *
+     * @param k          键
+     * @param defaultVal 默认值
+     * @param type       值类型
+     * @return T
+     * @date 2021/8/1 20:33
+     * @author chad
+     * @since 2.2.11
+     */
+    public <T> T get(final String k, T defaultVal, Type type) {
+        ValueOperations<String, String> operations = redisTemplate.opsForValue();
+        String val = operations.get(k);
+        if (!StringUtils.isNull(val)) {
+            // 大部分情况下这里就返回了
+            return JsonUtils.from(type, val);
+        }
+        Boolean isSetOk = operations.setIfAbsent(k, JsonUtils.to(defaultVal));
+        if (isSetOk) {
+            return defaultVal;
+        }
+
+        // 递归调用
+        return get(k, defaultVal, type);
     }
 
     /**
@@ -469,8 +495,26 @@ public class RedisOps {
             list.add(JsonUtils.to(values[i]));
         }
 
+
         return setOper.remove(k, list.toArray());
     }
+
+    /**
+     * 以source为基础，对比ks，找出差集，存入dest
+     *
+     * @param dest   目标SET
+     * @param source 源SET
+     * @param ks     差集比对的SET
+     * @return void
+     * @date 2021/8/1 20:18
+     * @author chad
+     * @since 2.2.11
+     */
+    public void sDiffStore(final String dest, final String source, final String... ks) {
+        SetOperations<String, String> setOper = redisTemplate.opsForSet();
+        setOper.differenceAndStore(source, Arrays.asList(ks), dest);
+    }
+
 
     /**
      * Set元素大小
@@ -529,6 +573,31 @@ public class RedisOps {
         });
         return targets;
     }
+
+    /**
+     * 随机获取Set中指定数量的元素
+     *
+     * @param k     redis键
+     * @param count 随机获取的数量
+     * @return java.util.Set<T>
+     * @date 2021/8/1 20:27
+     * @author chad
+     * @since 2.2.11
+     */
+    public <T> Set<T> sRandom(final String k, int count, Type cls) {
+        SetOperations<String, String> setOper = redisTemplate.opsForSet();
+        List<String> list = setOper.randomMembers(k, count);
+        if (StringUtils.isNull(list)) {
+            return Collections.EMPTY_SET;
+        }
+        Set<T> set = new HashSet<>(list.size());
+        for (String s : list) {
+            set.add(JsonUtils.from(cls, s));
+        }
+
+        return set;
+    }
+
 
     /**
      * 有序集合添加

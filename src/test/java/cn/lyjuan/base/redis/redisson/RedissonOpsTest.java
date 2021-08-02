@@ -184,6 +184,13 @@ public class RedissonOpsTest {
         Assert.assertEquals(DateUtils.format(userVal.getCreateTime(), DateUtils.FMT_DATE_TIME),
                 DateUtils.format(userVal2.getCreateTime(), DateUtils.FMT_DATE_TIME));
 
+        // get with default
+        redissonOps.del(key);
+        intVal = redissonOps.get(key, 1);
+        Assert.assertTrue(1 == intVal);
+        intVal = redissonOps.get(key, 2);
+        Assert.assertTrue(1 == intVal);
+
         redissonOps.del(key);
     }
 

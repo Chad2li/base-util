@@ -10,7 +10,6 @@ import org.redisson.client.protocol.ScoredEntry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
-import java.security.cert.CollectionCertStoreParameters;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -85,6 +84,32 @@ public class RedissonOps {
         RBucket<T> bucket = client.getBucket(key);
         T t = bucket.get();
         return t;
+    }
+
+    /**
+     * 获取值，如果键不存在，则设置为默认值并返回
+     *
+     * @param key        键
+     * @param defaultVal 默认值，不存在会将远程redis该键设置为默认值
+     * @return T
+     * @date 2021/8/1 17:13
+     * @author chad
+     * @since 1.0.0
+     */
+    public <T> T get(final String key, T defaultVal) {
+        RBucket<T> rb = client.getBucket(key);
+        T val = rb.get();
+        if (!StringUtils.isNull(val)) {
+            // 大部分情况下这里就返回了
+            return val;
+        }
+        boolean isSetOk = rb.trySet(defaultVal);
+        if (isSetOk) {
+            return defaultVal;
+        }
+
+        // 递归调用
+        return get(key, defaultVal);
     }
 
     /**
