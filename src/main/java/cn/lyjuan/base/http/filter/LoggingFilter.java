@@ -85,16 +85,16 @@ public class LoggingFilter implements Filter {
         // 头部信息：
         Map<String, String> header = pkgHeader(req);
         // 客户端信息：IP
-        String clientHost = req.getRemoteHost();
+        String clientIp = SpringUtils.getRemoteIp(req);
         if (!log.isDebugEnabled()) {
-            log.info("REQ-{}: {}:{}", method, clientHost, url);
+            log.info("REQ-{}: {}:{}", method, clientIp, url);
             return;
         }
         // header
         Map.Entry<String, String> entry = null;
 
         log.debug("=========== REQ-{} ===========", method);
-        log.debug("--info {} {}:{}", req.getMethod(), clientHost, url);
+        log.debug("--info {} {}:{}", req.getMethod(), clientIp, url);
         for (Iterator<Map.Entry<String, String>> it = header.entrySet().iterator(); it.hasNext(); ) {
             entry = it.next();
             log.debug("--head {}: {}", entry.getKey(), entry.getValue());
