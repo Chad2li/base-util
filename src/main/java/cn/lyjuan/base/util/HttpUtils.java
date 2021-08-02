@@ -192,15 +192,19 @@ public class HttpUtils {
             conn.setConnectTimeout(CONN_TIMEOUT);
             conn.setReadTimeout(READ_TIMEOUT);
             if (!HTTP_METHOD_DELETE.equalsIgnoreCase(method)) {
-                conn.setDoInput(true); // 设置可输入
-                if (!HTTP_METHOD_GET.equalsIgnoreCase(method))
-                    conn.setDoOutput(true);// 设置可输出
+                // 设置可输入
+                conn.setDoInput(true);
+                if (!HTTP_METHOD_GET.equalsIgnoreCase(method) && !StringUtils.isNull(params)) {
+                    // 不为GET，并且params有值则设置可输出
+                    conn.setDoOutput(true);
+                }
             }
             if (null != headers && !headers.isEmpty()) {
                 for (Map.Entry<String, String> h : headers.entrySet()) {
                     if (StringUtils.isNull(h.getKey())
-                            || StringUtils.isNull(h.getValue()))
+                            || StringUtils.isNull(h.getValue())) {
                         continue;
+                    }
                     conn.setRequestProperty(h.getKey(), h.getValue());
                 }
             }
@@ -208,7 +212,7 @@ public class HttpUtils {
             conn.connect();
 
             // 输出
-            if (!HTTP_METHOD_DELETE.equalsIgnoreCase(method) && !HTTP_METHOD_GET.equalsIgnoreCase(method)) {
+            if (conn.getDoOutput()) {
                 conn.getOutputStream().write(params.getBytes(charset));
                 conn.getOutputStream().flush();
                 conn.getOutputStream().close();
