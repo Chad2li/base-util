@@ -130,10 +130,11 @@ public class RedisIncrbyOps extends ARedisLua {
 //        List list = (List) execute(keyList, json);
         String incrStr = String.valueOf(null == incrby ? 1 : incrby);
         String existCtl = null == exists ? null : exists.name();
+        List<String> values = new ArrayList<>();
         // hashKey为null会出错，必须在null会加双引号
         List list = (List) execute(keyList, String.valueOf(JsonUtils.to(hashKey)), incrStr,
-                String.valueOf(limitEqMax), String.valueOf(limitEqMin), existCtl);
-//        log.debug("result ==> " + JsonUtils.to(list));
+                String.valueOf(limitEqMax), String.valueOf(limitEqMin), String.valueOf(existCtl));
+        log.debug("result ==> " + JsonUtils.to(list));
 //
         Result result = new Result();
         result.code = Integer.parseInt(list.get(0).toString());

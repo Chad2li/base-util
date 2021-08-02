@@ -23,10 +23,13 @@ local exists = ARGV[5]
 --redis.call('del', 'test:for:incrby:limitEqMax', 'test:for:incrby:limitEqMax1', 'test:for:incrby:limitEqMax2')
 --redis.call('del', 'test:for:incrby:limitEqMin', 'test:for:incrby:limitEqMin1', 'test:for:incrby:limitEqMin2')
 --redis.call('del', 'test:for:incrby:exists', 'test:for:incrby:exists1', 'test:for:incrby:exists2')
-if string.find(hashKey, 'null', 1) then hashKey = nil end
-if string.find(limitEqMax, 'null', 1) then limitEqMax = nil end
-if string.find(limitEqMin, 'null', 1) then limitEqMin = nil end
-if string.find(exists, 'null', 1) then exists = nil end
+if 'null' == hashKey or '"null"' == hashKey then hashKey = nil end
+if 'null' == limitEqMax or '"null"' == limitEqMax then limitEqMax = nil end
+if 'null' == limitEqMin or '"null"' == limitEqMin then limitEqMin = nil end
+if 'null' == exists or '"null"' == exists then exists = nil end
+--if string.find(limitEqMax, 'null', 1) then limitEqMax = nil end
+--if string.find(limitEqMin, 'null', 1) then limitEqMin = nil end
+--if string.find(exists, 'null', 1) then exists = nil end
 
 if hashKey and string.sub(hashKey, 1, 1) == '"' then
     hashKey = string.sub(hashKey, 2, string.len(hashKey) - 1)
@@ -55,8 +58,8 @@ if exists and string.sub(exists, 1, 1) == '"' then
 end
 
 local value
-if hashKey and not '' == hashKey then
-    redis.call('set', 'test:for:incrby:hashKey', hashKey)
+if hashKey then
+--    redis.call('set', 'test:for:incrby:hashKey', hashKey)
     value = redis.call("hget", redisKey, tostring(hashKey))
 else
     value = redis.call("get", redisKey)

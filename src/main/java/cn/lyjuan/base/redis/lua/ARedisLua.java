@@ -12,6 +12,7 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scripting.support.ResourceScriptSource;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
@@ -76,9 +77,10 @@ public abstract class ARedisLua {
                 }
             }
         }
-        if (log.isDebugEnabled())
-            log.debug("Exec lua script:{} mode:{} returnType:{} keys:{} params:{}", this.rScriptSha, this.rScriptMode.name(), RScript.ReturnType.MULTI.name(),
+        if (log.isDebugEnabled()) {
+            log.debug("Exec Lua script:{} mode:{} returnType:{} keys:{} params:{}", this.rScriptSha, this.rScriptMode.name(), RScript.ReturnType.MULTI.name(),
                     JsonUtils.to(keyList), JsonUtils.to(values));
+        }
         Object obj = this.rScript.evalSha(this.rScriptMode, this.rScriptSha, RScript.ReturnType.MULTI, (List<Object>) keyList, values);
         return obj;
     }
@@ -94,6 +96,10 @@ public abstract class ARedisLua {
             }
         }
 
+        if (log.isDebugEnabled()) {
+            log.debug("Exec Lua script:{} keys:{} params:{}", this.redisScript.getSha1(),
+                    JsonUtils.to(keyList), JsonUtils.to(values));
+        }
         return this.redisTemplate.execute(redisScript, keyList, values);
     }
 }
