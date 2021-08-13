@@ -619,7 +619,7 @@ public class RedisOps {
      * @param maxScore
      * @return
      */
-    public <T> Set<T> rangeByScore(String key, double minScore, double maxScore, Type cls) {
+    public <T> Set<T> zRangeByScore(String key, double minScore, double maxScore, Type cls) {
         ZSetOperations<String, String> zset = redisTemplate.opsForZSet();
         Set<String> origins = zset.rangeByScore(key, minScore, maxScore);
         if (null == origins || origins.isEmpty()) return Collections.emptySet();
@@ -640,6 +640,58 @@ public class RedisOps {
     public <T> Long zRank(String key, T value) {
         ZSetOperations<String, String> zset = redisTemplate.opsForZSet();
         return zset.rank(key, JsonUtils.to(value));
+    }
+
+    /**
+     * ZSet获取指定排名的成员
+     *
+     * @param key   redis键
+     * @param start 开始位置索引，从0开始，包含
+     * @param end 结束位置索引，尾部为-1，包含
+     * @return
+     */
+    public <T> Set<T> zRangeByRank(final String key, long start, long end, Type type) {
+        ZSetOperations<String, String> zset = redisTemplate.opsForZSet();
+        Set<String> set = zset.range(key, start, end);
+        if (StringUtils.isNull(set)){
+            return Collections.EMPTY_SET;
+        }
+
+        Set<T> setVal = new HashSet<>(set.size());
+        set.forEach(it -> {
+            setVal.add(JsonUtils.from(type, it));
+        });
+
+        return setVal;
+    }
+
+    /**
+     * ZSet删除指定的成员
+     *
+     * @param key    Redis键
+     * @param values ZSet要删除的成员，多个
+     * @return long 删除的成员数量
+     * @date 2021/8/13 14:32
+     * @author chad
+     * @since 1 by chad at 2021/08/13: 新增该方法
+     */
+    public long zRemove(final String key, Object... values) {
+        ZSetOperations<String, String> zset = redisTemplate.opsForZSet();
+        return zset.remove(key, values);
+    }
+
+    /**
+     * ZSet集合成员数量
+     *
+     * @param key redis键
+     * @return long
+     * @date 2021/8/13 14:38
+     * @author chad
+     * @since 1 by chad 2021/8/13: 新增该方法
+     */
+    public long zSize(final String key) {
+        ZSetOperations<String, String> zs = redisTemplate.opsForZSet();
+        return zs.zCard(key);
     }
 
 

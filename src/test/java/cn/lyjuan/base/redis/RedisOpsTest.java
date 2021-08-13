@@ -2,6 +2,7 @@ package cn.lyjuan.base.redis;
 
 import io.lettuce.core.ReadFrom;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
@@ -13,10 +14,13 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.time.Duration;
 import java.util.Map;
+import java.util.Set;
 
 public class RedisOpsTest {
 
     private static final String pwd = "XXWck7QQQghPbittPNQErNyzxtOhcikVP0KifN3VsKjw8oht4gxN6RgSh3FGbVsPOskBF9AVQMXmjtCIDCrkUx8h10ifWSBcecd";
+
+    private static final String KEY_PREFIX = "test:for:redisops:";
 
     private RedisOps redisOps;
 
@@ -61,11 +65,42 @@ public class RedisOpsTest {
 
     @Test
     public void hmGet() {
-        rt.opsForHash().put("test.for.hmget", "1", "abc");
+        String key = KEY_PREFIX + "hash";
+        rt.opsForHash().put(key, "1", "abc");
 
 
 //        redisOps.hmSet("test.for.hmget", 1, "abc");
 //        String val = redisOps.hmGet("test.for.hmget", 1, String.class);
 //        Assert.assertEquals("abc", val);
+    }
+
+    @Test
+    public void zset() {
+        String key = KEY_PREFIX + "zset";
+        String m1 = "a";
+        String m2 = "b";
+        String m3 = "c";
+
+        // add
+        redisOps.zAdd(key, m1, 1);
+        redisOps.zAdd(key, m2, 2);
+        redisOps.zAdd(key, m3, 3);
+
+        // size
+        long longVal = redisOps.zSize(key);
+        Assert.assertEquals(3, longVal);
+
+        // rangeByRank
+        Set<String> setVal = redisOps.zRangeByRank(key, 0, 1, String.class);
+        Assert.assertEquals(2, setVal.size());
+        Assert.assertTrue(setVal.contains(m1));
+        Assert.assertTrue(setVal.contains(m2));
+
+        longVal = redisOps.zRemove(key, m1, m2);
+        Assert.assertEquals(2, longVal);
+        setVal = redisOps.zRangeByRank(key, 0, -1, String.class);
+        Assert.assertEquals(1, setVal.size());
+        Assert.assertTrue(setVal.contains(m3));
+
     }
 }
