@@ -93,7 +93,12 @@ public class RedisOpsTest {
         // rangeByRank
         Set<String> setVal = redisOps.zRangeByRank(key, 0, 1, String.class);
         Assert.assertEquals(2, setVal.size());
+        Assert.assertTrue(setVal.contains(m2));
         Assert.assertTrue(setVal.contains(m1));
+
+        setVal = redisOps.zRangeByRank(key, -2, -1, String.class);
+        Assert.assertEquals(2, setVal.size());
+        Assert.assertTrue(setVal.contains(m3));
         Assert.assertTrue(setVal.contains(m2));
 
         longVal = redisOps.zRemove(key, m1, m2);
