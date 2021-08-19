@@ -1,7 +1,6 @@
 package cn.lyjuan.base.http.filter;
 
 import cn.lyjuan.base.http.filter.log.BufferedRequestWrapper;
-import cn.lyjuan.base.util.HttpUtils;
 import cn.lyjuan.base.util.JsonUtils;
 import cn.lyjuan.base.util.SpringUtils;
 import cn.lyjuan.base.util.StringUtils;
@@ -9,7 +8,6 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
-import org.springframework.web.filter.CorsFilter;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 
@@ -17,12 +15,8 @@ import javax.servlet.*;
 import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -103,10 +97,7 @@ public class LoggingFilter implements Filter {
         Map<String, String> params = SpringUtils.getParam(req);
         String body = null;
         if (!"GET".equalsIgnoreCase(method)) {
-            if (BufferedRequestWrapper.class.isInstance(req))
-                body = ((BufferedRequestWrapper) req).getContent();
-            else
-                body = SpringUtils.reqBody(req);
+            body = SpringUtils.reqBody(req);
         }
         if (null != params && params.size() > 0) {
             for (Iterator<Map.Entry<String, String>> it = params.entrySet().iterator(); it.hasNext(); ) {
