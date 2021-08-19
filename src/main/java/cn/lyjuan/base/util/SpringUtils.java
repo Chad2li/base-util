@@ -232,7 +232,11 @@ public class SpringUtils {
         if (BufferedRequestWrapper.class.isInstance(req)) {
             body = ((BufferedRequestWrapper) req).getContent(charset);
         } else {
-            body = reqBodyByInputWithMark(req, charset);
+            try {
+                body = reqBodyByInputWithMark(req.getInputStream(), charset);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         return body;
@@ -241,20 +245,16 @@ public class SpringUtils {
     /**
      * 使用可重复读取的Input流获取body内容
      *
-     * @param req 请求
-     * @return 请求流内容
+     * @param in 输入流
+     * @return 输入流内容
      */
-    private static String reqBodyByInputWithMark(HttpServletRequest req, String charset) {
-        InputStream in = null;
+    public static String reqBodyByInputWithMark(InputStream in, String charset) {
         String str = null;
         try {
-            in = req.getInputStream();
             if (!in.markSupported()) {
                 throw new RuntimeException("request unsupported mark");
             }
             in.reset();
-
-            // in.mark(req.getContentLength());
 
             str = HttpUtils.postStr(in, charset);
 

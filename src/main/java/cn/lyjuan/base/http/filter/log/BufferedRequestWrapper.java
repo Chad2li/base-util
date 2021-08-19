@@ -2,7 +2,6 @@ package cn.lyjuan.base.http.filter.log;
 
 import cn.lyjuan.base.util.SpringUtils;
 import cn.lyjuan.base.util.StringUtils;
-import com.mysql.cj.x.protobuf.MysqlxDatatypes;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 
 import javax.servlet.ServletInputStream;
@@ -33,12 +32,13 @@ public class BufferedRequestWrapper extends ContentCachingRequestWrapper {
     }
 
     private void wrapperInputStream() {
-        if (null != this.inputStream)
+        if (null != this.inputStream) {
             return;
+        }
         try {
             InputStream is = super.getInputStream();
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            byte buff[] = new byte[1024];
+            byte buff[] = new byte[10 * 1024];
             int read;
             while ((read = is.read(buff)) > 0) {
                 baos.write(buff, 0, read);
@@ -54,7 +54,11 @@ public class BufferedRequestWrapper extends ContentCachingRequestWrapper {
         byte[] bytes = super.getContentAsByteArray();
         if (StringUtils.isNullArray(bytes)) {
             wrapperInputStream();
-            bytes = SpringUtils.reqBody(this).getBytes();
+            try {
+                bytes = SpringUtils.reqBodyByInputWithMark(this.getInputStream(), StandardCharsets.UTF_8.name()).getBytes(StandardCharsets.UTF_8);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         return bytes;
