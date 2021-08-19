@@ -1,6 +1,7 @@
 package cn.lyjuan.base.http.filter;
 
 import cn.lyjuan.base.http.filter.log.BufferedRequestWrapper;
+import cn.lyjuan.base.util.HttpUtils;
 import cn.lyjuan.base.util.JsonUtils;
 import cn.lyjuan.base.util.SpringUtils;
 import cn.lyjuan.base.util.StringUtils;
@@ -96,7 +97,7 @@ public class LoggingFilter implements Filter {
 
         Map<String, String> params = SpringUtils.getParam(req);
         String body = null;
-        if (!"GET".equalsIgnoreCase(method)) {
+        if (!HttpUtils.HTTP_METHOD_GET.equalsIgnoreCase(method)) {
             body = SpringUtils.reqBody(req);
         }
         if (null != params && params.size() > 0) {
