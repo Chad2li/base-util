@@ -1,5 +1,6 @@
 package cn.lyjuan.base.util;
 
+import cn.lyjuan.base.http.filter.log.BufferedRequestWrapper;
 import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -14,6 +15,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -193,28 +195,75 @@ public class SpringUtils {
     }
 
     /**
-     * 读取request body内容
-     *
-     * @param req
-     * @return
+     * @param req 请求
+     * @return java.lang.String
+     * @date 2021/8/19 14:37
+     * @author chad
+     * @see {@link SpringUtils#reqBody(HttpServletRequest, String)}
+     * @since 2.2.11 by chad at 2021/8/19
      */
     public static String reqBody(HttpServletRequest req) {
+
+        return reqBody(req, StandardCharsets.UTF_8.name());
+    }
+
+    /**
+     * 读取request body内容，仅支持以下情况获取请求body内容
+     * <p>
+     * 1. 由 {@link BufferedRequestWrapper} 封装的Req请求，可缓存请求体内容供多次读取<br/>
+     * 2. 输入流 {@link InputStream#markSupported()} 方法返回 true，可多次重复读取，但不提供缓存功能
+     * </p>
+     * 待处理：
+     * <p>
+     * todo 1. 原始流，但可能被读取过，再次读取返回空
+     * todo 2. GET方法抛异常
+     * </p>
+     *
+     * @param req     请求
+     * @param charset 编码，参考{@link java.nio.charset.StandardCharsets}
+     * @return java.lang.String
+     * @date 2021/8/19 14:35
+     * @author chad
+     * @since 2.2.11 by chad at 2021/8/19 根据请求类使用不同方式获取请求内容
+     */
+    public static String reqBody(HttpServletRequest req, String charset) {
+
+        String body;
+        if (BufferedRequestWrapper.class.isInstance(req)) {
+            body = ((BufferedRequestWrapper) req).getContent(charset);
+        } else {
+            body = reqBodyByInputWithMark(req, charset);
+        }
+
+        return body;
+    }
+
+    /**
+     * 使用可重复读取的Input流获取body内容
+     *
+     * @param req 请求
+     * @return 请求流内容
+     */
+    private static String reqBodyByInputWithMark(HttpServletRequest req, String charset) {
         InputStream in = null;
         String str = null;
         try {
             in = req.getInputStream();
-            if (!in.markSupported())
+            if (!in.markSupported()) {
                 throw new RuntimeException("request unsupported mark");
+            }
             in.reset();
 
             // in.mark(req.getContentLength());
 
-            str = HttpUtils.postStr(in);
+            str = HttpUtils.postStr(in, charset);
 
             in.reset();
         } catch (IOException e) {
             try {
-                if (null != in) in.reset();
+                if (null != in) {
+                    in.reset();
+                }
             } catch (IOException e2) {
                 throw new RuntimeException(e2);
             }
@@ -224,6 +273,7 @@ public class SpringUtils {
 
         return str;
     }
+
 
     /**
      * 将非 HTTP 开头的地址拼接上前缀URL

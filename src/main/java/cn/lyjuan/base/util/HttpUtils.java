@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -153,8 +154,9 @@ public class HttpUtils {
     public static String send(String method, String url, String params, boolean isForm, String charset, Map<String, String> headers) {
         if (isForm)// 增加FORM表单提交属性
         {
-            if (null == headers)
+            if (null == headers) {
                 headers = new HashMap<>(2);
+            }
 
             headers.put("Content-Type", "application/x-www-form-urlencoded;charset=" + charset);
         }
@@ -174,10 +176,11 @@ public class HttpUtils {
      */
     public static String send(String method, String url, String params, String charset, Map<String, String> headers) {
         if (log.isDebugEnabled()) {
-            if (null == headers)
+            if (null == headers) {
                 log.debug(method + "请求 URL >> " + url + " params >> " + params);
-            else
+            } else {
                 log.debug(method + "请求 URL >> " + url + " params >> " + params + " headers >> " + headers);
+            }
         }
 
         String result = "";
@@ -236,8 +239,9 @@ public class HttpUtils {
             log.debug("result >> null");
         } else if (result.length() > 100) {
             log.debug("result >> " + result.substring(0, 100));
-        } else
+        } else {
             log.debug("result >> " + result);
+        }
 
         return result;
     }
@@ -282,8 +286,9 @@ public class HttpUtils {
             log.debug("result >> null");
         } else if (result.length() > 100) {
             log.debug("result >> " + result.substring(0, 100));
-        } else
+        } else {
             log.debug("result >> " + result);
+        }
         return result;
     }
 
@@ -296,11 +301,12 @@ public class HttpUtils {
      */
     public static String inputString(InputStream in, String charset) {
         ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-        byte[] bs = new byte[1024];
+        byte[] bs = new byte[10 * 1024];
         int len = -1;
         try {
-            while (-1 != (len = in.read(bs)))
+            while (-1 != (len = in.read(bs))) {
                 byteOut.write(bs, 0, len);
+            }
 
             return new String(byteOut.toByteArray(), charset);
         } catch (IOException e) {
@@ -315,8 +321,9 @@ public class HttpUtils {
      * @return
      */
     public static String paraToForm(Map<String, String> params) {
-        if (null == params)
+        if (null == params) {
             return "";
+        }
 
         StringBuilder result = new StringBuilder();
 
@@ -327,10 +334,15 @@ public class HttpUtils {
                     FORM_SEPARATE);
         }
 
-        if (result.length() > 0)
+        if (result.length() > 0) {
             result.delete(result.length() - 1, result.length());
+        }
 
         return result.toString();
+    }
+
+    public static Map<String, String> postParam(InputStream in) throws IOException {
+        return postParam(in, StandardCharsets.UTF_8.name());
     }
 
     /**
@@ -342,13 +354,14 @@ public class HttpUtils {
      * @return
      * @throws java.io.IOException
      */
-    public static Map<String, String> postParam(InputStream in)
+    public static Map<String, String> postParam(InputStream in, String charset)
             throws IOException {
         // 读取POST请求
-        String post = postStr(in);
+        String post = postStr(in, charset);
 
-        if (StringUtils.isNull(post.toString()))
+        if (StringUtils.isNull(post.toString())) {
             return new HashMap<String, String>();
+        }
 
         // 解析字符串为请求参数
         return parseURLParam(post);
@@ -361,12 +374,13 @@ public class HttpUtils {
      * @return
      * @throws java.io.IOException
      */
-    public static String postStr(InputStream in) throws IOException {
+    public static String postStr(InputStream in, String charset) throws IOException {
         StringBuilder sb = new StringBuilder();
         String line = null;
-        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-        while (null != (line = reader.readLine()))
+        BufferedReader reader = new BufferedReader(new InputStreamReader(in, charset));
+        while (null != (line = reader.readLine())) {
             sb.append(line);
+        }
 
         return sb.toString();
     }
@@ -379,20 +393,23 @@ public class HttpUtils {
     public static Map<String, String> parseURLParam(String strs) {
         Map<String, String> map = new HashMap<String, String>();
 
-        if (StringUtils.isNull(strs))
+        if (StringUtils.isNull(strs)) {
             return map;
+        }
 
         String str[] = strs.split(FORM_SEPARATE);
 
         for (String s : str) {
             String[] str2 = s.split(FORM_EP);
-            if (str2 == null || str2.length == 0)
+            if (str2 == null || str2.length == 0) {
                 continue;
+            }
 
-            if (str2.length == 1)
+            if (str2.length == 1) {
                 map.put(str2[0], "");
-            else
+            } else {
                 map.put(str2[0], s.substring(str2[0].length() + 1));
+            }
         }
 
         return map;
