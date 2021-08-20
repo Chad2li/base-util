@@ -575,18 +575,40 @@ public class RedisOps {
     }
 
     /**
+     * 获取Set中指定数量的元素，默认非重复元素
+     *
+     * @param k
+     * @param count
+     * @param cls
+     * @return java.util.Set<T>
+     * @date 2021/8/20 15:27
+     * @author chad
+     * @since
+     */
+    public <T> Set<T> sRandom(final String k, int count, Type cls) {
+        return sRandom(k, count, cls, true);
+    }
+
+    /**
      * 随机获取Set中指定数量的元素
      *
-     * @param k     redis键
-     * @param count 随机获取的数量
+     * @param k          redis键
+     * @param isDistinct true返回结果不重复
+     * @param count      随机获取的数量
      * @return java.util.Set<T>
      * @date 2021/8/1 20:27
      * @author chad
-     * @since 2.2.11
+     * @since 1 新增
+     * @since 2 by chad at 2021/08/20 增加参数获取非重复元素
      */
-    public <T> Set<T> sRandom(final String k, int count, Type cls) {
+    public <T> Set<T> sRandom(final String k, int count, Type cls, boolean isDistinct) {
         SetOperations<String, String> setOper = redisTemplate.opsForSet();
-        List<String> list = setOper.randomMembers(k, count);
+        Collection<String> list = null;
+        if (isDistinct) {
+            list = setOper.distinctRandomMembers(k, count);
+        } else {
+            list = setOper.randomMembers(k, count);
+        }
         if (StringUtils.isNull(list)) {
             return Collections.EMPTY_SET;
         }
@@ -647,13 +669,13 @@ public class RedisOps {
      *
      * @param key   redis键
      * @param start 开始位置索引，从0开始，包含
-     * @param end 结束位置索引，尾部为-1，包含
+     * @param end   结束位置索引，尾部为-1，包含
      * @return
      */
     public <T> Set<T> zRangeByRank(final String key, long start, long end, Type type) {
         ZSetOperations<String, String> zset = redisTemplate.opsForZSet();
         Set<String> set = zset.range(key, start, end);
-        if (StringUtils.isNull(set)){
+        if (StringUtils.isNull(set)) {
             return Collections.EMPTY_SET;
         }
 
