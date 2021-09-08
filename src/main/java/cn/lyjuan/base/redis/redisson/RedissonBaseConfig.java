@@ -27,7 +27,7 @@ public class RedissonBaseConfig {
     public static final String OBJECT_MAPPER_NAME = "redissonBaseConfigObjectMapper";
 
     @Bean(OBJECT_MAPPER_NAME)
-    private ObjectMapper createObjectMapper() {
+    public ObjectMapper createObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
         // 为null的数据不序列化
         mapper.setDateFormat(new SimpleDateFormat(DateUtils.FMT_DATE_TIME));
