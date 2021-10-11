@@ -35,8 +35,12 @@ public class DateUtils {
      * @param pattern
      * @return
      */
-    public static LocalDateTime parseTime(String time, String pattern) {
+    public static LocalDateTime parseDateTime(String time, String pattern) {
         return LocalDateTime.parse(time, getDTF(pattern));
+    }
+
+    public static LocalTime parseTime(String time, String pattern) {
+        return LocalTime.parse(time, getDTF(pattern));
     }
 
     /**

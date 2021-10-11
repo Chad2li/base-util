@@ -1,10 +1,7 @@
 package cn.lyjuan.base.util;
 
-import com.alibaba.druid.sql.visitor.functions.Char;
 import com.google.gson.*;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -131,9 +128,9 @@ public class JsonUtils {
         } else if (type == LocalDate.class)
             return (T) DateUtils.parseDate(json, DateUtils.FMT_DATE);
         else if (type == LocalDateTime.class)
-            return (T) DateUtils.parseTime(json, DateUtils.FMT_DATE_TIME);
+            return (T) DateUtils.parseDateTime(json, DateUtils.FMT_DATE_TIME);
         else if (type == LocalTime.class)
-            return (T) LocalTime.parse(json);
+            return (T) DateUtils.parseTime(json, DateUtils.FMT_TIME);
         return gson.fromJson(json, type);
     }
 }

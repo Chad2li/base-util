@@ -13,7 +13,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.time.Duration;
-import java.util.Map;
 import java.util.Set;
 
 public class RedisOpsTest {
@@ -57,10 +56,54 @@ public class RedisOpsTest {
     }
 
     @Test
-    public void setAndGet() {
-        String key = "test:for:redisson";
-        Map val = redisOps.get(key, Map.class);
-        System.out.println("result ==> " + val);
+    public void setAndGet() throws InterruptedException {
+        String key = "test:for:rediss:getAndset";
+        redisOps.del(key);
+
+        // xx
+        Boolean booleanVal = redisOps.set(key, 1, null, 10L);
+        Assert.assertTrue(booleanVal);
+        long longVal = redisOps.ttl(key);
+        Assert.assertTrue(longVal > 9);
+        int intVal = redisOps.get(key, Integer.class);
+        Assert.assertEquals(1, intVal);
+
+        booleanVal = redisOps.set(key, 1, false, 10L);
+        Assert.assertFalse(booleanVal);
+
+        booleanVal = redisOps.set(key, 2, true, 10L);
+        Assert.assertTrue(booleanVal);
+        intVal = redisOps.get(key, Integer.class);
+        Assert.assertEquals(2, intVal);
+
+        // set - not exists - null expire
+        redisOps.del(key);
+        booleanVal = redisOps.set(key, 3, false, null);
+        Assert.assertTrue(booleanVal);
+        longVal = redisOps.ttl(key);
+        Assert.assertEquals(-1, longVal);
+
+        // set - not exists - expire
+        redisOps.del(key);
+        booleanVal = redisOps.set(key, 3, false, 10L);
+        Assert.assertTrue(booleanVal);
+        longVal = redisOps.ttl(key);
+        Assert.assertTrue(longVal > 9);
+
+        // set - exists - null expire
+        booleanVal = redisOps.set(key, 3, true, null);
+        Assert.assertTrue(booleanVal);
+        longVal = redisOps.ttl(key);
+        Assert.assertEquals(-1, longVal);
+
+        // set - exists - expire
+        Thread.sleep(1500);// 测试ttl被覆盖
+        booleanVal = redisOps.set(key, 3, true, 10L);
+        Assert.assertTrue(booleanVal);
+        longVal = redisOps.ttl(key);
+        Assert.assertTrue(longVal > 9);
+
+
     }
 
     @Test

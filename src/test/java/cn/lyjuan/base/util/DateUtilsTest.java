@@ -5,6 +5,7 @@ import org.junit.Test;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 /**
  * Created by chad on 2017/1/9.
@@ -29,15 +30,22 @@ public class DateUtilsTest
     }
 
     @Test
-    public void testParseTime() {
-        LocalDateTime ldt = DateUtils.parseTime(time, timePattern);
+    public void testParseDateTime() {
+        LocalDateTime ldt = DateUtils.parseDateTime(time, timePattern);
         String the = DateUtils.format(ldt, timePattern);
         Assert.assertEquals(the, time);
     }
 
     @Test
+    public void parseTime() {
+        LocalTime time = LocalTime.now();
+        String str = DateUtils.format(time, DateUtils.FMT_TIME);
+        time = DateUtils.parseTime(str, DateUtils.FMT_TIME);
+    }
+
+    @Test
     public void testLong2Time() {
-        LocalDateTime ldt = DateUtils.parseTime(time, timePattern);
+        LocalDateTime ldt = DateUtils.parseDateTime(time, timePattern);
         long first = DateUtils.time2long(ldt);
         LocalDateTime ldt2 = DateUtils.long2Time(first);
 
@@ -46,7 +54,7 @@ public class DateUtilsTest
 
     @Test
     public void testAddLong() {
-        LocalDateTime ldt = DateUtils.parseTime(time, timePattern);
+        LocalDateTime ldt = DateUtils.parseDateTime(time, timePattern);
         ldt = DateUtils.addLong(ldt, 60 * 1000);//加10分钟
 
         Assert.assertEquals(time1, DateUtils.format(ldt, timePattern));

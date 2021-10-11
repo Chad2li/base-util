@@ -34,6 +34,10 @@ public class RedisDistOps {
      * 加锁失败重试次数
      */
     private int lockRetry = 3;
+    /**
+     * 锁释放秒
+     */
+    private long lockLeastSeconds = 30;
 
     @Autowired
     public RedisDistOps(final String appName, RedisOps redisOps) {
@@ -134,7 +138,7 @@ public class RedisDistOps {
      * @return true最终加锁成功
      */
     private boolean lock(String lockName, int retry) {
-        boolean ok = redisOps.set(lockName, name, false, lockRetry);
+        boolean ok = redisOps.set(lockName, name, false, lockLeastSeconds);
         if (log.isDebugEnabled())
             log.debug("Redis set lock: {} {} ==> {}", lockName, retry, ok);
         if (ok) return true;

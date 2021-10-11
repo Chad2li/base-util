@@ -27,7 +27,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.redisson.Redisson;
-import org.redisson.api.RedissonClient;
+import org.redisson.api.*;
 import org.redisson.client.protocol.Encoder;
 import org.redisson.client.protocol.ScoredEntry;
 import org.redisson.codec.JsonJacksonCodec;
@@ -40,6 +40,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class RedissonOpsTest {
     private RedissonOps redissonOps;
@@ -142,7 +143,7 @@ public class RedissonOpsTest {
         Assert.assertTrue(valInt.equals(1));
 
         // set with xx=true and exists
-        boolean booleanVal = redissonOps.set(key, 2, true, 10);
+        boolean booleanVal = redissonOps.set(key, 2, true, 10L);
         Assert.assertTrue(booleanVal);
         long ttl = redissonOps.ttl(key);
         Assert.assertTrue(ttl <= 10 * 1000);
@@ -151,22 +152,22 @@ public class RedissonOpsTest {
 
         // set with xx=true and non exists
         redissonOps.del(key);
-        booleanVal = redissonOps.set(key, 3, true, 10);
+        booleanVal = redissonOps.set(key, 3, true, 10L);
         Assert.assertFalse(booleanVal);
 
         // set with xx=false and non exists
-        booleanVal = redissonOps.set(key, 4, false, 10);
+        booleanVal = redissonOps.set(key, 4, false, 10L);
         Assert.assertTrue(booleanVal);
         intVal = redissonOps.get(key);
         Assert.assertTrue(4 == intVal);
 
         // set with xx=false and exists
-        booleanVal = redissonOps.set(key, 5, false, 10);
+        booleanVal = redissonOps.set(key, 5, false, 10L);
         Assert.assertFalse(booleanVal);
 
         // expire -1
         redissonOps.del(key);
-        booleanVal = redissonOps.set(key, 6, false, -1);
+        booleanVal = redissonOps.set(key, 6, false, -1L);
         Assert.assertTrue(booleanVal);
         ttl = redissonOps.ttl(key);
         Assert.assertTrue(-1 == ttl);
@@ -190,6 +191,13 @@ public class RedissonOpsTest {
         Assert.assertTrue(1 == intVal);
         intVal = redissonOps.get(key, 2);
         Assert.assertTrue(1 == intVal);
+
+        // int not exists
+        redissonOps.del(key);
+        // int会报空指针异常
+        Integer intVal2 = redissonOps.get(key);
+        Assert.assertNull(intVal2);
+
 
         redissonOps.del(key);
     }
@@ -367,6 +375,25 @@ public class RedissonOpsTest {
         Assert.assertEquals(userVal.age, userVal2.age);
         Assert.assertEquals(userVal.email, userVal2.email);
 
+        // xx -> null
+        redissonOps.del(key);
+        String hashKey = "name";
+        boolean booleanVal = redissonOps.hmSet(key, hashKey, 1, null);
+        Assert.assertTrue(booleanVal);
+        // xx -> true exists
+        booleanVal = redissonOps.hmSet(key, hashKey, 1, true);
+        Assert.assertTrue(booleanVal);
+        // xx -> true not exists
+        redissonOps.del(key);
+        booleanVal = redissonOps.hmSet(key, hashKey, 1, true);
+        Assert.assertFalse(booleanVal);
+        // xx -> false not exists
+        booleanVal = redissonOps.hmSet(key, hashKey, 1, false);
+        Assert.assertTrue(booleanVal);
+        // xx -> false exists
+        booleanVal = redissonOps.hmSet(key, hashKey, 1, false);
+        Assert.assertFalse(booleanVal);
+
         redissonOps.del(key);
     }
 
@@ -498,6 +525,68 @@ public class RedissonOpsTest {
         map.put("int", 1);
         map.put("time", now);
         print("map", encoder.encode(map));
+    }
+
+    @Test
+    public void lock() throws InterruptedException {
+        String key = "test:for:redisson:lock";
+//        redissonOps.del(key);
+
+        // 同一个线程下，可重入
+        RLock r1 = redissonOps.getLock(key);
+        long start = System.currentTimeMillis();
+        boolean booleanVal = r1.tryLock(5, 300, TimeUnit.SECONDS);
+        System.out.println("duration ==> " + (System.currentTimeMillis() - start));
+        Assert.assertTrue(booleanVal);
+        Assert.assertEquals(1, r1.getHoldCount());
+        RLock r2 = redissonOps.getLock(key);
+        r2.lock();
+        Assert.assertEquals(2, r1.getHoldCount());
+        Assert.assertEquals(2, r2.getHoldCount());
+        // try lock
+        r1.unlock();
+        r2.unlock();
+        redissonOps.del(key);
+        r1 = redissonOps.getLock(key);
+        r2 = redissonOps.getLock(key);
+        r1.tryLock();
+        Assert.assertEquals(1, r1.getHoldCount());
+        r2.tryLock();
+        Assert.assertEquals(2, r1.getHoldCount());
+        Assert.assertEquals(2, r2.getHoldCount());
+        System.out.println(r1.getName());
+
+        // 永久锁
+        redissonOps.del(key);
+        r1 = redissonOps.getLock(key);
+        booleanVal = r1.tryLock(5, -1, TimeUnit.SECONDS);
+        Assert.assertTrue(booleanVal);
+
+        long longVal = redissonOps.ttl(key);
+        Assert.assertEquals(-1, longVal);
+
+        // 手动上锁
+        redissonOps.del(key);
+        redissonOps.hmSet(key, "succ", 1);
+        r1 = redissonOps.getLock(key);
+        booleanVal = r1.tryLock(3, TimeUnit.SECONDS);
+        Assert.assertFalse(booleanVal);
+
+    }
+
+    @Test
+    public void batch() {
+        String key = "test:for:redisson:batch";
+        RBatch rb = redissonOps.getBatch();
+        RMultimapAsync<String, Integer> mapOper = rb.getSetMultimap(key);
+        mapOper.putAsync("a", 1);
+        mapOper.putAsync("b", 2);
+        mapOper.expireAsync(300, TimeUnit.SECONDS);
+
+        BatchResult<?> results = rb.execute();
+        for (Object o : results.getResponses()) {
+            System.out.println(o.getClass().getSimpleName() + " ==> " + o);
+        }
     }
 
     private void print(String title, ByteBuf b) {

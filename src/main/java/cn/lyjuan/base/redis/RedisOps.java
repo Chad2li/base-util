@@ -135,18 +135,37 @@ public class RedisOps {
      *
      * @param key
      * @param value
-     * @param xx            true强制存在才设置；false强制不存在才设置
-     * @param expireSeconds 过期秒数
-     * @param <T>
+     * @param xx            true强制存在才设置；false强制不存在才设置；null不作要求
+     * @param expireSeconds 过期秒数；null 不设置过期时间或保持原有ttl
      * @return true设置成功
      */
-    public <T> boolean set(final String key, final T value, boolean xx, Integer expireSeconds) {
+    public boolean set(final String key, final Object value, Boolean xx, Long expireSeconds) {
         ValueOperations<String, String> oper = redisTemplate.opsForValue();
+        String valStr = JsonUtils.to(value);
         Boolean result;
-        if (xx)// 存在才改变值
-            result = oper.setIfPresent(key, JsonUtils.to(value), expireSeconds, TimeUnit.SECONDS);
-        else// 不存在才改变值
-            result = oper.setIfAbsent(key, JsonUtils.to(value), expireSeconds, TimeUnit.SECONDS);
+        if (null == xx) {
+            // 不作要求
+            if (null == expireSeconds) {
+                oper.set(key, valStr);
+            } else {
+                oper.set(key, valStr, expireSeconds, TimeUnit.SECONDS);
+            }
+            return true;
+        } else if (xx) {
+            // 强制存在才改变值
+            if (null == expireSeconds) {
+                result = oper.setIfPresent(key, valStr);
+            } else {
+                result = oper.setIfPresent(key, valStr, expireSeconds, TimeUnit.SECONDS);
+            }
+        } else {
+            // 强制不存在才改变值
+            if (null == expireSeconds) {
+                result = oper.setIfAbsent(key, valStr);
+            } else {
+                result = oper.setIfAbsent(key, valStr, expireSeconds, TimeUnit.SECONDS);
+            }
+        }
         return result;
     }
 

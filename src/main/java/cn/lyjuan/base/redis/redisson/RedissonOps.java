@@ -51,7 +51,7 @@ public class RedissonOps {
      * @param expireSeconds 过期秒数，小于等于0不设置过期时间
      * @return true设置成功
      */
-    public boolean set(final String key, Object value, Boolean xx, Integer expireSeconds) {
+    public boolean set(final String key, Object value, Boolean xx, Long expireSeconds) {
         RBucket<Object> rb = client.getBucket(key);
         boolean result = false;
         if (null == xx) {
@@ -218,7 +218,7 @@ public class RedissonOps {
      * @param key           键值
      * @param expireSeconds 过期时间，秒
      */
-    public void expire(final String key, int expireSeconds) {
+    public void expire(final String key, long expireSeconds) {
         RKeys rkeys = client.getKeys();
         rkeys.expire(key, expireSeconds, TimeUnit.SECONDS);
     }
@@ -363,6 +363,35 @@ public class RedissonOps {
     public boolean hmSet(final String redisKey, Object hashKey, Object value) {
         RMap rmap = client.getMap(redisKey);
         return rmap.fastPut(hashKey, value);
+    }
+
+    /**
+     * 设置hash值，并对原hash键存在性作较检验
+     *
+     * @param redisKey redis键
+     * @param hashKey  hash键
+     * @param value    需要设置的值
+     * @param xx       true原值必须存在；false原值必须不存在；null不作要求
+     * @return boolean true设置成功，值被改变
+     * @date 2021/9/23 20:44
+     * @author chad
+     * @since 1 by chad at 2021/9/23 新增
+     */
+    public boolean hmSet(final String redisKey, Object hashKey, Object value, Boolean xx) {
+        RMap rmap = client.getMap(redisKey);
+
+        if (null == xx) {
+            // 存在性不作要求
+            return rmap.fastPut(hashKey, value);
+        } else if (xx) {
+            // 强制存在才设置
+            Object oldVal = rmap.putIfExists(hashKey, value);
+            return null != oldVal;
+        } else {
+            // 强制不存在才设置
+            Object oldVal = rmap.putIfAbsent(hashKey, value);
+            return null == oldVal;
+        }
     }
 
     /**
@@ -722,5 +751,34 @@ public class RedissonOps {
      */
     public <T> RDelayedQueue<T> getDelayQueue(RBlockingQueue<T> queue) {
         return client.getDelayedQueue(queue);
+    }
+
+    /**
+     * 获取Redis分布式锁
+     * <p>
+     * 为保证在主备切换中的可靠性，会同步等待所有的slaver服务器响应
+     * </p>
+     *
+     * @param lockName 锁名称
+     * @return org.redisson.api.RLock
+     * @date 2021/9/22 22:25
+     * @author chad
+     * @since 1 by chad at 2021/9/22 新增
+     */
+    public RLock getLock(String lockName) {
+        RLock rl = client.getLock(lockName);
+        return rl;
+    }
+
+    /**
+     * redisson批处理，参考redis pipeline
+     *
+     * @return org.redisson.api.RBatch
+     * @date 2021/9/23 17:11
+     * @author chad
+     * @since 1 by chad at 2021/9/23 新增
+     */
+    public RBatch getBatch() {
+        return client.createBatch();
     }
 }
