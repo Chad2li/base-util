@@ -21,4 +21,6 @@ else
     end
 end
 
+redis.call("set", "test:for:multi", cjson.encode(values))
+
 return values

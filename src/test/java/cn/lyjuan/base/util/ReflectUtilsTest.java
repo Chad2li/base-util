@@ -110,6 +110,15 @@ public class ReflectUtilsTest {
     }
 
     @Test
+    public void fileds() {
+        Class cls = User.class;
+        Map<String, Field> fs = ReflectUtils.fields(cls, true);
+        for (Map.Entry<String, Field> f : fs.entrySet()) {
+            System.out.println(f.getKey() + " = " + f.getValue().getType().getName());
+        }
+    }
+
+    @Test
     public void isBaseClass() {
         int intv = 1;
         Assert.assertTrue(ReflectUtils.isBaseClass(intv));
@@ -192,6 +201,8 @@ public class ReflectUtilsTest {
         }
     }
 
+
+
     public static class ExtendClass extends BaseGenericity<User> {
         @Override
         public String toString() {
@@ -235,6 +246,28 @@ public class ReflectUtilsTest {
         protected Integer age;
 
         protected int height;
+
+        protected boolean succ;
+
+        protected int tail;
+
+        protected int weight;
+
+        public int hasTail() {
+            return tail;
+        }
+
+        public void setTail(int tail) {
+            this.tail = tail;
+        }
+
+        public boolean isSucc() {
+            return succ;
+        }
+
+        public void setSucc(boolean succ) {
+            this.succ = succ;
+        }
 
         public User() {
         }

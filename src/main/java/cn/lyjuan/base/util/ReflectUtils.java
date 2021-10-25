@@ -308,17 +308,78 @@ public class ReflectUtils {
     }
 
     /**
-     * 迭代获取父子类的所有属性
+     * 获取类的属性，详情{@link ReflectUtils#fields(Class, boolean)}
      *
      * @param cls
-     * @return
+     * @return java.util.Map<java.lang.String, java.lang.reflect.Field>
+     * @date 2021/10/14 14:25
+     * @author chad
+     * @since 1 by chat at 2021/10/14 兼容方法
      */
-    public static Map<String, Field> fields(Class cls) {
+    public static Map<String, Field> fields(Class<?> cls) {
+        return fields(cls, true);
+    }
+
+    /**
+     * 获取类属性
+     * <p>
+     * 排除 transient, static, final修饰的属性
+     * </p>
+     *
+     * @param cls          类型
+     * @param mustGetField true仅获取有get方法的属性；false获取所有属性
+     * @return java.util.Map<java.lang.String, java.lang.reflect.Field>
+     * @date 2021/10/14 14:25
+     * @author chad
+     * @since 1 by chad at 2021/10/14 增加 {@code mustGetField}参数
+     */
+    public static Map<String, Field> fields(Class cls, boolean mustGetField) {
+
         Map<String, Field> fields = new HashMap();
 
         Field[] tmp = cls.getDeclaredFields();
         for (Field f : tmp) {
             if (skipField(f)) continue;
+            if (mustGetField) {
+                String name = f.getName();
+                // getXXX
+                String getMethodName = genMemberGetSetName(f.getName(), true);
+                boolean hasGetMethod = hasMethod(cls, getMethodName, null);
+                // isXXX
+                if (!hasGetMethod) {
+                    if (!name.startsWith("is")) {
+                        char[] cs = name.toCharArray();
+                        char first = cs[0];
+                        if (first >= 'a' && first <= 'z') {
+                            cs[0] = (char) (first - 32);
+                        }
+                        getMethodName = "is" + String.valueOf(cs);
+                    }
+                    // is
+                    hasGetMethod = hasMethod(cls, getMethodName, null);
+                }
+                // hasXXX
+                if (!hasGetMethod) {
+                    if (!name.startsWith("has")) {
+                        char[] cs = name.toCharArray();
+                        char first = cs[0];
+                        if (first >= 'a' && first <= 'z') {
+                            cs[0] = (char) (first - 32);
+                        }
+                        getMethodName = "has" + String.valueOf(cs);
+                    }
+                    // has
+                    hasGetMethod = hasMethod(cls, getMethodName, null);
+                }
+                // 同名
+                if (!hasGetMethod) {
+                    hasGetMethod = hasMethod(cls, f.getName(), null);
+                }
+                // 没有获取属性值的方法
+                if (!hasGetMethod) {
+                    continue;
+                }
+            }
             fields.put(f.getName(), f);
         }
 

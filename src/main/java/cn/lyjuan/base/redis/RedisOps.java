@@ -224,6 +224,30 @@ public class RedisOps {
         return operations.get(key);
     }
 
+    public List<String> gets(final String... keys) {
+        ValueOperations<String, String> operations = redisTemplate.opsForValue();
+        return operations.multiGet(Arrays.asList(keys));
+    }
+
+    public <T> List<T> gest(Class<T> cls, final T def, final String... keys) {
+        ValueOperations<String, String> operations = redisTemplate.opsForValue();
+        List<String> list = operations.multiGet(Arrays.asList(keys));
+        int size = keys.length;
+        List result = new ArrayList<>(keys.length);
+        if (StringUtils.isNull(list)) {
+            for (int i = 0; i < size; i++) {
+                result.add(def);
+            }
+            return result;
+        }
+
+        for (String s : list) {
+            result.add(JsonUtils.from(cls, s));
+        }
+
+        return result;
+    }
+
     /**
      * 获取值，如果键不存在，则设置为默认值，并返回
      *
@@ -308,6 +332,7 @@ public class RedisOps {
         hash.put(key, JsonUtils.to(hashKey), JsonUtils.to(value));
     }
 
+
     /**
      * 删除hash中多个域值
      *
@@ -376,6 +401,22 @@ public class RedisOps {
         String json = hash.get(key, JsonUtils.to(hashKey));
         if (StringUtils.isNull(json)) return null;
         return JsonUtils.from(cls, json);
+    }
+
+    public <T> List<T> hmGetMulti(final String key, Type cls, Object... hashKeys) {
+        HashOperations<String, String, String> hash = redisTemplate.opsForHash();
+        int size = hashKeys.length;
+        List<String> keys = new ArrayList<>(size);
+        for (Object k : hashKeys) {
+            keys.add(JsonUtils.to(k));
+        }
+        List<String> list = hash.multiGet(key, keys);
+        List<T> result = new ArrayList<>(size);
+        for (String s : list) {
+            result.add(JsonUtils.from(cls, s));
+        }
+
+        return result;
     }
 
     /**

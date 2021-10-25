@@ -13,6 +13,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Set;
 
 public class RedisOpsTest {
@@ -103,13 +104,21 @@ public class RedisOpsTest {
         longVal = redisOps.ttl(key);
         Assert.assertTrue(longVal > 9);
 
-
+        // multi by null
+        String str = redisOps.get("abc");
+        List<String> strs = redisOps.gets(key + "1", key + "2", key + "3");
+        Assert.assertEquals(3, strs.size());
+        System.out.println("multi ==> " + strs);
     }
 
     @Test
     public void hmGet() {
         String key = KEY_PREFIX + "hash";
-        rt.opsForHash().put(key, "1", "abc");
+        redisOps.hmSet(key, 1, 1);
+
+        List<Integer> list = redisOps.hmGetMulti(key, Integer.class, "1", "2");
+        Assert.assertEquals(2, list.size());
+        System.out.println("multi ==> " + list);
 
 
 //        redisOps.hmSet("test.for.hmget", 1, "abc");

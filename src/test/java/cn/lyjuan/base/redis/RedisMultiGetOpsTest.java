@@ -1,11 +1,13 @@
 package cn.lyjuan.base.redis;
 
+import cn.lyjuan.base.redis.redis.RedisOpsConnTest;
 import cn.lyjuan.base.test.BaseSpringTest;
 import cn.lyjuan.base.util.DateUtils;
 import cn.lyjuan.base.util.RandomUtils;
 import cn.lyjuan.base.util.ReflectUtilsTest;
 import lombok.Data;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.connection.RedisConnection;
@@ -18,15 +20,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class RedisMultiGetOpsTest extends BaseSpringTest {
+public class RedisMultiGetOpsTest extends RedisOpsConnTest {
     @Resource
     private RedisMultiGetOps redisMultiGetOps;
-    @Resource
-    private RedisOps redisOps;
 
     private String redisKey = "{test.for.multi.get}";
 
     private String redisHashKey = "test.for.multi.get.hash";
+
+    @Before
+    @Override
+    public void before(){
+        super.before();
+        redisMultiGetOps = new RedisMultiGetOps(rt);
+    }
 
 
     /**
@@ -324,5 +331,10 @@ public class RedisMultiGetOpsTest extends BaseSpringTest {
         list = redisMultiGetOps.getHashMultiKey(hashKey, ReflectUtilsTest.User.class, 1);
         Assert.assertEquals(1, list.size());
         Assert.assertEquals(user, list.get(0));
+
+        // not exists
+        redisOps.del(sdsKey);
+        list = redisMultiGetOps.getMultiKey(ReflectUtilsTest.User.class, sdsKey);
+        Assert.assertEquals(1, list.size());
     }
 }

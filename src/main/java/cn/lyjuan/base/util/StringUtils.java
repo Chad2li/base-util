@@ -387,11 +387,13 @@ public class StringUtils {
         }
 
         if (objCls.isArray()) {
-            Object[] arr = (Object[]) obj;
-            if (arr.length < 1) return "[]";
+            Class<?> arrCls = objCls.getComponentType();
+            List list = null;
+            int len = Array.getLength(obj);
+            if (0 == len) return "[]";
             sb.append("[");
-            for (Object o : arr) {
-                sb.append(toStr(o)).append(",");
+            for (int i = 0; i < len; i++) {
+                sb.append(toStr(Array.get(obj, i))).append(",");
             }
             sb.delete(sb.length() - 1, sb.length());
             sb.append("]");
@@ -403,14 +405,14 @@ public class StringUtils {
         // 指定的Class为Object或当前对象为Object，则简单输出Object.toString
         if (currCls == Object.class || obj.getClass() == Object.class) return obj.toString();
 
-        Field[] fs = currCls.getDeclaredFields();
+        Map<String, Field> fs = ReflectUtils.fields(currCls, true);
 
-        if (null == fs || fs.length < 1) return "";
+        if (null == fs || fs.isEmpty()) return "";
 
 
         sb.append(currCls.getSimpleName()).append("{");
         // 当前类
-        for (Field f : fs) {
+        for (Field f : fs.values()) {
             f.setAccessible(true);
             Object sub = null;
             try {

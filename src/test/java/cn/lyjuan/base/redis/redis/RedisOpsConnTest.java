@@ -17,7 +17,9 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  */
 public class RedisOpsConnTest {
 
-    private RedisOps redisOps;
+    protected RedisTemplate<String, String> rt;
+
+    protected RedisOps redisOps;
 
     @Before
     public void before() {
@@ -37,7 +39,7 @@ public class RedisOpsConnTest {
         factory.afterPropertiesSet();
 
         // redis template
-        RedisTemplate<String, String> rt = new StringRedisTemplate();
+        rt = new StringRedisTemplate();
         rt.setConnectionFactory(factory);
         rt.setDefaultSerializer(new StringRedisSerializer());
 
