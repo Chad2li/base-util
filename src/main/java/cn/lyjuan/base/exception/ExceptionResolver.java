@@ -8,12 +8,10 @@ import cn.lyjuan.base.util.SpringUtils;
 import cn.lyjuan.base.util.StringUtils;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.ServletRequestBindingException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -22,7 +20,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
+import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
+import java.util.Set;
+import java.util.StringJoiner;
 
 /**
  * Created by ly on 2015/1/11.
@@ -73,11 +74,11 @@ public class ExceptionResolver {
             base.setMsg(infoE.getMsg());
         } else if (isParamErr(e)) {
             base.setCode(IAppCode.fullCode(BaseCode.PARAM_INVALID));
-            if (!isDebug) {
-                base.setMsg(BaseCode.PARAM_INVALID.msg());
-            } else {
-                base.setMsg(parseParamErrDebugMsg(e));
-            }
+//            if (!isDebug) {
+//                base.setMsg(BaseCode.PARAM_INVALID.msg());
+//            } else {
+            base.setMsg(parseParamErrDebugMsg(e));
+//            }
         } else if (e instanceof HttpRequestMethodNotSupportedException)// 不支持的请求方法
         {
             base.setCode(IAppCode.fullCode(BaseCode.REQ_METHOD_UNSUPPORTED));
@@ -144,43 +145,37 @@ public class ExceptionResolver {
      * @return
      */
     private String parseParamErrDebugMsg(Exception e) {
-        if (e instanceof MethodArgumentNotValidException) {
+        if (e instanceof BindException) {
             // 自行处理还是默认处理
-            StringBuilder sb = new StringBuilder();
-            for (ObjectError item : ((MethodArgumentNotValidException) e).getAllErrors()) {
-                if (customValidationMsg)
+            StringJoiner sj = new StringJoiner(",");
+            for (ObjectError item : ((BindException) e).getAllErrors()) {
+                if (customValidationMsg) {
                     return item.getDefaultMessage();
+                }
 
                 Object[] args = item.getArguments();
-                if (!StringUtils.isNullArray(args)) {
-                    sb.append("[");
-                    for (Object o : args) {
-                        if (o instanceof DefaultMessageSourceResolvable) {
-                            sb.append(((DefaultMessageSourceResolvable) o).getDefaultMessage()).append(",");
-                        }
-                    }
-                    if (sb.length() > 1) {
-                        sb.deleteCharAt(sb.length() - 1);
-                        sb.append("] ");
-                    } else
-                        sb.deleteCharAt(0);
-                }
                 String objName = item.getObjectName();
                 String defMsg = item.getDefaultMessage();
 
                 log.warn("objName:{} args:{} defMsg:{}", objName, StringUtils.toStr(args), defMsg);
-                sb.append(defMsg).append(",");
+                sj.add(defMsg);
             }
-            if (sb.length() > 0) {
-                sb.deleteCharAt(sb.length() - 1);
-            }
-            return sb.toString();
+            return sj.toString();
         } else if (e instanceof ConstraintViolationException) {
-            return e.getMessage();
-        } else if (e instanceof HttpMessageNotReadableException) {
-            return "Request body is missing";
+            Set<ConstraintViolation<?>> set = ((ConstraintViolationException) e).getConstraintViolations();
+            StringJoiner sj = new StringJoiner(",");
+            for (ConstraintViolation s : set) {
+                sj.add(s.getMessage());
+            }
+            return sj.toString();
+        } else {
+            if (isDebug) {
+                if (e instanceof HttpMessageNotReadableException) {
+                    return "Request body is missing";
+                }
+            }
         }
 
-        return e.getMessage();
+        return BaseCode.PARAM_INVALID.msg();
     }
 }
