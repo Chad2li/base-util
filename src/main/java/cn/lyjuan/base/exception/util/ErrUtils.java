@@ -4,7 +4,6 @@ import cn.lyjuan.base.exception.IAppCode;
 import cn.lyjuan.base.exception.impl.AppException;
 import cn.lyjuan.base.exception.impl.BaseCode;
 import cn.lyjuan.base.util.StringUtils;
-import org.aspectj.weaver.BCException;
 
 /**
  * 抛异常工具
@@ -44,8 +43,9 @@ public class ErrUtils {
      */
     public static void appThrow(IAppCode code, String msg, String log, Throwable throwable) {
         String codeStr = IAppCode.fullCode(null == code ? BaseCode.ERROR : code);
-        if (StringUtils.isNull(msg))
+        if (StringUtils.isNull(msg)) {
             msg = null == code ? BaseCode.ERROR.msg() : code.msg();
+        }
         log = StringUtils.isNull(log) ? msg : log;
         throw new AppException(codeStr, msg, log, throwable);
     }

@@ -5,9 +5,9 @@ import cn.lyjuan.base.exception.impl.AppException;
 import cn.lyjuan.base.exception.impl.BaseCode;
 import cn.lyjuan.base.http.vo.res.BaseRes;
 import cn.lyjuan.base.util.SpringUtils;
-import cn.lyjuan.base.util.StringUtils;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.MessageSource;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
@@ -18,10 +18,13 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
+import javax.validation.MessageInterpolator;
+import java.util.Locale;
 import java.util.Set;
 import java.util.StringJoiner;
 
@@ -38,9 +41,22 @@ public class ExceptionResolver {
      */
     private boolean isDebug = false;
     /**
-     * true应用程序自行处理参数验证失败异常：比如国际化参数错误消息
+     * 国际化-资源
      */
-    private boolean customValidationMsg = false;
+    private MessageSource messageSource;
+    private MessageInterpolator messageInterpolator;
+    /**
+     * 国际化-语言环境解析器
+     */
+    private LocaleResolver localeResolver;
+
+    public ExceptionResolver() {
+    }
+
+    public ExceptionResolver(MessageSource messageSource, LocaleResolver localeResolver) {
+        this.messageSource = messageSource;
+        this.localeResolver = localeResolver;
+    }
 
     /**
      * 拦截所有 Exception
@@ -51,9 +67,11 @@ public class ExceptionResolver {
      */
     @ExceptionHandler({Exception.class})
     public Object doResolveException(Exception e) {
-        logExce(e);// 打印日志
+        // 打印日志
+        logExce(e);
 
-        BaseRes resp = ajaxExce(e);// 封闭异常信息
+        // 封闭异常信息
+        BaseRes resp = ajaxExce(e);
 
         return resp;
     }
@@ -68,23 +86,28 @@ public class ExceptionResolver {
         BaseRes base = new BaseRes();
 
         if (e instanceof AppException) {
+            // 应用自定义异常
             AppException infoE = (AppException) e;
-
             base.setCode(infoE.getCode());
-            base.setMsg(infoE.getMsg());
+            if (null != messageSource) {
+                // spring默认使用 AcceptHeaderLocaleResolver
+                Locale locale = null != localeResolver ? localeResolver.resolveLocale(SpringUtils.getRequest()) : Locale.getDefault();
+                String msg = infoE.getMsg();
+                // 尝试从国际化资源文件中取值，取不到则用原值
+                msg = messageSource.getMessage(msg, null, msg, locale);
+                base.setMsg(msg);
+            } else {
+                base.setMsg(infoE.getMsg());
+            }
         } else if (isParamErr(e)) {
             base.setCode(IAppCode.fullCode(BaseCode.PARAM_INVALID));
-//            if (!isDebug) {
-//                base.setMsg(BaseCode.PARAM_INVALID.msg());
-//            } else {
             base.setMsg(parseParamErrDebugMsg(e));
-//            }
-        } else if (e instanceof HttpRequestMethodNotSupportedException)// 不支持的请求方法
-        {
+        } else if (e instanceof HttpRequestMethodNotSupportedException) {
+            // 不支持的请求方法
             base.setCode(IAppCode.fullCode(BaseCode.REQ_METHOD_UNSUPPORTED));
             base.setMsg(BaseCode.REQ_METHOD_UNSUPPORTED.msg());
-        } else if (e instanceof NoHandlerFoundException)// 404
-        {
+        } else if (e instanceof NoHandlerFoundException) {
+            // 404
             base.setCode(IAppCode.fullCode(BaseCode.PATH_NOT_FOUND));
             base.setMsg(BaseCode.PATH_NOT_FOUND.msg());
         } else {
@@ -101,8 +124,9 @@ public class ExceptionResolver {
      * @param e
      */
     private void logExce(Exception e) {
-        if (null == e)
+        if (null == e) {
             return;
+        }
 
         if (e instanceof AppException) {
             AppException info = (AppException) e;
@@ -133,7 +157,7 @@ public class ExceptionResolver {
                 || e instanceof BindException// 少参数
                 || e instanceof MethodArgumentTypeMismatchException// 少参数
                 || e instanceof ConstraintViolationException// validation检验不通过
-                || e instanceof HttpMessageNotReadableException//没有 request body
+                || e instanceof HttpMessageNotReadableException// 没有 request body
 
                 ;
     }
@@ -149,15 +173,7 @@ public class ExceptionResolver {
             // 自行处理还是默认处理
             StringJoiner sj = new StringJoiner(",");
             for (ObjectError item : ((BindException) e).getAllErrors()) {
-                if (customValidationMsg) {
-                    return item.getDefaultMessage();
-                }
-
-                Object[] args = item.getArguments();
-                String objName = item.getObjectName();
                 String defMsg = item.getDefaultMessage();
-
-                log.warn("objName:{} args:{} defMsg:{}", objName, StringUtils.toStr(args), defMsg);
                 sj.add(defMsg);
             }
             return sj.toString();
