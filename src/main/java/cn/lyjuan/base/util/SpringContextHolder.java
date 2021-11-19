@@ -17,8 +17,21 @@ public class SpringContextHolder implements ApplicationContextAware {
      * 实现ApplicationContextAware接口的context注入函数, 将其存入静态变量.
      */
     @Override
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        SpringContextHolder.applicationContext = applicationContext;
+    public void setApplicationContext(ApplicationContext ctx) {
+        setMyApplicationContext(ctx);
+    }
+
+    /**
+     * 设置 ApplicationContext
+     *
+     * @param ctx Spring ApplicationContext
+     * @return void
+     * @date 2021/11/19 17:16
+     * @author chad
+     * @since 1 by chad at 2021/11/19 新增
+     */
+    public static void setMyApplicationContext(ApplicationContext ctx) {
+        SpringContextHolder.applicationContext = ctx;
     }
 
 
