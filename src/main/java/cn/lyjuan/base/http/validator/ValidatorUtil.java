@@ -53,7 +53,7 @@ public class ValidatorUtil {
      * 解决国际化资源文件
      * <p>
      * 资源存放在classpath下的ValidationMessages.properties和ValidationMessages_en.properties，目前仅
-     * 支持中文和英文
+     * 支持中文和英文，默认设置为中文
      * </p>
      * <p>
      * 详见：https://blog.csdn.net/DislodgeCocoon/article/details/80520235
@@ -63,8 +63,12 @@ public class ValidatorUtil {
      * @return 资源中心
      */
     public static MessageSource messageSource(String... resources) {
+        // 默认设为中文
+        Locale.setDefault(Locale.CHINA);
+        // 加载设定的国际化资源文件
         ReloadableResourceBundleMessageSource messageSource = new ReloadableResourceBundleMessageSource();
-        messageSource.setBasenames("classpath:/ValidationMessages", "classpath:/ValidationMessages_en");
+        messageSource.setBasenames(resources);
+
         return messageSource;
     }
 

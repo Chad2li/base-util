@@ -184,13 +184,14 @@ public class ExceptionResolver {
                 sj.add(s.getMessage());
             }
             return sj.toString();
-        } else {
-            if (isDebug) {
-                if (e instanceof HttpMessageNotReadableException) {
-                    return "Request body is missing";
-                }
-            }
         }
+//        else {
+//            if (isDebug) {
+//                if (e instanceof HttpMessageNotReadableException) {
+//                    return "Request body is missing";
+//                }
+//            }
+//        }
 
         return BaseCode.PARAM_INVALID.msg();
     }
