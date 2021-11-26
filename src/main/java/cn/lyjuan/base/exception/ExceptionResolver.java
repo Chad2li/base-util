@@ -5,6 +5,7 @@ import cn.lyjuan.base.exception.impl.AppException;
 import cn.lyjuan.base.exception.impl.BaseCode;
 import cn.lyjuan.base.http.vo.res.BaseRes;
 import cn.lyjuan.base.util.SpringUtils;
+import cn.lyjuan.base.util.StringUtils;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
@@ -85,35 +86,38 @@ public class ExceptionResolver {
     public BaseRes ajaxExce(Exception e) {
         BaseRes base = new BaseRes();
 
+        String msg = null;
         if (e instanceof AppException) {
             // 应用自定义异常
             AppException infoE = (AppException) e;
             base.setCode(infoE.getCode());
-            if (null != messageSource) {
-                // spring默认使用 AcceptHeaderLocaleResolver
-                Locale locale = null != localeResolver ? localeResolver.resolveLocale(SpringUtils.getRequest()) : Locale.getDefault();
-                String msg = infoE.getMsg();
-                // 尝试从国际化资源文件中取值，取不到则用原值
-                msg = messageSource.getMessage(msg, null, msg, locale);
-                base.setMsg(msg);
-            } else {
-                base.setMsg(infoE.getMsg());
-            }
+            msg = infoE.getMsg();
+
         } else if (isParamErr(e)) {
             base.setCode(IAppCode.fullCode(BaseCode.PARAM_INVALID));
-            base.setMsg(parseParamErrDebugMsg(e));
+            msg = parseParamErrDebugMsg(e);
         } else if (e instanceof HttpRequestMethodNotSupportedException) {
             // 不支持的请求方法
             base.setCode(IAppCode.fullCode(BaseCode.REQ_METHOD_UNSUPPORTED));
-            base.setMsg(BaseCode.REQ_METHOD_UNSUPPORTED.msg());
+            msg = BaseCode.REQ_METHOD_UNSUPPORTED.msg();
         } else if (e instanceof NoHandlerFoundException) {
             // 404
             base.setCode(IAppCode.fullCode(BaseCode.PATH_NOT_FOUND));
-            base.setMsg(BaseCode.PATH_NOT_FOUND.msg());
+            msg = BaseCode.PATH_NOT_FOUND.msg();
         } else {
             base.setCode(IAppCode.fullCode(BaseCode.ERROR));
-            base.setMsg(BaseCode.ERROR.msg());
+            msg = BaseCode.ERROR.msg();
         }
+
+        // 资源国际化
+        if (null != messageSource && !StringUtils.isNull(msg) && msg.matches("^[-\\w]+$")) {
+            // spring默认使用 AcceptHeaderLocaleResolver
+            Locale locale = null != localeResolver ? localeResolver.resolveLocale(SpringUtils.getRequest()) : Locale.getDefault();
+            // 尝试从国际化资源文件中取值，取不到则用原值
+            msg = messageSource.getMessage(msg, null, msg, locale);
+        }
+
+        base.setMsg(msg);
 
         return base;
     }
