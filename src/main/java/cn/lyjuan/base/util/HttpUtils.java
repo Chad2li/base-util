@@ -16,7 +16,6 @@ import java.util.Map.Entry;
  * HTTP 工具类
  *
  * @author chad
- * @deprecated 请使用HttpClient或RestTemplate
  */
 @Slf4j
 public class HttpUtils {

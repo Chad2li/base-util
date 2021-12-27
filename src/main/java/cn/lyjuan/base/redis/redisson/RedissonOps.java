@@ -204,12 +204,16 @@ public class RedissonOps {
      * 删除Redis键
      *
      * @param keys 键，支持数组
+     * @return 返回删除的键的数量
+     * @since 2 by chad at 2021/12/24 增加返回值
      */
-    public void del(final String... keys) {
-        if (StringUtils.isNullArray(keys))
-            return;
+    public long del(final String... keys) {
+        if (StringUtils.isNullArray(keys)) {
+            return 0;
+        }
         RKeys rkeys = client.getKeys();
-        rkeys.delete(keys);
+        long count = rkeys.delete(keys);
+        return count;
     }
 
     /**
