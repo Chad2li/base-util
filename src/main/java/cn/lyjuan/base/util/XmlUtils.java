@@ -1,14 +1,14 @@
 package cn.lyjuan.base.util;
 
-import com.google.gson.reflect.TypeToken;
-import org.jsoup.helper.StringUtil;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.lang.reflect.*;
-import java.sql.ClientInfoStatus;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -24,8 +24,9 @@ public class XmlUtils {
      */
     public static String getMember(String xml, String name) {
         if (null == xml || xml.trim().length() < 1
-                || null == name || name.trim().length() < 1)
+                || null == name || name.trim().length() < 1) {
             return "";
+        }
 
         int namei = xml.indexOf("<" + name + " ");
         int nameEndi = -1;
@@ -36,16 +37,22 @@ public class XmlUtils {
             nameEndi = xml.indexOf(">");
         }
 
-        if (namei < 0) return "";
+        if (namei < 0) {
+            return "";
+        }
 
         int nameLasti = xml.indexOf("</" + name + ">");
-        if (nameLasti < 0) return "";
+        if (nameLasti < 0) {
+            return "";
+        }
 
-        if (nameEndi < 0)// 元素以<name>value</name>
+        if (nameEndi < 0) {
+            // 元素以<name>value</name>
+
             xml = xml.substring(namei + name.length() + 2, nameLasti);
-        else
+        } else {
             xml = xml.substring(nameEndi + 1, nameLasti);
-
+        }
         if (xml.startsWith("<![CDATA[") && xml.length() >= "<![CDATA[]]>".length()) {
             xml = xml.substring("<![CDATA[".length());
             xml = xml.substring(0, xml.length() - 3);
@@ -63,11 +70,13 @@ public class XmlUtils {
      */
     public static boolean hasMember(String xml, String name) {
         if (null == xml || xml.trim().length() < 1
-                || null == name || name.trim().length() < 1)
+                || null == name || name.trim().length() < 1) {
             return false;
+        }
 
-        if (xml.indexOf("<" + name + ">") > -1 || xml.indexOf("<" + name + "/>") > -1)
+        if (xml.indexOf("<" + name + ">") > -1 || xml.indexOf("<" + name + "/>") > -1) {
             return true;
+        }
 
         return false;
     }
@@ -80,24 +89,27 @@ public class XmlUtils {
      * @return
      */
     public static boolean hasMember(String xml, String... name) {
-        if (null == name || name.length < 1)
+        if (null == name || name.length < 1) {
             return false;
+        }
 
         boolean has = true;
-        for (String n : name)
+        for (String n : name) {
             has = has && hasMember(xml, n);
-
+        }
         return has;
     }
 
     public static String getMemberWithCDATA(String xml, String name) {
         String member = getMember(xml, name);
 
-        if (StringUtils.isNull(member))
+        if (StringUtils.isNull(member)) {
             return "";
+        }
 
-        if (member.length() < 12)
+        if (member.length() < 12) {
             return member;
+        }
 
         member = member.indexOf("<![CDATA[") > -1 ? member.substring("<![CDATA[".length()) : member;
 
@@ -121,27 +133,37 @@ public class XmlUtils {
 
         boolean hasRoot = null != root && root.trim().length() > 0;
 
-        if (hasRoot)
+        if (hasRoot) {
             xml.append("<" + root.trim() + ">");
+        }
 
         if (null != xmlMap && !xmlMap.isEmpty()) {
             for (Iterator<Map.Entry<String, String>> it = xmlMap.entrySet().iterator(); it.hasNext(); ) {
                 Map.Entry<String, String> entry = it.next();
 
-                if (skipNull && (null == entry.getValue() || entry.getValue().trim().length() < 1)) continue;
+                if (skipNull && (null == entry.getValue() || entry.getValue().trim().length() < 1)) {
+                    continue;
+                }
 
-                if (null == entry.getKey()) continue;
+                if (null == entry.getKey()) {
+                    continue;
+                }
 
                 xml.append("<").append(entry.getKey()).append(">");
-                if (putCDATA) xml.append("<![CDATA[");
+                if (putCDATA) {
+                    xml.append("<![CDATA[");
+                }
                 xml.append(null == entry.getValue() ? "" : entry.getValue());
-                if (putCDATA) xml.append("]]>");
+                if (putCDATA) {
+                    xml.append("]]>");
+                }
                 xml.append("</").append(entry.getKey()).append(">");
             }
         }
 
-        if (hasRoot)
+        if (hasRoot) {
             xml.append("</" + root.trim() + ">");
+        }
 
         return xml.toString();
     }
@@ -197,7 +219,9 @@ public class XmlUtils {
      * @return
      */
     private static String genXml(Object obj, Field field, boolean delNull) {
-        if (null == obj) return "";
+        if (null == obj) {
+            return "";
+        }
 
         Class objCls = obj.getClass();
         if (objCls == String.class
@@ -210,46 +234,56 @@ public class XmlUtils {
                 || objCls == Long.class
                 || objCls == Short.class) {
             return String.valueOf(obj);
-        } else if (objCls == Date.class)
+        } else if (objCls == Date.class) {
             return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format((Date) obj);
-        else if (objCls == LocalDate.class)
+        } else if (objCls == LocalDate.class) {
             return DateUtils.format((LocalDate) obj, "yyyy-MM-dd");
-        else if (objCls == LocalDateTime.class)
+        } else if (objCls == LocalDateTime.class) {
             return DateUtils.format((LocalDateTime) obj, "yyyy-MM-dd HH:mm:ss");
+        }
 
         StringBuilder sb = new StringBuilder();
         if (List.class.isInstance(obj)) {
             List list = (List) obj;
-            if (list.isEmpty()) return "";
+            if (list.isEmpty()) {
+                return "";
+            }
             if (null != field) {
                 XmlItem itemAnnotation = field.getAnnotation(XmlItem.class);
-                if (null == itemAnnotation)
+                if (null == itemAnnotation) {
                     throw new RuntimeException("List field <" + field.getName() + "> must has XmlItem annotation");
+                }
                 String tag = itemAnnotation.value();
-                if (StringUtils.isNull(tag))
+                if (StringUtils.isNull(tag)) {
                     throw new RuntimeException("XmlItem of <" + field.getName() + "> must has value");
+                }
                 for (Object listo : list) {
                     sb.append("<").append(tag).append(">");
                     sb.append(genXml(listo, null, delNull));
                     sb.append("</").append(tag).append(">");
                 }
             } else {
-                for (Object listo : list)
+                for (Object listo : list) {
                     sb.append(genXml(listo, null, delNull));
+                }
             }
             return sb.toString();
         }
 
         if (Set.class.isInstance(obj)) {
             Set set = (Set) obj;
-            if (set.isEmpty()) return "";
+            if (set.isEmpty()) {
+                return "";
+            }
             if (null != field) {
                 XmlItem itemAnnotation = field.getAnnotation(XmlItem.class);
-                if (null == itemAnnotation)
+                if (null == itemAnnotation) {
                     throw new RuntimeException("List field <" + field.getName() + "> must has XmlItem annotation");
+                }
                 String tag = itemAnnotation.value();
-                if (StringUtils.isNull(tag))
+                if (StringUtils.isNull(tag)) {
                     throw new RuntimeException("XmlItem of <" + field.getName() + "> must has value");
+                }
                 for (Iterator<Object> it = set.iterator(); it.hasNext(); ) {
                     Object setto = it.next();
                     sb.append("<").append(tag).append(">");
@@ -268,7 +302,9 @@ public class XmlUtils {
 
         if (Map.class.isInstance(obj)) {
             Map mapo = (Map) obj;
-            if (mapo.isEmpty()) return "";
+            if (mapo.isEmpty()) {
+                return "";
+            }
 
             for (Iterator<Map.Entry<Object, Object>> it = mapo.entrySet().iterator(); it.hasNext(); ) {
                 Map.Entry<Object, Object> keyo = it.next();
@@ -283,7 +319,9 @@ public class XmlUtils {
         // toString
         Field[] fs = obj.getClass().getDeclaredFields();
 
-        if (null == fs || fs.length < 1) return "";
+        if (null == fs || fs.length < 1) {
+            return "";
+        }
 
 
         // 当前类
@@ -292,8 +330,9 @@ public class XmlUtils {
             Object sub = null;
             try {
                 sub = f.get(obj);
-                if (delNull && StringUtils.isNull(sub))// 根据 delNull 参数去掉为空的属性
+                if (delNull && StringUtils.isNull(sub)) {// 根据 delNull 参数去掉为空的属性
                     continue;
+                }
                 if ("this$0".equals(f.getName())) {
                     continue;
                 }
@@ -317,20 +356,40 @@ public class XmlUtils {
      * @return
      */
     public static <T> T fromXml(String xml, Type type, String itemName) {
-        if (StringUtils.isNull(xml))
+        if (StringUtils.isNull(xml)) {
             return null;
+        }
 
-//        String inXml = xml.substring(xml.indexOf(">") + 1, xml.lastIndexOf("<"));
-        if (StringUtils.isNull(xml)) return null;
-        if (type == String.class) return (T) xml;
-        if (type == Integer.class || type == int.class) return (T) new Integer(xml);
-        if (type == Byte.class || type == byte.class) return (T) new Byte(xml);
-        if (type == Boolean.class || type == boolean.class) return (T) new Boolean(xml);
-        if (type == Float.class || type == float.class) return (T) new Float(xml);
-        if (type == Double.class || type == double.class) return (T) new Double(xml);
-        if (type == Character.class || type == char.class) return (T) new Character(xml.charAt(0));
-        if (type == Long.class || type == long.class) return (T) new Long(xml);
-        if (type == Short.class || type == short.class) return (T) new Short(xml);
+        if (StringUtils.isNull(xml)) {
+            return null;
+        }
+        if (type == String.class) {
+            return (T) xml;
+        }
+        if (type == Integer.class || type == int.class) {
+            return (T) new Integer(xml);
+        }
+        if (type == Byte.class || type == byte.class) {
+            return (T) new Byte(xml);
+        }
+        if (type == Boolean.class || type == boolean.class) {
+            return (T) new Boolean(xml);
+        }
+        if (type == Float.class || type == float.class) {
+            return (T) new Float(xml);
+        }
+        if (type == Double.class || type == double.class) {
+            return (T) new Double(xml);
+        }
+        if (type == Character.class || type == char.class) {
+            return (T) new Character(xml.charAt(0));
+        }
+        if (type == Long.class || type == long.class) {
+            return (T) new Long(xml);
+        }
+        if (type == Short.class || type == short.class) {
+            return (T) new Short(xml);
+        }
         // list set map array
         if (type instanceof ParameterizedType) {
             Type rawType = ((ParameterizedType) type).getRawType();

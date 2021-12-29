@@ -20,6 +20,7 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.redisson.Redisson;
 import org.redisson.api.RBlockingQueue;
@@ -36,12 +37,16 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Redisson延迟队列
  */
+@Ignore
 public class RedissonDelayQueueTest {
     private RedissonClient client;
     private RBlockingQueue<DemoInfo> blockQueue;
