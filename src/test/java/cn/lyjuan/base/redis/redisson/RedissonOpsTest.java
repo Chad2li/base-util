@@ -394,6 +394,25 @@ public class RedissonOpsTest {
         booleanVal = redissonOps.hmSet(key, hashKey, 1, false);
         Assert.assertFalse(booleanVal);
 
+        // hmExists
+        redissonOps.del(key);
+        redissonOps.hmSet(key, hashKey, 1);
+        booleanVal = redissonOps.hmExists(key, hashKey);
+        Assert.assertTrue(booleanVal);
+
+        // hmDel
+        redissonOps.hmSet(key, hashKey, 1);
+        Assert.assertTrue(redissonOps.hmExists(key, hashKey));
+        long longVal = redissonOps.hmDel(key, hashKey);
+        Assert.assertEquals(1L, longVal);
+        Assert.assertFalse(redissonOps.hmExists(key, hashKey));
+
+        // hmDelAndGet
+        redissonOps.hmSet(key, hashKey, 1);
+        intVal = redissonOps.hmDelAndGet(key, hashKey);
+        Assert.assertEquals(1, intVal);
+        Assert.assertFalse(redissonOps.hmExists(key, hashKey));
+
         redissonOps.del(key);
     }
 

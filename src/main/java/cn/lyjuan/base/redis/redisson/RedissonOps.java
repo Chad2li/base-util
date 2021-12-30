@@ -399,6 +399,54 @@ public class RedissonOps {
     }
 
     /**
+     * hash是否存在
+     *
+     * @param redisKey redis键
+     * @param hashKey  hash键
+     * @return boolean true hash值存在
+     * @date 2021/12/30 21:30
+     * @author chad
+     * @since 1 by chad create
+     */
+    public <T> boolean hmExists(final String redisKey, Object hashKey) {
+        RMap<Object, T> rm = client.getMap(redisKey);
+        boolean exists = rm.containsKey(hashKey);
+        return exists;
+    }
+
+    /**
+     * 执行Hash快速删除
+     *
+     * @param redisKey redis键
+     * @param hashKeys hash键
+     * @return long 删除hash值的数量
+     * @date 2021/12/30 21:05
+     * @author chad
+     * @since 1 by chad create
+     */
+    public <T> long hmDel(final String redisKey, Object... hashKeys) {
+        RMap<Object, T> rm = client.getMap(redisKey);
+        long count = rm.fastRemove(hashKeys);
+        return count;
+    }
+
+    /**
+     * 删除并取回被删除的 hash 值
+     *
+     * @param redisKey redis键
+     * @param hashKey  hash键
+     * @return T 删除的 hash 值，如果 redisKey 或 hashKey 不存在返回 null
+     * @date 2021/12/30 21:26
+     * @author chad
+     * @since 1 by chad create
+     */
+    public <T> T hmDelAndGet(final String redisKey, Object hashKey) {
+        RMap<Object, T> rm = client.getMap(redisKey);
+        T t = rm.remove(hashKey);
+        return t;
+    }
+
+    /**
      * 获取redis hash结构指定键的值
      *
      * @param redisKey redis键
