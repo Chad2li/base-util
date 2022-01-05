@@ -8,6 +8,7 @@ import java.util.StringJoiner;
 
 /**
  * Created by ly on 2014/12/22.
+ * @author chad
  */
 public class ArrayUtils {
     /**
