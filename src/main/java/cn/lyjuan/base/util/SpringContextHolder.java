@@ -54,24 +54,20 @@ public class SpringContextHolder implements ApplicationContextAware {
      */
     @SuppressWarnings("unchecked")
     public static <T> T getBean(String name) {
-        checkApplicationContext();
-        return (T) applicationContext.getBean(name);
+        return (T) getApplicationContext().getBean(name);
     }
 
     /**
      * 从静态变量ApplicationContext中取得Bean, 自动转型为所赋值对象的类型.
      * 如果有多个Bean符合Class, 取出第一个.
      */
-    @SuppressWarnings("unchecked")
     public static <T> T getBean(Class<T> clazz) {
         checkApplicationContext();
-        @SuppressWarnings("rawtypes")
-        Map beanMaps = applicationContext.getBeansOfType(clazz);
-        if (beanMaps != null && !beanMaps.isEmpty()) {
-            return (T) beanMaps.values().iterator().next();
-        } else {
+        Map beanMaps = getApplicationContext().getBeansOfType(clazz);
+        if (StringUtils.isNull(beanMaps)) {
             return null;
         }
+        return (T) beanMaps.values().iterator().next();
     }
 
     /**
@@ -90,11 +86,12 @@ public class SpringContextHolder implements ApplicationContextAware {
      */
     public static boolean hasActiveProfile(String profile) {
         Profiles profiles = Profiles.of(profile);
-        return applicationContext.getEnvironment().acceptsProfiles(profiles);
+        return getApplicationContext().getEnvironment().acceptsProfiles(profiles);
     }
 
     /**
      * 是否为生产环境
+     *
      * @return boolean  true生产环境；false其他环境
      * @date 2022/1/5 09:03
      * @author chad
