@@ -153,6 +153,19 @@ public class StringUtils {
     }
 
     /**
+     * 验证 map 是否为空
+     *
+     * @param map map对象
+     * @return boolean true表示 map为 null或内容为空
+     * @date 2022/1/4 17:44
+     * @author chad
+     * @since 1 by chad create
+     */
+    public static boolean isNull(Map map) {
+        return null == map || map.isEmpty();
+    }
+
+    /**
      * 判断字符串的长度限制
      *
      * @param str    限制长度的字符串

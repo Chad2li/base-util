@@ -10,6 +10,12 @@ import java.util.Map;
  * 以静态变量保存Spring ApplicationContext, 可在任何代码任何地方任何时候中取出ApplicaitonContext.
  */
 public class SpringContextHolder implements ApplicationContextAware {
+
+    /**
+     * 生产环境策略标识
+     */
+    public static final String PROFILE_PROD = "prod";
+
     private static ApplicationContext applicationContext;
 
 
@@ -79,11 +85,23 @@ public class SpringContextHolder implements ApplicationContextAware {
      * 是否包含了该策略
      *
      * @param profile
-     * @return
+     * @return true包含
+     * @since 2 by chad at 2022/02/05 修正方法名
      */
-    public static boolean hashActiveProfile(String profile) {
+    public static boolean hasActiveProfile(String profile) {
         Profiles profiles = Profiles.of(profile);
         return applicationContext.getEnvironment().acceptsProfiles(profiles);
+    }
+
+    /**
+     * 是否为生产环境
+     * @return boolean  true生产环境；false其他环境
+     * @date 2022/1/5 09:03
+     * @author chad
+     * @since 1 by chad create
+     */
+    public static boolean isProdProfile() {
+        return hasActiveProfile(PROFILE_PROD);
     }
 
     /**
