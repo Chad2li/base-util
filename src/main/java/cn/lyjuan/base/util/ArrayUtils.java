@@ -3,8 +3,8 @@ package cn.lyjuan.base.util;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
+import java.util.StringJoiner;
 
 /**
  * Created by ly on 2014/12/22.
@@ -18,37 +18,34 @@ public class ArrayUtils {
      * @return
      */
     public static String join(Object[] objArr, String separator) {
-        if (null == objArr || objArr.length == 0)
+        if (null == objArr || objArr.length == 0) {
             return "";
+        }
 
-        StringBuilder sb = new StringBuilder();
+        StringJoiner sj = new StringJoiner(separator);
         Object obj = null;
         for (int i = 0; i < objArr.length; i++) {
             obj = Array.get(objArr, i);
-            if (StringUtils.isNull(obj))
-                sb.append(separator);
-            else
-                sb.append(StringUtils.toStr(objArr).trim()).append(separator);
+            if (StringUtils.isNull(obj)) {
+                sj.add("");
+            } else {
+                sj.add(StringUtils.toStr(obj).trim());
+            }
         }
-
-        sb.delete(sb.length() - 1, sb.length());
-
-        return sb.toString();
+        return sj.toString();
     }
 
     public static String join(Collection coll, String sep) {
-        if (null == coll || coll.isEmpty())
+        if (null == coll || coll.isEmpty()) {
             return "";
-
-        StringBuilder sb = new StringBuilder();
-        for (Object c : coll) {
-            sb.append(StringUtils.toStr(c).trim()).append(sep);
         }
 
-        if (sb.length() > 0)
-            sb.deleteCharAt(sb.length() - 1);
+        StringJoiner sj = new StringJoiner(sep);
+        for (Object c : coll) {
+            sj.add(StringUtils.toStr(c).trim());
+        }
 
-        return sb.toString();
+        return sj.toString();
     }
 
     /**
@@ -68,13 +65,16 @@ public class ArrayUtils {
      * @return
      */
     public static String[] arrUnnull(String[] arr) {
-        if (null == arr || arr.length < 1) return null;
+        if (null == arr || arr.length < 1) {
+            return null;
+        }
 
         List<String> list = new ArrayList<String>();
 
         for (String s : arr) {
-            if (StringUtils.isNull(s))
+            if (StringUtils.isNull(s)) {
                 continue;
+            }
 
             list.add(s);
         }
@@ -90,7 +90,9 @@ public class ArrayUtils {
      * @return
      */
     public static String[] splitUnnull(String str, String separate) {
-        if (StringUtils.isNull(str)) return null;
+        if (StringUtils.isNull(str)) {
+            return null;
+        }
 
         String[] arr = str.split(separate);
 
