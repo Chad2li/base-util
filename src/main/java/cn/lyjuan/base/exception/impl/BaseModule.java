@@ -2,8 +2,12 @@ package cn.lyjuan.base.exception.impl;
 
 import cn.lyjuan.base.exception.IAppModuleEnum;
 
-public enum  BaseModule implements IAppModuleEnum
-{
+/**
+ * 模块配置
+ *
+ * @author chad
+ */
+public enum BaseModule implements IAppModuleEnum {
     /**
      * 通用组件
      */
@@ -40,4 +44,10 @@ public enum  BaseModule implements IAppModuleEnum
      * 任务服务
      */
     , SERVICE_TASK;
+
+
+    @Override
+    public String displayName() {
+        return this.name();
+    }
 }
