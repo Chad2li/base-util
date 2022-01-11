@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
  * @date 2021/12/22 12:00:00
  * @since 1 by chad at 2021/12/22 新增
  */
-@Target({ElementType.FIELD})
+@Target({ElementType.FIELD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface FieldProperties {
     /**
@@ -28,7 +28,7 @@ public @interface FieldProperties {
      *
      * @return
      */
-    String title() default "属性";
+    String title() default "";
 
     /**
      * 类型 {@link ItemTypeEnum}，该字段的类型

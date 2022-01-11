@@ -1,16 +1,15 @@
 package cn.lyjuan.base.util.field;
 
-import cn.lyjuan.base.util.JsonUtils;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import lombok.Data;
-import lombok.Generated;
 import org.junit.Test;
+import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -40,33 +39,41 @@ public class FieldUtilTest {
     @Test
     public void toJson() {
         // format
-        String json = FieldUtil.toJson(FieldDemo.class);
+        String json = FieldUtil.format(FieldDemo.class);
         System.out.println("format ==> " + json);
 
-        List<FieldApiVo> result = FieldUtil.parse(json);
+        FieldApiVo result = FieldUtil.parse(json);
         json = FieldUtil.format(result);
         System.out.println("format2 ==> " + json);
+
+        // list
+        json = FieldUtil.format(ParameterizedTypeImpl.make(List.class, new Type[]{FieldDemo.class}, null));
+        System.out.println("list ==> " + json);
     }
 
     @Data
+    @FieldProperties(title = "Demo类", remark = "仅测试使用")
     public static class FieldDemo {
         @FieldProperties(title = "姓名")
         private String name;
-
         @FieldProperties(title = "年龄", min = 18, max = 65)
         private int age;
-
         @FieldProperties(title = "联系地址List", remark = "可以填多个")
         private ArrayList<Address> addrList;
-
 //        @FieldProperties(title = "列表", remark = "测试没有泛型会报错")
 //        private List list;
-
         @FieldProperties(title = "联系地址Array", remark = "可以填多个")
         private Address[] addrArray;
-
         @FieldProperties(title = "邮箱")
         private Email email;
+        @FieldProperties(title = "map>List")
+        private HashMap<String, List<Address>> mapList;
+        @FieldProperties(title = "map>arr")
+        private HashMap<String, Address[]> mapArr;
+        @FieldProperties(title = "map>map")
+        private HashMap<String, HashMap<String, Address>> mapMap;
+        @FieldProperties(title = "map>str", remark = "value为字符串的Map")
+        private HashMap<String, String> mapStr;
 
         @Data
         public static class Email {

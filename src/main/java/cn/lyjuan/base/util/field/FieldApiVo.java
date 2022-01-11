@@ -4,7 +4,6 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -36,7 +35,9 @@ public class FieldApiVo {
     private boolean notNull;
     @ApiModelProperty(required = true, value = "升序排序")
     private int sort;
-    @ApiModelProperty(required = true, value = "如果类型为OBJECT，则为子属性列表，如果为数组，则第1个为数组类型")
-    private List<FieldApiVo> subFields = Collections.EMPTY_LIST;
+    @ApiModelProperty(required = false, value = "List、Map的值类型")
+    private FieldApiVo subField;
+    @ApiModelProperty(required = false, value = "Object的属性列表")
+    private List<FieldApiVo> objectFields;
 }
 

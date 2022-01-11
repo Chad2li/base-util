@@ -14,7 +14,17 @@ public enum ItemTypeEnum {
     //
     , OBJECT
     //
-    , ARRAY
+    , LIST
+    //
+    /**
+     * hash结构，Key固定为 String，Value的标签为 {@link ItemTypeEnum#NAME_HASH_VALUE}
+     */
+    , HASH
     //
     ;
+    /**
+     * Hash结构值对象的标识
+     */
+    public static final String NAME_HASH_VALUE = "HASH.VALUE";
+    public static final String NAME_LIST_VALUE = "LIST.VALUE";
 }
