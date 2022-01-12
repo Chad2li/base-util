@@ -1,7 +1,9 @@
 package cn.lyjuan.base.test;
 
 import cn.lyjuan.base.util.JsonUtils;
+import org.junit.Test;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -17,5 +19,13 @@ public class JsonEncoderTest {
         System.out.println("map ==> " + JsonUtils.to(map));
 
         System.out.println("rep ==> " + json.replaceAll("\\\\", ""));
+    }
+
+    @Test
+    public void url() throws UnsupportedEncodingException {
+        String str = "\\xAC\\xED\\x00\\x05\\x00\\x13";
+        str = str.replaceAll("\\\\x", "%");
+        str = URLDecoder.decode(str, StandardCharsets.UTF_8.name());
+        System.out.println(str);
     }
 }

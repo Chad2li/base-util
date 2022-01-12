@@ -146,8 +146,9 @@ public class RedissonReplicaConfig {
         BaseCodec codec = new CustomJsonJacksonCodec(objectMapper);
 
         Set<String> slaverSet = new HashSet<>(this.slavers.length);
-        for (String s : this.slavers)
+        for (String s : this.slavers) {
             slaverSet.add(s);
+        }
 
         Config config = new Config();
         config.setCodec(codec)

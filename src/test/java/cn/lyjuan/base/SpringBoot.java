@@ -3,9 +3,7 @@ package cn.lyjuan.base;
 import cn.lyjuan.base.redis.RedisIncrbyOps;
 import cn.lyjuan.base.redis.RedisMultiGetOps;
 import cn.lyjuan.base.redis.RedisOps;
-import cn.lyjuan.base.redis.RedisReplicaConfig;
 import cn.lyjuan.base.redis.redisson.RedissonOps;
-import cn.lyjuan.base.redis.redisson.RedissonReplicaConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -16,7 +14,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import javax.annotation.Resource;
 
 @SpringBootApplication
-@ImportAutoConfiguration(classes = {RedisReplicaConfig.class
+@ImportAutoConfiguration(classes = {
+        // RedisReplicaConfig.class
 //        , RedissonReplicaConfig.class
 })
 @EnableConfigurationProperties

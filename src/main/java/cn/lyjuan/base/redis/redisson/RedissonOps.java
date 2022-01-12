@@ -21,7 +21,7 @@ public class RedissonOps {
 
     @Getter
     private RedissonClient client;
-
+    @Getter
     private ObjectMapper objectMapper;
 
     @Autowired
