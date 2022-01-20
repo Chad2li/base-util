@@ -217,6 +217,24 @@ public class RedissonOps {
     }
 
     /**
+     * 获取键值并删
+     *
+     * @param key redis键
+     * @return T null键不存在，请用小写接收
+     * @date 2022/1/18 19:56
+     * @author chad
+     * @since 1 by chad create
+     */
+    public <T> T getAndDel(final String key) {
+        if (StringUtils.isNull(key)) {
+            return null;
+        }
+        RBucket<T> rb = client.getBucket(key);
+        T val = rb.getAndDelete();
+        return val;
+    }
+
+    /**
      * 设置key的过期时间
      *
      * @param key           键值
