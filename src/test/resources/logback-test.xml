@@ -9,7 +9,7 @@
         </layout>
     </appender>
 
-    <logger name="cn.lyjuan" level="DEBUG" additivity="false">
+    <logger name="io.github.chad2li" level="DEBUG" additivity="false">
         <appender-ref ref="STDOUT"/>
     </logger>
     <!-- 测试 mybatis -->
