@@ -52,9 +52,11 @@ public class RedisIncrbyOpsTest extends BaseSpringTest {
         result = redisIncrbyOps.incrby(redisKey, null, 11, 10L, null, null);
         Assert.assertFalse(result.isSucc());
         Assert.assertTrue(result.isMaxFail());
+
         redisOps.set(redisKey, 0);
         result = redisIncrbyOps.incrby(redisKey, null, 10, null, null, null);
         Assert.assertTrue(result.isSucc());
+
         result = redisIncrbyOps.incrby(redisKey, null, null, 10L, null, null);
         Assert.assertFalse(result.isSucc());
         Assert.assertTrue(result.isMaxFail());

@@ -4,6 +4,8 @@ import cn.lyjuan.base.redis.lua.ARedisLua;
 import cn.lyjuan.base.redis.redisson.RedissonOps;
 import cn.lyjuan.base.util.JsonUtils;
 import cn.lyjuan.base.util.StringUtils;
+import lombok.Setter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RScript;
 import org.redisson.config.ReadMode;
@@ -146,6 +148,8 @@ public class RedisIncrbyOps extends ARedisLua {
     /**
      * 操作结果
      */
+    @Setter
+    @ToString
     public static class Result {
         private int code;
 

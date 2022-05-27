@@ -1,6 +1,5 @@
 package cn.lyjuan.base.redis.prod;
 
-import cn.lyjuan.base.redis.redisson.RedissonOpsTest;
 import cn.lyjuan.base.redis.redisson.codec.CustomJsonJacksonCodec;
 import cn.lyjuan.base.util.DateUtils;
 import com.fasterxml.jackson.annotation.JsonInclude;

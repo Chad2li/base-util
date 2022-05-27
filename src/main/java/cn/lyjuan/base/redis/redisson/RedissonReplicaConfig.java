@@ -1,6 +1,7 @@
 package cn.lyjuan.base.redis.redisson;
 
 import cn.lyjuan.base.redis.redisson.codec.CustomJsonJacksonCodec;
+import cn.lyjuan.base.util.StringUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 import org.redisson.Redisson;
@@ -145,10 +146,13 @@ public class RedissonReplicaConfig {
     public RedissonClient redissonClient(ObjectMapper objectMapper) {
         BaseCodec codec = new CustomJsonJacksonCodec(objectMapper);
 
-        Set<String> slaverSet = new HashSet<>(this.slavers.length);
-        for (String s : this.slavers) {
-            slaverSet.add(s);
+        Set<String> slaverSet = new HashSet<>();
+        if (!StringUtils.isNullArray(this.slavers)) {
+            for (String s : this.slavers) {
+                slaverSet.add(s);
+            }
         }
+
 
         Config config = new Config();
         config.setCodec(codec)

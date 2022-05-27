@@ -8,6 +8,7 @@ import org.redisson.config.TransportMode;
 
 /**
  * 测试本地连接redisson
+ *
  * @author chad
  * @date 2021/9/8 15:44
  * @since
@@ -16,12 +17,14 @@ public class RedissonOpsConnTest {
     private RedissonBaseConfig baseConfig = new RedissonBaseConfig();
     private RedissonReplicaConfig config = new RedissonReplicaConfig();
 
+    private RedissonOps redissonOps;
+
     @Before
     public void before() {
-        config.setMaster("redis://redis.test.hehewang.com:7101");
-        config.setSlavers(new String[]{"redis://redis.test.hehewang.com:7102"});
+        config.setMaster("redis://localhost:6379");
+//        config.setSlavers(new String[]{"redis://redis.test.hehewang.com:7102"});
         config.setDatabase(0);
-        config.setPassword("");
+//        config.setPassword("");
 
         config.setThreads(4);
         config.setNettyThreads(4);
@@ -42,10 +45,19 @@ public class RedissonOpsConnTest {
 
     @Test
     public void conn() {
-        RedissonOps redissonOps = config.redissonOps(baseConfig.createObjectMapper());
+        redissonOps = config.redissonOps(baseConfig.createObjectMapper());
         String key = "test:for:conn";
         redissonOps.set(key, 1);
         int val = redissonOps.get(key);
         Assert.assertEquals(1, val);
+    }
+
+
+    public static RedissonOps redissonOps() {
+        RedissonOpsConnTest conn = new RedissonOpsConnTest();
+        conn.before();
+        conn.conn();
+
+        return conn.redissonOps;
     }
 }

@@ -5,20 +5,28 @@ import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
+import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettucePoolingClientConfiguration;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
 public class RedisOpsTest {
-
-    private static final String pwd = "XXWck7QQQghPbittPNQErNyzxtOhcikVP0KifN3VsKjw8oht4gxN6RgSh3FGbVsPOskBF9AVQMXmjtCIDCrkUx8h10ifWSBcecd";
+    private static final String host = "localhost";
+    private static final int port = 6379;
+//    private static final String pwd = "XXWck7QQQghPbittPNQErNyzxtOhcikVP0KifN3VsKjw8oht4gxN6RgSh3FGbVsPOskBF9AVQMXmjtCIDCrkUx8h10ifWSBcecd";
+    private static final String pwd = "";
 
     private static final String KEY_PREFIX = "test:for:redisops:";
 
@@ -29,9 +37,6 @@ public class RedisOpsTest {
     @Before
     public void before() {
         rt = new StringRedisTemplate();
-        String host = "192.168.1.201";
-        int port = 7101;
-
         GenericObjectPoolConfig<?> config = new GenericObjectPoolConfig<>();
         config.setMaxTotal(1);
         config.setMaxIdle(1);
@@ -158,6 +163,40 @@ public class RedisOpsTest {
         setVal = redisOps.zRangeByRank(key, 0, -1, String.class);
         Assert.assertEquals(1, setVal.size());
         Assert.assertTrue(setVal.contains(m3));
+    }
 
+    @Test
+    public void pipeline() {
+        String key = "test:for:pipelined";
+        byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
+        redisOps.del(key);
+        for (int i = 0; i < 10; i++) {
+            List<Object> list = redisOps.executePipelined(new RedisCallback<Object>() {
+                @Override
+                public Object doInRedis(RedisConnection connection) throws DataAccessException {
+                    connection.incrBy(keyBytes, 1L);
+                    connection.expire(keyBytes, 86400);
+                    return null;
+                }
+            });
+
+            Assert.assertEquals(i + 1L, list.get(0));
+        }
+    }
+
+    @Test
+    public void mockPipeline() {
+        RedisTemplate rt = Mockito.mock(RedisTemplate.class);
+        Mockito.when(rt.executePipelined(Mockito.any(RedisCallback.class))).thenReturn(Arrays.asList(new String[]{"ZhangSan"}));
+        List list = rt.executePipelined(new RedisCallback<Object>() {
+            @Override
+            public Object doInRedis(RedisConnection connection) throws DataAccessException {
+
+                return null;
+            }
+        });
+
+
+        Assert.assertEquals("ZhangSan", list.get(0));
     }
 }
