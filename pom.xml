@@ -9,6 +9,36 @@
     <version>3.0.1</version>
     <packaging>jar</packaging>
 
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>actable</distribution>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <name>chad</name>
+            <email>li17206@163.com</email>
+            <organization>chad</organization>
+        </developer>
+    </developers>
+    <scm>
+        <tag>master</tag>
+        <connection>https://github.com/chad2li/dict-auto</connection>
+        <developerConnection>https://github.com/chad2li/</developerConnection>
+        <url>https://github.com/chad2li/dict-auto/tree/${project.scm.tag}</url>
+    </scm>
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
 
     <!-- 配置 -->
     <properties>
@@ -28,40 +58,89 @@
 
     <!-- 构建 -->
     <build>
+        <finalName>${project.artifactId}-${project.version}</finalName>
         <plugins>
+            <!-- 该项目编译时忽略注解 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
+                <version>3.10.1</version>
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
-                    <encoding>${project.build.sourceEncoding}</encoding>
+                    <encoding>${encoding}</encoding>
                 </configuration>
             </plugin>
+            <!-- 生成源码 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>2.1</version>
-                <configuration>
-                    <attach>true</attach>
-                </configuration>
+                <version>3.2.1</version>
                 <executions>
                     <execution>
-                        <phase>compile</phase>
+                        <id>attach-sources</id>
+                        <phase>install</phase>
                         <goals>
-                            <goal>jar</goal>
+                            <goal>jar-no-fork</goal>
                         </goals>
                     </execution>
                 </executions>
             </plugin>
-            <!-- Maven版本管理 -->
+            <!-- 生成 javadoc，关闭doclint，避免注解检查不通过 -->
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>versions-maven-plugin</artifactId>
-                <version>2.3</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.4.0</version>
+                <configuration>
+                    <source>1.8</source>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <additionalOptions>
+                                <!-- jdk8 -->
+                                <additionalOption>-Xdoclint:none</additionalOption>
+                            </additionalOptions>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
-
+            <!-- maven gpg 对组件进行签名 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>1.6</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- 将组件部署到OSSRH，并发布到Central Repository -->
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.6.7</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>ossrh</serverId>
+                    <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                </configuration>
+            </plugin>
+            <!--            <plugin>-->
+            <!--                <groupId>org.apache.maven.plugins</groupId>-->
+            <!--                <artifactId>maven-release-plugin</artifactId>-->
+            <!--                <version>3.0.0-M5</version>-->
+            <!--            </plugin>-->
         </plugins>
     </build>
 
@@ -142,6 +221,7 @@
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>2.8.9</version>
+            <optional>true</optional>
         </dependency>
 
         <!-- Spring Boot -->
@@ -284,6 +364,7 @@
             <groupId>org.mybatis</groupId>
             <artifactId>mybatis-typehandlers-jsr310</artifactId>
             <version>1.0.2</version>
+            <optional>true</optional>
         </dependency>
 
 
@@ -357,24 +438,4 @@
         </dependency>
         <!-- Druid$ -->
     </dependencies>
-
-
-    <!-- 发布仓储 -->
-    <distributionManagement>
-        <snapshotRepository>
-            <id>snapshots</id>
-            <name>nexus snapshot</name>
-            <url>
-                http://nexus.hehewang.com/repository/hehewang-snapshots/
-            </url>
-            <uniqueVersion>true</uniqueVersion>
-        </snapshotRepository>
-        <repository>
-            <id>releases</id>
-            <name>nexus release</name>
-            <url>
-                http://nexus.hehewang.com/repository/hehewang-releases/
-            </url>
-        </repository>
-    </distributionManagement>
 </project>

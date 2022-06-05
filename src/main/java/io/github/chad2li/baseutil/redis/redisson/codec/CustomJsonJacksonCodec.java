@@ -3,6 +3,8 @@ package io.github.chad2li.baseutil.redis.redisson.codec;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
+import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
 import com.fasterxml.jackson.databind.jsontype.TypeResolverBuilder;
 import org.redisson.codec.JsonJacksonCodec;
 
@@ -12,7 +14,11 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 /**
- * 解析原生JsonJacksonCodec无法正确解析/反解析 LocalDateTime
+ * 解决原生JsonJacksonCodec无法正确解析/反解析 LocalDateTime
+ *
+ * @author chad
+ * @since 1 create by chad
+ * @since 2 at 2022/06/05 by chad: 增加 DefaultBaseTypeLimitingValidator
  */
 public class CustomJsonJacksonCodec extends JsonJacksonCodec {
 
@@ -22,7 +28,11 @@ public class CustomJsonJacksonCodec extends JsonJacksonCodec {
 
     @Override
     protected void initTypeInclusion(ObjectMapper mapObjectMapper) {
-        TypeResolverBuilder<?> mapTyper = new ObjectMapper.DefaultTypeResolverBuilder(ObjectMapper.DefaultTyping.NON_FINAL) {
+
+        PolymorphicTypeValidator ptv = BasicPolymorphicTypeValidator.builder().allowIfBaseType(Object.class).build();
+
+        TypeResolverBuilder<?> mapType = new ObjectMapper.DefaultTypeResolverBuilder(ObjectMapper.DefaultTyping.NON_FINAL, ptv) {
+            @Override
             public boolean useForType(JavaType t) {
                 Class cls = t.getRawClass();
                 switch (_appliesFor) {
@@ -43,8 +53,9 @@ public class CustomJsonJacksonCodec extends JsonJacksonCodec {
                         }
                         if (cls == LocalDateTime.class ||
                                 cls == LocalDate.class ||
-                                cls == LocalTime.class)
+                                cls == LocalTime.class) {
                             return true;
+                        }
                         if (cls == XMLGregorianCalendar.class) {
                             return false;
                         }
@@ -55,8 +66,9 @@ public class CustomJsonJacksonCodec extends JsonJacksonCodec {
                 }
             }
         };
-        mapTyper.init(JsonTypeInfo.Id.CLASS, null);
-        mapTyper.inclusion(JsonTypeInfo.As.PROPERTY);
-        mapObjectMapper.setDefaultTyping(mapTyper);
+
+        mapType.init(JsonTypeInfo.Id.CLASS, null);
+        mapType.inclusion(JsonTypeInfo.As.PROPERTY);
+        mapObjectMapper.setDefaultTyping(mapType);
     }
 }

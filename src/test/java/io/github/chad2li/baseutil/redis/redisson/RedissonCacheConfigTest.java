@@ -23,7 +23,7 @@ import javax.annotation.Resource;
  * @since 1 by chad create
  */
 @EnableCaching
-@ImportAutoConfiguration(classes = {RedissonReplicaConfig.class, RedissonCacheConfig.class, RedissonCacheConfigTest.RedissonRepositoryConfig.class})
+@ImportAutoConfiguration(classes = {RedissonReplicatedConfig.class, RedissonCacheConfig.class, RedissonCacheConfigTest.RedissonRepositoryConfig.class})
 public class RedissonCacheConfigTest extends BaseSpringTest {
     @Resource
     private RedissonRepository repo;

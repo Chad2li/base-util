@@ -1,7 +1,5 @@
 package io.github.chad2li.baseutil.redis.redisson;
 
-import io.github.chad2li.baseutil.util.DateUtils;
-import io.github.chad2li.baseutil.util.JsonUtils;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -19,6 +17,8 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
+import io.github.chad2li.baseutil.util.DateUtils;
+import io.github.chad2li.baseutil.util.JsonUtils;
 import io.netty.buffer.ByteBuf;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -27,7 +27,11 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.redisson.Redisson;
-import org.redisson.api.*;
+import org.redisson.api.BatchResult;
+import org.redisson.api.RBatch;
+import org.redisson.api.RLock;
+import org.redisson.api.RMultimapAsync;
+import org.redisson.api.RedissonClient;
 import org.redisson.client.protocol.Encoder;
 import org.redisson.client.protocol.ScoredEntry;
 import org.redisson.codec.JsonJacksonCodec;
@@ -39,7 +43,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class RedissonOpsTest {
@@ -107,7 +117,7 @@ public class RedissonOpsTest {
         ;
 
         RedissonClient client = Redisson.create(config);
-        redissonOps = new RedissonOps(client, mapper);
+        redissonOps = new RedissonOps(client);
     }
 
     @Test

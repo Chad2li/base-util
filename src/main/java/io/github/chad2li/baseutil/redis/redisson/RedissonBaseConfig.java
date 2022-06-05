@@ -1,6 +1,5 @@
 package io.github.chad2li.baseutil.redis.redisson;
 
-import io.github.chad2li.baseutil.util.DateUtils;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,6 +11,8 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
+import io.github.chad2li.baseutil.util.DateUtils;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 
 import java.text.SimpleDateFormat;
@@ -22,10 +23,29 @@ import java.time.format.DateTimeFormatter;
 
 /**
  * redisson通用配置
+ *
+ * @author chad
  */
 public class RedissonBaseConfig {
     public static final String OBJECT_MAPPER_NAME = "redissonBaseConfigObjectMapper";
+    /**
+     * redisson通用配置资源文件名
+     */
+    public static final String BASE_PROPERTY_FILE = "classpath:/redisson/redisson.properties";
+    /**
+     * 资源前缀
+     */
+    public static final String PROPERTY_PREFIX = "redisson";
 
+    /**
+     * 当名为 {@link RedissonBaseConfig#OBJECT_MAPPER_NAME} 的 ObjectMapper 不存在时，创建该 bean
+     *
+     * @return Redisson的对象映射工具
+     * @date 2022/5/27 12:58
+     * @author chad
+     * @since 1 by chad at 2022/5/27
+     */
+    @ConditionalOnMissingBean(name = RedissonBaseConfig.OBJECT_MAPPER_NAME, value = ObjectMapper.class)
     @Bean(OBJECT_MAPPER_NAME)
     public ObjectMapper createObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();

@@ -1,16 +1,33 @@
 package io.github.chad2li.baseutil.redis.redisson;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.chad2li.baseutil.util.ReflectUtils;
 import io.github.chad2li.baseutil.util.StringUtils;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.*;
+import org.redisson.api.RAtomicLong;
+import org.redisson.api.RBatch;
+import org.redisson.api.RBlockingQueue;
+import org.redisson.api.RBucket;
+import org.redisson.api.RBuckets;
+import org.redisson.api.RDelayedQueue;
+import org.redisson.api.RKeys;
+import org.redisson.api.RLock;
+import org.redisson.api.RLongAdder;
+import org.redisson.api.RMap;
+import org.redisson.api.RScoredSortedSet;
+import org.redisson.api.RScript;
+import org.redisson.api.RSet;
+import org.redisson.api.RedissonClient;
 import org.redisson.client.protocol.ScoredEntry;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -24,11 +41,8 @@ public class RedissonOps {
     @Getter
     private ObjectMapper objectMapper;
 
-    @Autowired
-    public RedissonOps(@Autowired RedissonClient client,
-                       @Autowired @Qualifier(RedissonBaseConfig.OBJECT_MAPPER_NAME) ObjectMapper objectMapper) {
+    public RedissonOps(@Autowired RedissonClient client) {
         this.client = client;
-        this.objectMapper = objectMapper;
     }
 
     /**

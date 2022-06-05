@@ -13,7 +13,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 
 import javax.annotation.Resource;
 
-@SpringBootApplication
+@SpringBootApplication(excludeName = {"*"})
 @ImportAutoConfiguration(classes = {
         // RedisReplicaConfig.class
 //        , RedissonReplicaConfig.class

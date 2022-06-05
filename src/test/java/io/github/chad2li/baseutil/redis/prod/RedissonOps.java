@@ -1,7 +1,5 @@
 package io.github.chad2li.baseutil.redis.prod;
 
-import io.github.chad2li.baseutil.redis.redisson.codec.CustomJsonJacksonCodec;
-import io.github.chad2li.baseutil.util.DateUtils;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -17,6 +15,8 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
+import io.github.chad2li.baseutil.redis.redisson.codec.CustomJsonJacksonCodec;
+import io.github.chad2li.baseutil.util.DateUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.redisson.Redisson;
@@ -94,7 +94,7 @@ public class RedissonOps {
         ;
 
         RedissonClient client = Redisson.create(config);
-        redissonOps = new io.github.chad2li.baseutil.redis.redisson.RedissonOps(client, mapper);
+        redissonOps = new io.github.chad2li.baseutil.redis.redisson.RedissonOps(client);
     }
 
 
