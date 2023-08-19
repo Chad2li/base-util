@@ -58,10 +58,11 @@ public class SecureAopHandler<H extends IHeaderService.AHeaderParam> {
 
     @Before("pointcut()")
     public void handler(JoinPoint jp) {
-        if (FilterProperties.isSkip(this.filterProperties, SpringUtils.getRequest().getRequestURI()))
+        if (FilterProperties.isSkip(this.filterProperties, SpringUtils.getRequest().getRequestURI())) {
             return;
-
-        if (isDebug) {// 测试环境跳过安全认证
+        }
+        if (isDebug) {
+            // 测试环境跳过安全认证
             log.warn("Skip secure handler for debug");
             return;
         }
@@ -70,16 +71,18 @@ public class SecureAopHandler<H extends IHeaderService.AHeaderParam> {
         long duration = DateUtils.time2long(LocalDateTime.now()) - header.getTimestamp();
         duration /= 1000;
         if (duration > timestampTimeoutSeconds) {
-            ErrUtils.appThrow(BaseCode.TIMESTAMP_TIMEOUT);
+            throw ErrUtils.appThrow(BaseCode.TIMESTAMP_TIMEOUT);
         }
         String fullRequestId = secureService.fullRequestId(header);
         // requestId防重
         boolean isExists = secureService.exists(fullRequestId);
-        if (isExists)
-            ErrUtils.appThrow(BaseCode.REQUESTID_DUPLICATE);
+        if (isExists) {
+            throw ErrUtils.appThrow(BaseCode.REQUESTID_DUPLICATE);
+        }
         // 缓存
         secureService.cache(fullRequestId, timestampTimeoutSeconds + 10);
-        if (log.isDebugEnabled())
+        if (log.isDebugEnabled()) {
             log.debug("cache requestId: {}", header.getRequestId());
+        }
     }
 }

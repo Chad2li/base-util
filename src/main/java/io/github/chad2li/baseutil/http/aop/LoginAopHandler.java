@@ -82,7 +82,7 @@ public class LoginAopHandler<H extends IHeaderService.AHeaderParam> {
                 return;
             // 必须登录
             IAppCode code = userService.errNeedLogin();
-            ErrUtils.appThrow(code);
+            throw ErrUtils.appThrow(code);
         }
 
         IUserService.UserToken user = userService.user(headerService.cache());
@@ -91,7 +91,7 @@ public class LoginAopHandler<H extends IHeaderService.AHeaderParam> {
             // 无须登录权限
             if (!mustLogin) return;
             // 必须登录
-            ErrUtils.appThrow(userService.errTokenInvalid());
+            throw ErrUtils.appThrow(userService.errTokenInvalid());
         }
         // token有效
         // 接口无需权限
@@ -108,7 +108,7 @@ public class LoginAopHandler<H extends IHeaderService.AHeaderParam> {
         // 权限判断
         List<String> loginTypes = user.getLoginTypes();
         if (CollectionUtils.isEmpty(loginTypes)) {// 无权访问
-            ErrUtils.appThrow(userService.errIllegalPermission());
+            throw ErrUtils.appThrow(userService.errIllegalPermission());
         }
         for (String type : types) {
             for (String userType : loginTypes) {
@@ -120,7 +120,7 @@ public class LoginAopHandler<H extends IHeaderService.AHeaderParam> {
             }
         }
         // 无权访问
-        ErrUtils.appThrow(userService.errIllegalPermission());
+        throw ErrUtils.appThrow(userService.errIllegalPermission());
     }
 
     /**

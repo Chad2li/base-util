@@ -1,14 +1,23 @@
 package io.github.chad2li.baseutil.http.vo.res;
 
+import com.github.pagehelper.Page;
 import io.github.chad2li.baseutil.exception.IAppCode;
 import io.github.chad2li.baseutil.exception.impl.BaseCode;
-import io.github.chad2li.baseutil.util.StringUtils;
-import com.github.pagehelper.Page;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 
+import java.io.Serializable;
+
+/**
+ * rest统一响应
+ *
+ * @author chad
+ * @since 1 by chad at 2023/8/19
+ */
 @ApiModel
-public class BaseRes<T> {
+@Data
+public class BaseRes<T> implements Serializable {
     /**
      * 状态码
      */
@@ -28,65 +37,27 @@ public class BaseRes<T> {
     private T data;
 
     /**
-     * 成功的响应重载方法
+     * 成功且无数据
      *
-     * @param <T>
-     * @return
+     * @return base res
+     * @author chad
+     * @see BaseRes#resp(IAppCode, String, Object)
+     * @since 1 by chad at 2018/2/27
      */
     public static <T> BaseRes<T> succ() {
-        return resp();
+        return resp(BaseCode.SUCC, BaseCode.SUCC.msg(), null);
     }
 
     /**
-     * 成功响应数据
+     * 成功且有数据
      *
-     * @param data
-     * @param <T>
-     * @return
+     * @return base res
+     * @author chad
+     * @see BaseRes#resp(IAppCode, String, Object)
+     * @since 1 by chad at 2018/2/27
      */
     public static <T> BaseRes<T> succ(T data) {
-        return resp(BaseCode.SUCC, "succ", data);
-    }
-
-    /**
-     * 返回不带数据的成功消息
-     *
-     * @return
-     */
-    public static <T> BaseRes<T> resp() {
-        return resp(BaseCode.SUCC, "succ", null);
-    }
-
-    /**
-     * 返回指定状态码的消息
-     *
-     * @param code
-     * @return
-     */
-    public static <T> BaseRes<T> resp(IAppCode code) {
-        return resp(code, "", null);
-    }
-
-    /**
-     * 返回定制的不带数据的消息
-     *
-     * @param code
-     * @param msg
-     * @return
-     */
-    public static <T> BaseRes<T> resp(IAppCode code, String msg) {
-        return resp(code, msg, null);
-    }
-
-    /**
-     * 返回带数据的成功消息
-     *
-     * @param data 数据
-     * @param <T>
-     * @return
-     */
-    public static <T> BaseRes<T> resp(T data) {
-        return resp(BaseCode.SUCC, "succ", data);
+        return resp(BaseCode.SUCC, BaseCode.SUCC.msg(), data);
     }
 
     /**
@@ -99,80 +70,36 @@ public class BaseRes<T> {
      * @return
      */
     public static <T> BaseRes<T> resp(IAppCode code, String msg, T data) {
-        BaseRes<T> base = null;
-        if (null != data && data instanceof Page) {
-            Page p = (Page) data;
-            base = PagerRes.page(p.getPageNum(), p.getPageSize(), p.getTotal());
+        BaseRes<T> base;
+        if (null != data && "com.github.pagehelper.Page".equalsIgnoreCase(data.getClass().getName())) {
+            base = new PagerRes<>(code.fullCode(), msg, data, ((Page<?>) data).getTotal());
+        } else {
+            base = new BaseRes<>(code.fullCode(), msg, data);
         }
-
-        if (null == base)
-            base = new BaseRes();
-
-        base.setCode(IAppCode.fullCode(code)).setMsg(msg).setData(data);
 
         return base;
     }
 
+    public BaseRes(String code, String msg, T data) {
+        this.code = code;
+        this.msg = msg;
+        this.data = data;
+    }
+
     public BaseRes() {
+        // do nothing
     }
 
     /**
-     * 是否为成功响应
+     * 业务是否执行成功
      *
-     * @return
+     * @return true业务执行成功；否则失败
+     * @author chad
+     * @since 1 by chad at 2018/2/27
      */
     public boolean isSucc() {
-        return IAppCode.fullCode(BaseCode.SUCC).equals(this.code);
+        return BaseCode.SUCC.fullCode().equals(this.code);
     }
 
-    public T getData() {
-        return data;
-    }
-
-    public BaseRes<T> setData(T data) {
-        this.data = data;
-        return this;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public BaseRes<T> setCode(String code) {
-        this.code = code;
-        return this;
-    }
-
-    public String getMsg() {
-        return msg;
-    }
-
-    public BaseRes<T> setMsg(String msg) {
-        this.msg = msg;
-        return this;
-    }
-
-    public static BaseRes res(IAppCode code, String msg) {
-        return res(IAppCode.fullCode(code), msg);
-    }
-
-    public static BaseRes res(IAppCode code) {
-        return res(IAppCode.fullCode(code), code.msg());
-    }
-
-    public static BaseRes res(String code, String msg) {
-        BaseRes res = new BaseRes();
-        res.setCode(StringUtils.isNull(code) ? IAppCode.fullCode(BaseCode.ERROR) : code);
-        res.setMsg(StringUtils.isNull(msg) ? BaseCode.ERROR.msg() : msg);
-        return res;
-    }
-
-    @Override
-    public String toString() {
-        return "BaseRes{" +
-                "code=" + code +
-                ", msg='" + msg + '\'' +
-                ", data=" + data +
-                '}';
-    }
+    private static final long serialVersionUID = 1L;
 }

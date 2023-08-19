@@ -1,64 +1,115 @@
 package io.github.chad2li.baseutil.exception.util;
 
+import cn.hutool.core.text.CharSequenceUtil;
 import io.github.chad2li.baseutil.exception.IAppCode;
 import io.github.chad2li.baseutil.exception.impl.AppException;
 import io.github.chad2li.baseutil.exception.impl.BaseCode;
-import io.github.chad2li.baseutil.util.StringUtils;
 
 /**
  * 抛异常工具
+ *
+ * @author chad
+ * @since 1 by chad at 2018/2/27 <br/>
+ * 2 by chad at 2023/8/18: 1).废弃log参数;2).调用方throw更符合逻辑
  */
 public class ErrUtils {
-    public static void appThrow() {
-        appThrow(null, null, null, null);
+    /**
+     * 封装异常信息
+     *
+     * @param code      状态码
+     * @param msg       自定义消息，未指定使用 {@link IAppCode#msg()}
+     * @param throwable 程序运行时的异常信息
+     * @return app exception
+     * @author chad
+     * @since 1 by chad at 2023/8/18
+     */
+    public static AppException appThrow(IAppCode code, String msg, Throwable throwable) {
+        code = null != code ? code : BaseCode.ERROR;
+        msg = CharSequenceUtil.isNotEmpty(msg) ? msg : code.msg();
+        return new AppException(code, msg, throwable);
     }
-
-    public static void appThrow(String log) {
-        appThrow(null, null, log, null);
-    }
-
-    public static void appThrow(IAppCode code, Throwable t) {
-        appThrow(code, null, null, t);
-    }
-
-    public static void appThrow(IAppCode code, String log) {
-        appThrow(code, null, log, null);
-    }
-
-    public static void appThrow(IAppCode code) {
-        appThrow(code, null, null, null);
-    }
-
-    public static void appThrow(IAppCode code, String log, Throwable t) {
-        appThrow(code, null, log, t);
-    }
-
 
     /**
-     * 抛异常
+     * 封装异常信息
      *
-     * @param code
-     * @param msg
-     * @param log
+     * @return app exception
+     * @author chad
+     * @see ErrUtils#appThrow(IAppCode, String, Throwable)
+     * @since 1 by chad at 2023/8/18
      */
-    public static void appThrow(IAppCode code, String msg, String log, Throwable throwable) {
-        String codeStr = IAppCode.fullCode(null == code ? BaseCode.ERROR : code);
-        if (StringUtils.isNull(msg)) {
-            msg = null == code ? BaseCode.ERROR.msg() : code.msg();
-        }
-        log = StringUtils.isNull(log) ? msg : log;
-        throw new AppException(codeStr, msg, log, throwable);
+    public static AppException appThrow() {
+        return appThrow(null, null, null);
     }
 
-    public static void appThrow(String msg, String log, Throwable throwable) {
-        appThrow(null, msg, log, throwable);
+    /**
+     * 封装异常信息
+     *
+     * @return app exception
+     * @author chad
+     * @see ErrUtils#appThrow(IAppCode, String, Throwable)
+     * @since 1 by chad at 2023/8/18
+     */
+    public static AppException appThrow(String msg) {
+        return appThrow(null, msg, null);
     }
 
-    public static void appThrow(String msg, Throwable throwable) {
-        appThrow(null, msg, null, throwable);
+    /**
+     * 封装异常信息
+     *
+     * @return app exception
+     * @author chad
+     * @see ErrUtils#appThrow(IAppCode, String, Throwable)
+     * @since 1 by chad at 2023/8/18
+     */
+    public static AppException appThrow(IAppCode code, Throwable t) {
+        return appThrow(code, null, t);
     }
 
-    public static void appThrow(Throwable throwable) {
-        appThrow(null, null, null, throwable);
+    /**
+     * 封装异常信息
+     *
+     * @return app exception
+     * @author chad
+     * @see ErrUtils#appThrow(IAppCode, String, Throwable)
+     * @since 1 by chad at 2023/8/18
+     */
+    public static AppException appThrow(IAppCode code, String msg) {
+        return appThrow(code, msg, null);
+    }
+
+    /**
+     * 封装异常信息
+     *
+     * @return app exception
+     * @author chad
+     * @see ErrUtils#appThrow(IAppCode, String, Throwable)
+     * @since 1 by chad at 2023/8/18
+     */
+    public static AppException appThrow(IAppCode code) {
+        return appThrow(code, null, null);
+    }
+
+    /**
+     * 封装异常信息
+     *
+     * @return app exception
+     * @author chad
+     * @see ErrUtils#appThrow(IAppCode, String, Throwable)
+     * @since 1 by chad at 2023/8/18
+     */
+    public static AppException appThrow(String msg, Throwable throwable) {
+        return appThrow(null, msg, throwable);
+    }
+
+    /**
+     * 封装异常信息
+     *
+     * @return app exception
+     * @author chad
+     * @see ErrUtils#appThrow(IAppCode, String, Throwable)
+     * @since 1 by chad at 2023/8/18
+     */
+    public static AppException appThrow(Throwable throwable) {
+        return appThrow(null, null, throwable);
     }
 }

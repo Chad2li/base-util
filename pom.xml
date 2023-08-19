@@ -6,7 +6,7 @@
 
     <groupId>io.github.chad2li</groupId>
     <artifactId>base-util</artifactId>
-    <version>3.0.1</version>
+    <version>4.0.1</version>
     <packaging>jar</packaging>
 
     <licenses>
@@ -437,5 +437,11 @@
             <artifactId>spring-test</artifactId>
         </dependency>
         <!-- Druid$ -->
+
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+            <version>5.8.21</version>
+        </dependency>
     </dependencies>
 </project>

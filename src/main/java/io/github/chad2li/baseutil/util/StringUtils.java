@@ -1,5 +1,8 @@
 package io.github.chad2li.baseutil.util;
 
+import cn.hutool.core.text.CharSequenceUtil;
+import cn.hutool.core.text.StrJoiner;
+
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
@@ -8,6 +11,13 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 
+/**
+ * 字符串工具
+ *
+ * @author chad
+ * @date 2023/8/18 08:51
+ * @since 1 by chad at 2023/8/18
+ */
 public class StringUtils {
 
     /**
@@ -208,9 +218,11 @@ public class StringUtils {
      *
      * @param str
      * @return
+     * @deprecated {@link CharSequenceUtil#isEmpty(CharSequence)}
      */
+    @Deprecated
     public static boolean isNull(Object str) {
-        if (str == null || str.toString().trim().length() < 1) {
+        if (str == null || str.toString().trim().isEmpty()) {
             return true;
         }
 
@@ -382,9 +394,11 @@ public class StringUtils {
     /**
      * 判断对象是否为身份证格式
      *
-     * @param cert
-     * @return
+     * @param cert 身份证
+     * @return true 校验通过
+     * @deprecated 需要决断校验位, {@link IdCardUtils#validate(String)}
      */
+    @Deprecated
     public static boolean isCertId(String cert) {
         if (isNull(cert)) {
             return false;
@@ -400,7 +414,9 @@ public class StringUtils {
      * @param mobile
      * @param operator 1 移动 2 联通 3电信， 该标志关系到视图 vll_operator 数据
      * @return true 表示手机号格式正确，否则表示手机号格式错误
+     * @deprecated 号段在不断更新，不能简单使用该方法
      */
+    @Deprecated
     public static boolean isOperator(String mobile, int operator) {
         String reg = "^1[\\d]{10}$";
 
@@ -435,7 +451,9 @@ public class StringUtils {
      *
      * @param obj
      * @return
+     * @deprecated 有问题，废弃
      */
+    @Deprecated
     public static String toStr(Object obj) {
         return toStr(obj, null, null);
     }
@@ -447,7 +465,9 @@ public class StringUtils {
      * @param currCls 输出对象指定类的信息，默认打印当前类
      * @param stopCls 输出对象递归父类信息，停止于指定类（stopCls类对象信息不会输出），默认仅打印当前类
      * @return
+     * @deprecated 有问题，废弃
      */
+    @Deprecated
     public static String toStr(Object obj, Class currCls, Class stopCls) {
         if (null == obj) {
             return "";
@@ -575,5 +595,40 @@ public class StringUtils {
         sb.append("}");
 
         return sb.toString();
+    }
+
+    /**
+     * 拼接字符串
+     * <pre>
+     *     1. 忽略空字符串（空格认为有效）
+     *     2. 去除每个元素的首尾空格
+     * </pre>
+     *
+     * @param delimiter 拼接符
+     * @param values    拼接值
+     * @return 拼接后的字符串
+     * @author chad
+     * @since 1 by chad at 2023/8/18
+     */
+    public static String joinIgnoreEmpty(String delimiter, String... values) {
+        return StrJoiner.of(delimiter)
+                // 忽略null
+                .setNullMode(StrJoiner.NullMode.IGNORE)
+                .append(values, it ->
+                        CharSequenceUtil.isEmpty(it) ? null : it.trim()
+                ).toString();
+    }
+
+    /**
+     * 拼接字符串
+     *
+     * @param values 拼接值
+     * @return 拼接后的值
+     * @author chad
+     * @see StringUtils#joinIgnoreEmpty(String, String...)
+     * @since 1 by chad at 2023/8/18
+     */
+    public static String join(String... values) {
+        return joinIgnoreEmpty(",", values);
     }
 }

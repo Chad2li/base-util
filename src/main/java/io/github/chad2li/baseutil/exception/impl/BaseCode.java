@@ -2,9 +2,11 @@ package io.github.chad2li.baseutil.exception.impl;
 
 import io.github.chad2li.baseutil.exception.IAppCode;
 import io.github.chad2li.baseutil.exception.IAppModuleEnum;
+import lombok.ToString;
+import org.slf4j.event.Level;
 
-public enum BaseCode implements IAppCode
-{
+@ToString
+public enum BaseCode implements IAppCode {
     /**
      * 业务执行成功
      */
@@ -12,7 +14,7 @@ public enum BaseCode implements IAppCode
     /**
      * 业务执行失败
      */
-    , FAILED("0002", "failed")
+    , FAILED("0002", "failed", Level.ERROR)
     /**
      * 参数无效
      */
@@ -56,37 +58,40 @@ public enum BaseCode implements IAppCode
     //
     ;
 
-    private String code;
+    private final String code;
 
-    private String msg;
+    private final String msg;
+
+    private final Level level;
 
     @Override
-    public IAppModuleEnum module()
-    {
+    public IAppModuleEnum module() {
         return BaseModule.BASE_COMMON;
     }
 
     @Override
-    public String code()
-    {
+    public String code() {
         return this.code;
     }
 
     @Override
-    public String msg()
-    {
+    public String msg() {
         return this.msg;
     }
 
-    BaseCode(String code, String msg)
-    {
-        this.code = code;
-        this.msg = msg;
+    @Override
+    public Level level() {
+        return this.level;
     }
 
-    @Override
-    public String toString()
-    {
-        return this.code();
+
+    BaseCode(String code, String msg) {
+        this(code, msg, Level.INFO);
+    }
+
+    BaseCode(String code, String msg, Level level) {
+        this.code = code;
+        this.msg = msg;
+        this.level = level;
     }
 }

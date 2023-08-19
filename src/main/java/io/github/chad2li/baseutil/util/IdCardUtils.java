@@ -1,5 +1,9 @@
 package io.github.chad2li.baseutil.util;
 
+import cn.hutool.core.lang.Assert;
+import cn.hutool.core.text.CharSequenceUtil;
+import lombok.extern.slf4j.Slf4j;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
@@ -7,9 +11,11 @@ import java.time.format.DateTimeFormatter;
  * 验证身份证号码 身份证号码, 可以解析身份证号码的各个字段，以及验证身份证号码是否有效;<br />
  * 身份证号码构成：6位地址编码+8位生日+3位顺序码+1位校验码<br />
  * 来源：http://blog.csdn.net/fssf0079/article/details/19121125
+ *
+ * @author chad
  */
-public class IdCardUtils
-{
+@Slf4j
+public class IdCardUtils {
 //    private String cardNumber; // 完整的身份证号码
 //    private Boolean cacheValidateResult = null; // 缓存身份证是否有效，因为验证有效性使用频繁且计算复杂
     /**
@@ -41,50 +47,58 @@ public class IdCardUtils
     /**
      * 校验号码是否有效
      *
-     * @param idcard
+     * @param idCard
      * @return
      */
-    public static boolean validate(String idcard)
-    {
-        if (StringUtils.isNull(idcard)) return false;// 不能为空
-        idcard = idcard.trim();
-        if (idcard.length() == OLD_CARD_NUMBER_LENGTH)// 15位转18位
-            idcard = old2new(idcard);
-
-        if (NEW_CARD_NUMBER_LENGTH != idcard.length()) return false;// 长度
-
+    public static boolean validate(String idCard) {
+        if (CharSequenceUtil.isEmpty(idCard)) {
+            // 不能为空
+            return false;
+        }
+        String tmpIdCard = idCard.trim();
+        if (tmpIdCard.length() == OLD_CARD_NUMBER_LENGTH) {
+            // 15位转18位
+            tmpIdCard = old2new(tmpIdCard);
+        }
+        if (NEW_CARD_NUMBER_LENGTH != tmpIdCard.length()) {
+            // 长度不足
+            return false;
+        }
         // 身份证号的前17位必须是阿拉伯数字
-        if (!StringUtils.isNumber(idcard.substring(0, NEW_CARD_NUMBER_LENGTH - 1))) return false;
-        boolean result = true;
-
+        if (!CharSequenceUtil.isNumeric(tmpIdCard.substring(0, NEW_CARD_NUMBER_LENGTH - 1))) {
+            return false;
+        }
+        boolean result;
         // 身份证号的第18位校验正确
-        char code = calculateVerifyCode(idcard);
-        result = code == idcard.charAt(NEW_CARD_NUMBER_LENGTH - 1);
-        if (!result) return false;
-
-
+        char code = calculateVerifyCode(tmpIdCard);
+        result = code == tmpIdCard.charAt(NEW_CARD_NUMBER_LENGTH - 1);
+        if (!result) {
+            // 校验不通过
+            return false;
+        }
         // 出生日期不能晚于当前时间，并且不能早于1900年
-        try
-        {
-            LocalDate birth = parseBirthDate(idcard);
-
+        try {
+            LocalDate birth = parseBirthDate(tmpIdCard);
             // 出生年月在当前日期前
             result = birth.isBefore(LocalDate.now());
-            if (!result) return false;
-
+            if (!result) {
+                return false;
+            }
             // 出生年月在身份证最小日期后
             result = birth.isAfter(MINIMAL_BIRTH_DATE);
-            if (!result) return false;
+            if (!result) {
+                return false;
+            }
 
-            /**
+            /*
              * 出生日期中的年、月、日必须正确,比如月份范围是[1,12],日期范围是[1,31]，还需要校验闰年、大月、小月的情况时，
              * 月份和日期相符合
              */
-            String birthdayPart = parseBirthPart(idcard);// 出生年月部分
+            String birthdayPart = parseBirthPart(tmpIdCard);// 出生年月部分
             String realBirthdayPart = formatBirthDate(birthdayPart).format(BIRTH_DATE_FORMAT);// 解析日期，看是否相同
             if (!realBirthdayPart.equalsIgnoreCase(birthdayPart)) return false;
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
+            log.error("valid idCard error, idCard:{}", idCard, e);
             return false;
         }
         // todo 完整身份证号码的省市县区检验规则
@@ -98,8 +112,7 @@ public class IdCardUtils
      * @param idcard
      * @return
      */
-    public static String getAddressCode(String idcard)
-    {
+    public static String getAddressCode(String idcard) {
         idcard = old2new(idcard);
 
         return idcard.substring(0, 6);
@@ -111,17 +124,14 @@ public class IdCardUtils
      * @param idcard
      * @return
      */
-    public static LocalDate parseBirthDate(String idcard)
-    {
+    public static LocalDate parseBirthDate(String idcard) {
         idcard = old2new(idcard);
 
-        try
-        {
+        try {
             LocalDate birth = formatBirthDate(parseBirthPart(idcard));
 
             return birth;
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
             throw new RuntimeException("birthday of idcard:" + idcard + " format error");
         }
     }
@@ -131,8 +141,7 @@ public class IdCardUtils
      *
      * @return
      */
-    public static boolean isMale(String idcard)
-    {
+    public static boolean isMale(String idcard) {
         idcard = old2new(idcard);
 
         return 1 == parseGenderCode(idcard);
@@ -144,8 +153,7 @@ public class IdCardUtils
      * @param idcard
      * @return
      */
-    public static boolean isFemale(String idcard)
-    {
+    public static boolean isFemale(String idcard) {
         idcard = old2new(idcard);
 
         return 0 == parseGenderCode(idcard);
@@ -156,16 +164,14 @@ public class IdCardUtils
      *
      * @return
      */
-    private static int parseGenderCode(String idcard)
-    {
+    private static int parseGenderCode(String idcard) {
         idcard = old2new(idcard);
         checkIfValid(idcard);
         char genderCode = idcard.charAt(NEW_CARD_NUMBER_LENGTH - 2);
         return ((genderCode - '0') & 0x1);
     }
 
-    private static String parseBirthPart(String idcard)
-    {
+    private static String parseBirthPart(String idcard) {
         idcard = old2new(idcard);
 
         return idcard.substring(6, 14);
@@ -177,13 +183,11 @@ public class IdCardUtils
      * @param birthPart 身份证上的出生年月
      * @return
      */
-    private static LocalDate formatBirthDate(String birthPart)
-    {
+    private static LocalDate formatBirthDate(String birthPart) {
         return LocalDate.parse(birthPart, BIRTH_DATE_FORMAT);
     }
 
-    private static void checkIfValid(String idcard)
-    {
+    private static void checkIfValid(String idcard) {
         idcard = old2new(idcard);
 
         if (false == validate(idcard))
@@ -201,11 +205,9 @@ public class IdCardUtils
      * @param idcard
      * @return
      */
-    private static char calculateVerifyCode(String idcard)
-    {
+    private static char calculateVerifyCode(String idcard) {
         int sum = 0;
-        for (int i = 0; i < NEW_CARD_NUMBER_LENGTH - 1; i++)
-        {
+        for (int i = 0; i < NEW_CARD_NUMBER_LENGTH - 1; i++) {
             char ch = idcard.charAt(i);
             sum += ((int) (ch - '0')) * VERIFY_CODE_WEIGHT[i];
         }
@@ -221,9 +223,8 @@ public class IdCardUtils
      * @param old
      * @return
      */
-    private static String old2new(String old)
-    {
-        if (StringUtils.isNull(old)) throw new NullPointerException("idcard cannot be null");
+    private static String old2new(String old) {
+        Assert.notEmpty(old, "idCard cannot be null");
 
         if (old.length() != OLD_CARD_NUMBER_LENGTH) return old;
 

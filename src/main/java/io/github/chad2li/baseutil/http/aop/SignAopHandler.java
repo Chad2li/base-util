@@ -69,7 +69,7 @@ public class SignAopHandler<H extends IHeaderService.AHeaderParam> {
         // 获取app信息
         ISignService.App app = signService.app(header);
         if (null == app || !app.isValid())
-            ErrUtils.appThrow(BaseCode.APP_ID_INVALID);
+            throw ErrUtils.appThrow(BaseCode.APP_ID_INVALID);
         // 获取url参数
         Map<String, String> get = SpringUtils.getParam(req);
         // 获取body参数，get方法不获取
@@ -104,6 +104,6 @@ public class SignAopHandler<H extends IHeaderService.AHeaderParam> {
         }
         if (isDebug)// 测试环境跳过签名不匹配
             return;
-        ErrUtils.appThrow(BaseCode.SIGN_INVALID);
+        throw ErrUtils.appThrow(BaseCode.SIGN_INVALID);
     }
 }

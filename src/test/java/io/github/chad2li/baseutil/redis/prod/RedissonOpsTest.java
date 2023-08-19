@@ -29,7 +29,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
-public class RedissonOps {
+public class RedissonOpsTest {
     private io.github.chad2li.baseutil.redis.redisson.RedissonOps redissonOps;
 
     private static final String MASTER = "redis://redis.hehewang.com:7001";

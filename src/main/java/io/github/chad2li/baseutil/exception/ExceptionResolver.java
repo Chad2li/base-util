@@ -1,6 +1,8 @@
 package io.github.chad2li.baseutil.exception;
 
 
+import cn.hutool.core.exceptions.ExceptionUtil;
+import cn.hutool.core.text.CharSequenceUtil;
 import io.github.chad2li.baseutil.exception.impl.AppException;
 import io.github.chad2li.baseutil.exception.impl.BaseCode;
 import io.github.chad2li.baseutil.http.vo.res.BaseRes;
@@ -69,10 +71,10 @@ public class ExceptionResolver {
     @ExceptionHandler({Exception.class})
     public Object doResolveException(Exception e) {
         // 打印日志
-        logExce(e);
+        writeLog(e);
 
         // 封闭异常信息
-        BaseRes resp = ajaxExce(e);
+        BaseRes resp = res(e);
 
         return resp;
     }
@@ -83,34 +85,33 @@ public class ExceptionResolver {
      * @param e
      * @return
      */
-    public BaseRes ajaxExce(Exception e) {
-        BaseRes base = new BaseRes();
+    public BaseRes<Void> res(Exception e) {
+        BaseRes<Void> base = new BaseRes<>();
 
         String msg = null;
         if (e instanceof AppException) {
             // 应用自定义异常
             AppException infoE = (AppException) e;
-            base.setCode(infoE.getCode());
+            base.setCode(infoE.getCode().fullCode());
             msg = infoE.getMsg();
-
         } else if (isParamErr(e)) {
-            base.setCode(IAppCode.fullCode(BaseCode.PARAM_INVALID));
+            base.setCode(BaseCode.PARAM_INVALID.fullCode());
             msg = parseParamErrDebugMsg(e);
         } else if (e instanceof HttpRequestMethodNotSupportedException) {
             // 不支持的请求方法
-            base.setCode(IAppCode.fullCode(BaseCode.REQ_METHOD_UNSUPPORTED));
+            base.setCode(BaseCode.REQ_METHOD_UNSUPPORTED.fullCode());
             msg = BaseCode.REQ_METHOD_UNSUPPORTED.msg();
         } else if (e instanceof NoHandlerFoundException) {
             // 404
-            base.setCode(IAppCode.fullCode(BaseCode.PATH_NOT_FOUND));
+            base.setCode(BaseCode.PATH_NOT_FOUND.fullCode());
             msg = BaseCode.PATH_NOT_FOUND.msg();
         } else {
-            base.setCode(IAppCode.fullCode(BaseCode.ERROR));
+            base.setCode(BaseCode.ERROR.fullCode());
             msg = BaseCode.ERROR.msg();
         }
 
         // 资源国际化
-        if (null != messageSource && !StringUtils.isNull(msg) && msg.matches("^[-\\w]+$")) {
+        if (null != messageSource && CharSequenceUtil.isNotEmpty(msg) && msg.matches("^[-\\w]+$")) {
             // spring默认使用 AcceptHeaderLocaleResolver
             Locale locale = null != localeResolver ? localeResolver.resolveLocale(SpringUtils.getRequest()) : Locale.getDefault();
             // 尝试从国际化资源文件中取值，取不到则用原值
@@ -127,25 +128,52 @@ public class ExceptionResolver {
      *
      * @param e
      */
-    private void logExce(Exception e) {
+    private void writeLog(Exception e) {
         if (null == e) {
+            log.warn("exception without info");
             return;
         }
 
         if (e instanceof AppException) {
-            AppException info = (AppException) e;
-
-            log.warn("WARN: " + info.getCode() + "-" + info.getLog(), info.getThrowable());
-        } else if (isParamErr(e))// 缺少参数
-        {
-            log.warn("WARN: " + SpringUtils.getRequest().getRequestURI() + ": " + e.getMessage());
-        } else if (e instanceof HttpRequestMethodNotSupportedException)// 不支付的请求方法
-        {
+            writeLogByLevel((AppException) e);
+        } else if (isParamErr(e)) {
+            // 参数异常
+            log.warn("WARN: {} {}", SpringUtils.getRequest().getRequestURI(), e.getMessage());
+        } else if (e instanceof HttpRequestMethodNotSupportedException) {
+            // 不支付的请求方法
             log.warn("WARN: [{}] not supported [{}] method", SpringUtils.getRequest().getRequestURI(), SpringUtils.getRequest().getMethod());
         } else if (e instanceof NoHandlerFoundException) {
             log.warn("WARN: [{}] not found", SpringUtils.getRequest().getRequestURI());
         } else {
-            log.error("Error: " + e.getMessage(), e);
+            log.error("Unknown error", e);
+        }
+    }
+
+    /**
+     * 使用对应日志级别输出日志
+     *
+     * @param e app exception
+     * @author chad
+     * @since 1 by chad at 2023/8/19
+     */
+    private void writeLogByLevel(AppException e) {
+        String logs = ExceptionUtil.stacktraceToOneLineString(e);
+        switch (e.getCode().level()) {
+            case TRACE:
+                log.trace(logs);
+                break;
+            case DEBUG:
+                log.debug(logs);
+                break;
+            case INFO:
+                log.info(logs);
+                break;
+            case WARN:
+                log.warn(logs);
+                break;
+            case ERROR:
+                log.error(logs);
+                break;
         }
     }
 

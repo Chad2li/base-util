@@ -1,5 +1,6 @@
 package io.github.chad2li.baseutil.http.filter;
 
+import cn.hutool.core.text.CharSequenceUtil;
 import io.github.chad2li.baseutil.exception.impl.BaseCode;
 import io.github.chad2li.baseutil.http.aop.service.IHeaderService;
 import io.github.chad2li.baseutil.http.vo.res.BaseRes;
@@ -59,13 +60,13 @@ public class HeaderFilter<T extends IHeaderService.AHeaderParam> implements Filt
             // 校验头部信息
             String errMsg = header.check();
             // 校验头部信息未通过
-            if (!StringUtils.isNull(errMsg)) {
+            if (CharSequenceUtil.isNotEmpty(errMsg)) {
                 // 此处直接返回信息
                 // 或者使用 BasicErrorController 处理请求信息
                 String msg = isDebug ? errMsg : BaseCode.PARAM_INVALID.msg();
                 if (log.isDebugEnabled())
                     log.debug("header check invalid: {}", msg);
-                BaseRes res = BaseRes.res(BaseCode.PARAM_INVALID, msg);
+                BaseRes<Void> res = BaseRes.resp(BaseCode.PARAM_INVALID, msg, null);
                 String json = JsonUtils.to(res);
                 response.getWriter().print(json);
                 response.flushBuffer();
