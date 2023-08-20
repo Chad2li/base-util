@@ -66,6 +66,92 @@ public class NumberUtils {
         return isPositive(new BigDecimal(number));
     }
 
+    /**
+     * 判断 number1 > number2
+     *
+     * @param number1 number1
+     * @param number2 number2
+     * @return 如果number1或number2有一个为null返回false
+     * @author chad
+     * @since 1 by chad at 2023/8/20
+     */
+    public static boolean isGt(@Nullable Long number1, @Nullable Long number2) {
+        if (null == number1 || null == number2) {
+            return false;
+        }
+
+        return number1 > number2;
+    }
+
+    /**
+     * 判断 number1 >= number2
+     *
+     * @param number1 number1
+     * @param number2 number2
+     * @return 如果number1或number2有一个为null返回false
+     * @author chad
+     * @since 1 by chad at 2023/8/20
+     */
+    public static boolean isGte(@Nullable Long number1, @Nullable Long number2) {
+        if (null == number1 || null == number2) {
+            return false;
+        }
+
+        return number1 >= number2;
+    }
+
+    /**
+     * @author chad
+     * @see NumberUtils#isGt(Long, Long)
+     * @since 1 by chad at 2023/8/20
+     */
+    public static boolean isGt(@Nullable Integer number1, @Nullable Integer number2) {
+        if (null == number1 || null == number2) {
+            return false;
+        }
+
+        return number1 > number2;
+    }
+
+    /**
+     * @author chad
+     * @see NumberUtils#isGte(Long, Long)
+     * @since 1 by chad at 2023/8/20
+     */
+    public static boolean isGte(@Nullable Integer number1, @Nullable Integer number2) {
+        if (null == number1 || null == number2) {
+            return false;
+        }
+
+        return number1 >= number2;
+    }
+
+    /**
+     * @author chad
+     * @see NumberUtils#isGt(Long, Long)
+     * @since 1 by chad at 2023/8/20
+     */
+    public static boolean isGt(@Nullable BigDecimal number1, @Nullable BigDecimal number2) {
+        if (null == number1 || null == number2) {
+            return false;
+        }
+
+        return number1.compareTo(number2) > 0;
+    }
+
+    /**
+     * @author chad
+     * @see NumberUtils#isGte(Long, Long)
+     * @since 1 by chad at 2023/8/20
+     */
+    public static boolean isGte(@Nullable BigDecimal number1, @Nullable BigDecimal number2) {
+        if (null == number1 || null == number2) {
+            return false;
+        }
+
+        return number1.compareTo(number2) >= 0;
+    }
+
     private NumberUtils() {
         // do nothing
     }
