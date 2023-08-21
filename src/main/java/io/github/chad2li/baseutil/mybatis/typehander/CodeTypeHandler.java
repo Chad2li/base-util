@@ -12,8 +12,9 @@ import java.sql.SQLException;
 
 /**
  * 数字与枚举值转换器
- * @author chad
+ *
  * @param <E>
+ * @author chad
  */
 public class CodeTypeHandler<E extends Enum<?> & ICodeEnum> extends BaseTypeHandler<ICodeEnum> {
     private Class<E> type;

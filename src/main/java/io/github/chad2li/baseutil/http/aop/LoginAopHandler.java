@@ -76,6 +76,7 @@ public class LoginAopHandler<H extends IHeaderService.AHeaderParam> {
         // 登录检查
         boolean mustLogin = mustLogin(login);
 
+        H header = headerService.cache();
         // 没有用户标识
         if (!headerService.hasUserId()) {
             if (!mustLogin)

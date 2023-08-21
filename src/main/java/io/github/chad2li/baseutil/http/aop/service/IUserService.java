@@ -61,7 +61,7 @@ public interface IUserService<T extends IUserService.UserToken, E extends IHeade
         /**
          * 用户ID
          */
-        protected int userId;
+        protected Long id;
         /**
          * 登陆类型
          */

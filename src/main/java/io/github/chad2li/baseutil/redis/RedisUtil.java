@@ -1,5 +1,9 @@
 package io.github.chad2li.baseutil.redis;
 
+import cn.hutool.core.text.CharSequenceUtil;
+import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.core.util.ObjectUtil;
+import io.github.chad2li.baseutil.redis.redisson.RedissonOps;
 import io.github.chad2li.baseutil.util.JsonUtils;
 import io.github.chad2li.baseutil.util.ReflectUtils;
 import io.github.chad2li.baseutil.util.StringUtils;
@@ -15,7 +19,9 @@ public class RedisUtil {
      *
      * @param map
      * @return
+     * @deprecated 废弃，使用 {@link RedissonOps}
      */
+    @Deprecated
     public static Map<String, String> map2map(Map<?, ?> map) {
         if (null == map || map.isEmpty()) return Collections.EMPTY_MAP;
 
@@ -32,7 +38,9 @@ public class RedisUtil {
      * @param obj
      * @param <T>
      * @return
+     * @deprecated 废弃，使用 {@link RedissonOps}
      */
+    @Deprecated
     public static <T> Map<String, String> bean2map(T obj) {
         if (null == obj) return Collections.EMPTY_MAP;
         Map<String, Object> map = ReflectUtils.membersToMap(obj);
@@ -53,7 +61,9 @@ public class RedisUtil {
      * @param obj
      * @param <T>
      * @return
+     * @deprecated 废弃，使用 {@link RedissonOps}
      */
+    @Deprecated
     public static <T> Map<byte[], byte[]> bean2byteMap(T obj) {
         Map<String, Object> map = ReflectUtils.membersToMap(obj);
         Map<byte[], byte[]> result = new HashMap<>(map.size());
@@ -73,7 +83,9 @@ public class RedisUtil {
      *
      * @param ids
      * @return
+     * @deprecated 废弃，使用 bitmap
      */
+    @Deprecated
     public static <T> String idKeys(T... ids) {
         if (ArrayUtils.isEmpty(ids))
             throw new NullPointerException("IdKeys cannot be empty");
@@ -98,7 +110,9 @@ public class RedisUtil {
      * @param idKeys
      * @param index  第index+1位表示的ID
      * @return
+     * @deprecated 废弃，使用bitmap
      */
+    @Deprecated
     public static String fromIdKeys(String idKeys, Integer index) {
         if (StringUtils.isNull(idKeys))
             throw new IllegalArgumentException("IdKeys cannot be empty");
@@ -121,18 +135,21 @@ public class RedisUtil {
     }
 
     public static String key(String key, Object... spanIds) {
-        if (null == spanIds || spanIds.length < 1)
+        if (ArrayUtil.isEmpty(spanIds)) {
             return key;
+        }
 
         if (1 == spanIds.length) {
-            if (StringUtils.isNull(spanIds[0])) return key;
+            if (ObjectUtil.isEmpty(spanIds[0])) {
+                return key;
+            }
 
-            return key.replaceAll(IRedisKey.ID_SPAN, JsonUtils.to(spanIds[0]));
+            return key.replaceAll(IRedisKey.ID_SPAN, String.valueOf(spanIds[0]));
         }
 
         String strKey = key;
         for (Object id : spanIds) {
-            strKey = strKey.replaceFirst(IRedisKey.ID_SPAN, JsonUtils.to(id));
+            strKey = strKey.replaceFirst(IRedisKey.ID_SPAN, String.valueOf(id));
         }
 
         return strKey;
