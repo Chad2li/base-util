@@ -1,5 +1,6 @@
 package io.github.chad2li.baseutil.util;
 
+import cn.hutool.json.JSONUtil;
 import com.google.gson.*;
 
 import java.lang.reflect.Type;
@@ -11,6 +12,13 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
+/**
+ * json util
+ * @author chad
+ * @since 1 by chad at 2023/8/28
+ * @deprecated 使用 {@link JSONUtil}
+ */
+@Deprecated
 public class JsonUtils {
     private static Gson gson;
 

@@ -22,4 +22,6 @@ public interface IRedisKey {
     default String key(Object... ids) {
         return RedisUtil.key(this, ids);
     }
+
+    String key();
 }

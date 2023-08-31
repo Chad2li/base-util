@@ -70,14 +70,7 @@ public class BaseRes<T> implements Serializable {
      * @return
      */
     public static <T> BaseRes<T> resp(IAppCode code, String msg, T data) {
-        BaseRes<T> base;
-        if (null != data && "com.github.pagehelper.Page".equalsIgnoreCase(data.getClass().getName())) {
-            base = new PagerRes<>(code.fullCode(), msg, data, ((Page<?>) data).getTotal());
-        } else {
-            base = new BaseRes<>(code.fullCode(), msg, data);
-        }
-
-        return base;
+        return new BaseRes<>(code.fullCode(), msg, data);
     }
 
     public BaseRes(String code, String msg, T data) {

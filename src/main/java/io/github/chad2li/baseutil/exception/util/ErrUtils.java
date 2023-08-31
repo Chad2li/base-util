@@ -110,6 +110,9 @@ public class ErrUtils {
      * @since 1 by chad at 2023/8/18
      */
     public static AppException appThrow(Throwable throwable) {
+        if (throwable instanceof AppException) {
+            return (AppException) throwable;
+        }
         return appThrow(null, null, throwable);
     }
 }

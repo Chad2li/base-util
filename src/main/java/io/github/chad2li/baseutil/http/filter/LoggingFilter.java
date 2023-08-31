@@ -1,8 +1,8 @@
 package io.github.chad2li.baseutil.http.filter;
 
+import cn.hutool.json.JSONUtil;
 import io.github.chad2li.baseutil.http.filter.log.BufferedRequestWrapper;
 import io.github.chad2li.baseutil.util.HttpUtils;
-import io.github.chad2li.baseutil.util.JsonUtils;
 import io.github.chad2li.baseutil.util.SpringUtils;
 import io.github.chad2li.baseutil.util.StringUtils;
 import lombok.Data;
@@ -12,7 +12,11 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 
-import javax.servlet.*;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -119,7 +123,7 @@ public class LoggingFilter implements Filter {
 
         String resultJson = null;
         try {
-            resultJson = JsonUtils.to(result);
+            resultJson = JSONUtil.toJsonStr(result);
             int len = resultJson.length();
             // 限制打印长度
             if (len > maxLen) {

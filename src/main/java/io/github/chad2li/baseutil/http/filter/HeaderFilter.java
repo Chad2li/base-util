@@ -1,17 +1,20 @@
 package io.github.chad2li.baseutil.http.filter;
 
 import cn.hutool.core.text.CharSequenceUtil;
+import cn.hutool.json.JSONUtil;
 import io.github.chad2li.baseutil.exception.impl.BaseCode;
 import io.github.chad2li.baseutil.http.aop.service.IHeaderService;
 import io.github.chad2li.baseutil.http.vo.res.BaseRes;
-import io.github.chad2li.baseutil.util.JsonUtils;
-import io.github.chad2li.baseutil.util.StringUtils;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 
-import javax.servlet.*;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -67,7 +70,7 @@ public class HeaderFilter<T extends IHeaderService.AHeaderParam> implements Filt
                 if (log.isDebugEnabled())
                     log.debug("header check invalid: {}", msg);
                 BaseRes<Void> res = BaseRes.resp(BaseCode.PARAM_INVALID, msg, null);
-                String json = JsonUtils.to(res);
+                String json = JSONUtil.toJsonStr(res);
                 response.getWriter().print(json);
                 response.flushBuffer();
                 return;

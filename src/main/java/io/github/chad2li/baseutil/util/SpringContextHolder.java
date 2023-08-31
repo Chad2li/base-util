@@ -1,5 +1,6 @@
 package io.github.chad2li.baseutil.util;
 
+import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.env.Profiles;
@@ -17,28 +18,6 @@ public class SpringContextHolder implements ApplicationContextAware {
     public static final String PROFILE_PROD = "prod";
 
     private static ApplicationContext applicationContext;
-
-
-    /**
-     * 实现ApplicationContextAware接口的context注入函数, 将其存入静态变量.
-     */
-    @Override
-    public void setApplicationContext(ApplicationContext ctx) {
-        setMyApplicationContext(ctx);
-    }
-
-    /**
-     * 设置 ApplicationContext
-     *
-     * @param ctx Spring ApplicationContext
-     * @return void
-     * @date 2021/11/19 17:16
-     * @author chad
-     * @since 1 by chad at 2021/11/19 新增
-     */
-    public static void setMyApplicationContext(ApplicationContext ctx) {
-        SpringContextHolder.applicationContext = ctx;
-    }
 
 
     /**
@@ -78,15 +57,15 @@ public class SpringContextHolder implements ApplicationContextAware {
     }
 
     /**
-     * 是否包含了该策略
+     * 是否包含了profiles任意一个策略
      *
-     * @param profile
+     * @param profiles 环境
      * @return true包含
      * @since 2 by chad at 2022/02/05 修正方法名
      */
-    public static boolean hasActiveProfile(String profile) {
-        Profiles profiles = Profiles.of(profile);
-        return getApplicationContext().getEnvironment().acceptsProfiles(profiles);
+    public static boolean hasActiveProfile(String... profiles) {
+        Profiles anyProfiles = Profiles.of(profiles);
+        return getApplicationContext().getEnvironment().acceptsProfiles(anyProfiles);
     }
 
     /**
@@ -106,7 +85,7 @@ public class SpringContextHolder implements ApplicationContextAware {
      */
     private static void checkApplicationContext() {
         if (applicationContext == null) {
-            throw new IllegalStateException("applicationContext未注入,请在applicationContext.xml中定义SpringContextHolder");
+            throw new IllegalStateException("applicationContext未注入，请初始化SpringContextHolder");
         }
     }
 
@@ -114,6 +93,8 @@ public class SpringContextHolder implements ApplicationContextAware {
         setApplicationContext(applicationContext);
     }
 
-    public SpringContextHolder() {
+    @Override
+    public void setApplicationContext(ApplicationContext ctx) throws BeansException {
+        SpringContextHolder.applicationContext = ctx;
     }
 }

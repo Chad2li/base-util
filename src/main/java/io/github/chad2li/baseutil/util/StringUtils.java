@@ -8,7 +8,11 @@ import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -620,7 +624,7 @@ public class StringUtils {
     }
 
     /**
-     * 拼接字符串
+     * 拼接字符串，忽略空字符串
      *
      * @param values 拼接值
      * @return 拼接后的值

@@ -1,152 +1,118 @@
 package io.github.chad2li.baseutil.util;
 
-import java.io.*;
-import java.time.LocalDate;
+import cn.hutool.core.date.DatePattern;
+import cn.hutool.core.lang.Assert;
+import cn.hutool.core.text.CharSequenceUtil;
+import cn.hutool.core.util.RandomUtil;
+import io.github.chad2li.baseutil.consts.DefaultConstant;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.lang.Nullable;
 
-public class FileUtils
-{
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.time.LocalDateTime;
 
-
-    /**
-     * 获取时间路径
-     *
-     * @param fatherPath
-     */
-    public static String getTimePath(String fatherPath)
-    {
-        fatherPath = StringUtils.isNull(fatherPath) ? "" : fatherPath;
-
-        String subPath = DateUtils.format(LocalDate.now(), "/yyyy/MM/");
-
-        return fatherPath + subPath;
-    }
-
-    /**
-     * 获取服务的本地路径
-     *
-     * @param subPath
-     * @return
-     */
-    public static String getRealPath(String subPath)
-    {
-        String path = FileUtils.class.getClassLoader().getResource("PinyinUtils.java/").getPath();
-
-        path = path.substring(0, path.length() - 1);
-
-        path = path.substring(0, path.lastIndexOf("/"));
-
-        path = path.substring(0, path.lastIndexOf("/") + 1);
-
-        return path + subPath;
-    }
-
+/**
+ * file
+ *
+ * @author chad
+ * @since 1 by chad at 2023/8/22
+ */
+@Slf4j
+public class FileUtils {
 
     /**
-     * 保存文件
-     *
-     * @param content
-     * @param to
+     * 文件名唯一锁
      */
-    public static void saveFile(byte[] content, String to)
-    {
-        saveFile(content, new File(to));
-    }
+    private static final Object LOCK_CREATE_FILE = new Object();
 
     /**
-     * 保存文件
+     * 日期路径
      *
-     * @param content
-     * @param to
+     * @param fatherPath 上级路径
+     * @return fatherPath/yyyy/MM/dd
+     * @author chad
+     * @since 1 by chad at 2023/8/22
      */
-    public static void saveFile(byte[] content, File to)
-    {
-        try
-        {
-            if (!to.getParentFile().isDirectory())
-                to.getParentFile().mkdirs();
-
-            OutputStream out = new FileOutputStream(to);
-
-            out.write(content);
-
-            out.close();
-        } catch (Exception e)
-        {
-            throw new RuntimeException("saveFile for byte fail", e);
+    public static String datePath(String fatherPath) {
+        Assert.notNull(fatherPath);
+        String datePath = DateUtils.format(LocalDateTime.now(), "yyyy/MM/dd");
+        if (fatherPath.endsWith(DefaultConstant.Norm.FILE_SPLIT)) {
+            return fatherPath + datePath;
         }
+
+        return fatherPath + DefaultConstant.Norm.FILE_SPLIT + datePath;
     }
 
     /**
-     * 保存文件
+     * 生成唯一文件名，并创建文件来占用文件名
      *
-     * @param from
-     * @param to
+     * @param path   路径
+     * @param prefix 文件名前缀
+     * @param suffix 文件名后缀
+     * @return path /
+     * @author chad
+     * @since 1 by chad at 2023/8/22
      */
-    public static void saveFile(File from, File to)
-    {
-        try
-        {
-            InputStream  in  = new FileInputStream(from);
-            OutputStream out = new FileOutputStream(to);
-            byte[]       b   = new byte[1024];
-            int          len = -1;
-            while (-1 != (len = in.read(b)))
-                out.write(b, 0, len);
-
-            out.flush();
-            out.close();
-            in.close();
-        } catch (IOException e)
-        {
-            throw new RuntimeException("saveFile for file fail", e);
+    public static File timeFileNameUnique(String path, @Nullable String prefix,
+                                            @Nullable String suffix) {
+        Assert.notNull(path);
+        path = path.trim();
+        // 1. 创建目录
+        File file = new File(path, timeFileName(prefix, suffix));
+        if (!file.getParentFile().isDirectory()) {
+            // 创建目录
+            file.getParentFile().mkdirs();
         }
-    }
 
-    /**
-     * 拷贝文件
-     *
-     * @param oriFile
-     * @param toFile
-     */
-    public static void copyFile(File oriFile, File toFile)
-    {
-        if (null == oriFile || null == toFile)
-            return;
-
-        if (!toFile.getParentFile().isDirectory())
-            toFile.getParentFile().mkdirs();
-
-        InputStream  in  = null;
-        OutputStream out = null;
-        try
-        {
-            in = new FileInputStream(oriFile);
-            out = new FileOutputStream(toFile);
-            byte[] b   = new byte[1024];
-            int    len = -1;
-            while (-1 != (len = in.read(b)))
-                out.write(b, 0, len);
-        } catch (Exception e)
-        {
-            throw new RuntimeException("上传文件失败", e);
-        } finally
-        {
-            try
-            {
-                if (null != out)
-                {
-                    out.flush();
-                    out.close();
+        // 2. 生成唯一文件名
+        synchronized (LOCK_CREATE_FILE) {
+            try {
+                while (!file.createNewFile()) {
+                    // 文件已经存在，重新生成文件名
+                    file = new File(path, timeFileName(prefix, suffix));
                 }
-                if (null != in)
-                {
-                    in.close();
-                }
-            } catch (IOException e1)
-            {
-                throw new RuntimeException("上传文件失败", e1);
+            } catch (Exception e) {
+                log.error("create file error, file:{}", file.getAbsoluteFile(), e);
+                throw new IllegalStateException(e);
             }
         }
+        return file;
+    }
+
+    /**
+     * 时间文件名
+     *
+     * @param prefix 文件名前缀
+     * @param suffix 文件名后缀，如：txt效果同.txt
+     * @return prefix + yyyyMMddHHmmss + {3位随机数} + [.]suffix
+     * @author chad
+     * @since 1 by chad at 2023/8/22
+     */
+    public static String timeFileName(@Nullable String prefix, @Nullable String suffix) {
+        // 1. 拼接前缀和-
+        String fileName = DefaultConstant.Norm.EMPTY;
+        if (CharSequenceUtil.isNotEmpty(prefix)) {
+            fileName = prefix.trim();
+            if (!fileName.endsWith(DefaultConstant.Norm.DIVISION)) {
+                fileName += DefaultConstant.Norm.DIVISION;
+            }
+        }
+        // 2. 拼接时间yyyyMMddHHmmss + 3位随机数
+        fileName += DateUtils.format(LocalDateTime.now(), DatePattern.PURE_DATETIME_PATTERN);
+        fileName += RandomUtil.randomNumbers(3);
+        // 3. 拼接文件后缀
+        if (CharSequenceUtil.isEmpty(suffix)) {
+            // 3.1 没有后缀
+            return fileName;
+        }
+        suffix = suffix.trim();
+        if (!suffix.startsWith(DefaultConstant.Norm.DOT)) {
+            return fileName + DefaultConstant.Norm.DOT + suffix;
+        }
+        return fileName + suffix;
     }
 
     /**
@@ -155,8 +121,7 @@ public class FileUtils
      * @param path
      * @return
      */
-    public static String getUniqueFileName(String path, String fix)
-    {
+    public static String getUniqueFileName(String path, String fix) {
         String fn = System.currentTimeMillis() + "" + RandomUtils.randomInt(6) + fix;
 
         File f = null;
@@ -167,10 +132,8 @@ public class FileUtils
         return f.getName();
     }
 
-    public static void saveFile(File file, String content, String charset)
-    {
-        try
-        {
+    public static void saveFile(File file, String content, String charset) {
+        try {
             file.createNewFile();
             OutputStream out = new FileOutputStream(file);
 
@@ -179,8 +142,7 @@ public class FileUtils
             out.flush();
 
             out.close();
-        } catch (IOException e)
-        {
+        } catch (IOException e) {
             throw new RuntimeException("save file error", e);
         }
     }

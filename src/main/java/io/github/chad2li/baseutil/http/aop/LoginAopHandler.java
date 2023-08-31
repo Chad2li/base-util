@@ -1,5 +1,6 @@
 package io.github.chad2li.baseutil.http.aop;
 
+import cn.hutool.core.text.CharSequenceUtil;
 import io.github.chad2li.baseutil.exception.IAppCode;
 import io.github.chad2li.baseutil.exception.util.ErrUtils;
 import io.github.chad2li.baseutil.http.aop.annotation.Login;
@@ -7,6 +8,7 @@ import io.github.chad2li.baseutil.http.aop.service.IHeaderService;
 import io.github.chad2li.baseutil.http.aop.service.IUserService;
 import io.github.chad2li.baseutil.http.filter.FilterProperties;
 import io.github.chad2li.baseutil.util.SpringUtils;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
@@ -18,6 +20,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.core.annotation.Order;
 import org.springframework.util.CollectionUtils;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
@@ -26,6 +29,7 @@ import java.util.List;
 @Slf4j
 @Data
 @Aspect
+@AllArgsConstructor
 @Order(LoginAopHandler.ORDER)
 public class LoginAopHandler<H extends IHeaderService.AHeaderParam> {
     public static final int ORDER = SignAopHandler.ORDER - 1;
@@ -34,14 +38,13 @@ public class LoginAopHandler<H extends IHeaderService.AHeaderParam> {
 
     private IUserService userService;
 
-    private IHeaderService<H> headerService;
+//    private IHeaderService<H> headerService;
 
     private FilterProperties filterProperties;
-
-    public LoginAopHandler(IUserService userService, IHeaderService<H> headerService) {
-        this.userService = userService;
-        this.headerService = headerService;
-    }
+    /**
+     * 请求中的token名
+     */
+    private String headerTokenName;
 
     /**
      * 对所有的 controller二级包下面的所有类所有方法进行拦截
@@ -54,8 +57,10 @@ public class LoginAopHandler<H extends IHeaderService.AHeaderParam> {
 
     @Before("pointcut()")
     public void handle(JoinPoint jp) {
-        if (FilterProperties.isSkip(this.filterProperties, SpringUtils.getRequest().getRequestURI()))
+        HttpServletRequest req = SpringUtils.getRequest();
+        if (FilterProperties.isSkip(this.filterProperties, req.getRequestURI())) {
             return;
+        }
 
         log.debug("login handler");
         // 获取类对象
@@ -75,24 +80,24 @@ public class LoginAopHandler<H extends IHeaderService.AHeaderParam> {
 
         // 登录检查
         boolean mustLogin = mustLogin(login);
-
-        H header = headerService.cache();
+        String token = req.getHeader(headerTokenName);
         // 没有用户标识
-        if (!headerService.hasUserId()) {
-            if (!mustLogin)
+        if (CharSequenceUtil.isEmpty(token)) {
+            if (!mustLogin) {
                 return;
+            }
             // 必须登录
-            IAppCode code = userService.errNeedLogin();
+            IAppCode code = userService.needLogin();
             throw ErrUtils.appThrow(code);
         }
 
-        IUserService.UserToken user = userService.user(headerService.cache());
+        IUserService.UserToken user = userService.user(token);
         // token无效
         if (null == user || !userService.isAccessValid(user)) {
             // 无须登录权限
             if (!mustLogin) return;
             // 必须登录
-            throw ErrUtils.appThrow(userService.errTokenInvalid());
+            throw ErrUtils.appThrow(userService.tokenInvalid());
         }
         // token有效
         // 接口无需权限
@@ -109,7 +114,7 @@ public class LoginAopHandler<H extends IHeaderService.AHeaderParam> {
         // 权限判断
         List<String> loginTypes = user.getLoginTypes();
         if (CollectionUtils.isEmpty(loginTypes)) {// 无权访问
-            throw ErrUtils.appThrow(userService.errIllegalPermission());
+            throw ErrUtils.appThrow(userService.illegalPermission());
         }
         for (String type : types) {
             for (String userType : loginTypes) {
@@ -121,7 +126,7 @@ public class LoginAopHandler<H extends IHeaderService.AHeaderParam> {
             }
         }
         // 无权访问
-        throw ErrUtils.appThrow(userService.errIllegalPermission());
+        throw ErrUtils.appThrow(userService.illegalPermission());
     }
 
     /**

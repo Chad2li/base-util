@@ -79,9 +79,9 @@
                 <executions>
                     <execution>
                         <id>attach-sources</id>
-                        <phase>install</phase>
+<!--                        <phase>install</phase>-->
                         <goals>
-                            <goal>jar-no-fork</goal>
+                            <goal>jar</goal>
                         </goals>
                     </execution>
                 </executions>
