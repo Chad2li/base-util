@@ -1,8 +1,19 @@
 package io.github.chad2li.baseutil.util;
 
-import java.time.*;
+import org.springframework.lang.Nullable;
+
+import java.time.DayOfWeek;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAdjusters;
 import java.util.HashMap;
 import java.util.Map;
@@ -162,5 +173,65 @@ public class DateUtils {
      */
     public static long duration(LocalDateTime start, LocalDateTime end) {
         return Duration.between(start, end).toMillis();
+    }
+
+    /**
+     * date1是否大于date2
+     *
+     * @param date1 date1
+     * @param date2 date2
+     * @return true if date1 &gt; date2, false if date1 &lt;= date2 or has null
+     * @author chad
+     * @since 1 by chad at 2023/9/2
+     */
+    public static boolean isGt(@Nullable Temporal date1, @Nullable Temporal date2) {
+        if (date1 instanceof LocalDateTime && date2 instanceof LocalDateTime) {
+            return ((LocalDateTime) date1).isAfter((LocalDateTime) date2);
+        } else if (date1 instanceof LocalDate && date2 instanceof LocalDate) {
+            return ((LocalDate) date1).isAfter((LocalDate) date2);
+        } else if (date1 instanceof LocalTime && date2 instanceof LocalTime) {
+            return ((LocalTime) date1).isAfter((LocalTime) date2);
+        }
+        return false;
+    }
+
+    /**
+     * date1是否大于等于date2
+     *
+     * @param date1 date1
+     * @param date2 date2
+     * @return true if date1 &gt;= date2, false if date1 &lt; date2 or has null
+     * @author chad
+     * @since 1 by chad at 2023/9/2
+     */
+    public static boolean isGte(@Nullable Temporal date1, @Nullable Temporal date2) {
+        if (date1 instanceof LocalDateTime && date2 instanceof LocalDateTime) {
+            return !((LocalDateTime) date1).isBefore((LocalDateTime) date2);
+        } else if (date1 instanceof LocalDate && date2 instanceof LocalDate) {
+            return !((LocalDate) date1).isBefore((LocalDate) date2);
+        } else if (date1 instanceof LocalTime && date2 instanceof LocalTime) {
+            return !((LocalTime) date1).isBefore((LocalTime) date2);
+        }
+        return false;
+    }
+
+    /**
+     * 是否相等
+     *
+     * @param date1 date1
+     * @param date2 date2
+     * @return true if date1 = date2, false if date1 != date2 or has null
+     * @author chad
+     * @since 1 by chad at 2023/9/2
+     */
+    public static boolean isEquals(@Nullable Temporal date1, @Nullable Temporal date2) {
+        if (date1 instanceof LocalDateTime && date2 instanceof LocalDateTime) {
+            return ((LocalDateTime) date1).isEqual((LocalDateTime) date2);
+        } else if (date1 instanceof LocalDate && date2 instanceof LocalDate) {
+            return ((LocalDate) date1).isEqual((LocalDate) date2);
+        } else if (date1 instanceof LocalTime && date2 instanceof LocalTime) {
+            return ((LocalTime) date1).equals(date2);
+        }
+        return false;
     }
 }

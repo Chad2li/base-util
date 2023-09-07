@@ -6,13 +6,14 @@ import org.junit.Test;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.Temporal;
 
 /**
  * Created by chad on 2017/1/9.
  */
 
-public class DateUtilsTest
-{
+public class DateUtilsTest {
     String date = "1991-10-12";
     String dateMonday = "1991-10-07";
     String dateFirstDayOfMonth = "1991-10-01";
@@ -77,11 +78,179 @@ public class DateUtilsTest
     }
 
     @Test
-    public void duration(){
+    public void duration() {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime end = DateUtils.addLong(now, 5000);
 
         long dura = DateUtils.duration(now, end);
         Assert.assertEquals(5000, dura);
+    }
+
+    @Test
+    public void isGt() {
+        Temporal date1;
+        Temporal date2;
+        // -- 大于
+        // 1.1 ldt
+        date1 = LocalDateTime.now();
+        date2 = ((LocalDateTime) date1).plusSeconds(-1);
+        Assert.assertTrue(DateUtils.isGt(date1, date2));
+        // 1.2 ldt
+        date1 = LocalDate.now();
+        date2 = date1.plus(-1, ChronoUnit.DAYS);
+        Assert.assertTrue(DateUtils.isGt(date1, date2));
+        // 1.3 ldt
+        date1 = LocalTime.now();
+        date2 = date1.plus(-1, ChronoUnit.SECONDS);
+        Assert.assertTrue(DateUtils.isGt(date1, date2));
+        // -- 相等
+        // 2.1 ldt
+        date1 = LocalDateTime.now();
+        date2 = ((LocalDateTime) date1).plusSeconds(0);
+        Assert.assertFalse(DateUtils.isGt(date1, date2));
+        // 2.2 ldt
+        date1 = LocalDate.now();
+        date2 = date1.plus(0, ChronoUnit.DAYS);
+        Assert.assertFalse(DateUtils.isGt(date1, date2));
+        // 2.3 ldt
+        date1 = LocalTime.now();
+        date2 = date1.plus(0, ChronoUnit.SECONDS);
+        Assert.assertFalse(DateUtils.isGt(date1, date2));
+        // -- 小于
+        // 2.4 ldt
+        date1 = LocalDateTime.now();
+        date2 = ((LocalDateTime) date1).plusSeconds(1);
+        Assert.assertFalse(DateUtils.isGt(date1, date2));
+        // 2.5 ldt
+        date1 = LocalDate.now();
+        date2 = date1.plus(1, ChronoUnit.DAYS);
+        Assert.assertFalse(DateUtils.isGt(date1, date2));
+        // 2.5 ldt
+        date1 = LocalTime.now();
+        date2 = date1.plus(1, ChronoUnit.SECONDS);
+        Assert.assertFalse(DateUtils.isGt(date1, date2));
+
+        // 3.1 空
+        date1 = null;
+        date2 = LocalDateTime.now();
+        Assert.assertFalse(DateUtils.isGt(date1, date2));
+        date1 = LocalDateTime.now();
+        date2 = null;
+        Assert.assertFalse(DateUtils.isGt(date1, date2));
+        date1 = null;
+        date2 = null;
+        Assert.assertFalse(DateUtils.isGt(date1, date2));
+    }
+
+    @Test
+    public void isGte() {
+        Temporal date1;
+        Temporal date2;
+        // -- 大于
+        // 1.1 ldt
+        date1 = LocalDateTime.now();
+        date2 = ((LocalDateTime) date1).plusSeconds(-1);
+        Assert.assertTrue(DateUtils.isGte(date1, date2));
+        // 1.2 ldt
+        date1 = LocalDate.now();
+        date2 = date1.plus(-1, ChronoUnit.DAYS);
+        Assert.assertTrue(DateUtils.isGte(date1, date2));
+        // 1.3 ldt
+        date1 = LocalTime.now();
+        date2 = date1.plus(-1, ChronoUnit.SECONDS);
+        Assert.assertTrue(DateUtils.isGte(date1, date2));
+        // -- 相等
+        // 2.1 ldt
+        date1 = LocalDateTime.now();
+        date2 = ((LocalDateTime) date1).plusSeconds(0);
+        Assert.assertTrue(DateUtils.isGte(date1, date2));
+        // 2.2 ldt
+        date1 = LocalDate.now();
+        date2 = date1.plus(0, ChronoUnit.DAYS);
+        Assert.assertTrue(DateUtils.isGte(date1, date2));
+        // 2.3 ldt
+        date1 = LocalTime.now();
+        date2 = date1.plus(0, ChronoUnit.SECONDS);
+        Assert.assertTrue(DateUtils.isGte(date1, date2));
+        // -- 小于
+        // 2.4 ldt
+        date1 = LocalDateTime.now();
+        date2 = ((LocalDateTime) date1).plusSeconds(1);
+        Assert.assertFalse(DateUtils.isGte(date1, date2));
+        // 2.5 ldt
+        date1 = LocalDate.now();
+        date2 = date1.plus(1, ChronoUnit.DAYS);
+        Assert.assertFalse(DateUtils.isGte(date1, date2));
+        // 2.5 ldt
+        date1 = LocalTime.now();
+        date2 = date1.plus(1, ChronoUnit.SECONDS);
+        Assert.assertFalse(DateUtils.isGte(date1, date2));
+
+        // 3.1 空
+        date1 = null;
+        date2 = LocalDateTime.now();
+        Assert.assertFalse(DateUtils.isGte(date1, date2));
+        date1 = LocalDateTime.now();
+        date2 = null;
+        Assert.assertFalse(DateUtils.isGte(date1, date2));
+        date1 = null;
+        date2 = null;
+        Assert.assertFalse(DateUtils.isGte(date1, date2));
+    }
+
+    @Test
+    public void isEquals() {
+        Temporal date1;
+        Temporal date2;
+        // -- 大于
+        // 1.1 ldt
+        date1 = LocalDateTime.now();
+        date2 = ((LocalDateTime) date1).plusSeconds(-1);
+        Assert.assertFalse(DateUtils.isEquals(date1, date2));
+        // 1.2 ldt
+        date1 = LocalDate.now();
+        date2 = date1.plus(-1, ChronoUnit.DAYS);
+        Assert.assertFalse(DateUtils.isEquals(date1, date2));
+        // 1.3 ldt
+        date1 = LocalTime.now();
+        date2 = date1.plus(-1, ChronoUnit.SECONDS);
+        Assert.assertFalse(DateUtils.isEquals(date1, date2));
+        // -- 相等
+        // 2.1 ldt
+        date1 = LocalDateTime.now();
+        date2 = ((LocalDateTime) date1).plusSeconds(0);
+        Assert.assertTrue(DateUtils.isEquals(date1, date2));
+        // 2.2 ldt
+        date1 = LocalDate.now();
+        date2 = date1.plus(0, ChronoUnit.DAYS);
+        Assert.assertTrue(DateUtils.isEquals(date1, date2));
+        // 2.3 ldt
+        date1 = LocalTime.now();
+        date2 = date1.plus(0, ChronoUnit.SECONDS);
+        Assert.assertTrue(DateUtils.isEquals(date1, date2));
+        // -- 小于
+        // 2.4 ldt
+        date1 = LocalDateTime.now();
+        date2 = ((LocalDateTime) date1).plusSeconds(1);
+        Assert.assertFalse(DateUtils.isEquals(date1, date2));
+        // 2.5 ldt
+        date1 = LocalDate.now();
+        date2 = date1.plus(1, ChronoUnit.DAYS);
+        Assert.assertFalse(DateUtils.isEquals(date1, date2));
+        // 2.5 ldt
+        date1 = LocalTime.now();
+        date2 = date1.plus(1, ChronoUnit.SECONDS);
+        Assert.assertFalse(DateUtils.isEquals(date1, date2));
+
+        // 3.1 空
+        date1 = null;
+        date2 = LocalDateTime.now();
+        Assert.assertFalse(DateUtils.isEquals(date1, date2));
+        date1 = LocalDateTime.now();
+        date2 = null;
+        Assert.assertFalse(DateUtils.isEquals(date1, date2));
+        date1 = null;
+        date2 = null;
+        Assert.assertFalse(DateUtils.isEquals(date1, date2));
     }
 }

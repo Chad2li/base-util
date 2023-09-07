@@ -7,10 +7,10 @@ import io.github.chad2li.baseutil.exception.impl.AppException;
 import io.github.chad2li.baseutil.exception.impl.BaseCode;
 import io.github.chad2li.baseutil.http.vo.res.BaseRes;
 import io.github.chad2li.baseutil.util.SpringUtils;
-import io.github.chad2li.baseutil.util.StringUtils;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
+import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
@@ -24,6 +24,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.validation.MessageInterpolator;
@@ -33,6 +34,7 @@ import java.util.StringJoiner;
 
 /**
  * Created by ly on 2015/1/11.
+ *
  * @author chad
  */
 @Slf4j
@@ -73,6 +75,9 @@ public class ExceptionResolver {
     public Object doResolveException(Exception e) {
         // 打印日志
         writeLog(e);
+
+        // 重置response
+        resetResponse();
 
         // 封闭异常信息
         BaseRes resp = res(e);
@@ -122,6 +127,25 @@ public class ExceptionResolver {
         base.setMsg(msg);
 
         return base;
+    }
+
+    /**
+     * 重置 response
+     *
+     * @author chad
+     * @since 1 by chad at 2023/9/5
+     */
+    private void resetResponse() {
+        HttpServletResponse res = SpringUtils.getResponse();
+        if (null == res) {
+            return;
+        }
+        try {
+            res.reset();
+            res.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
+        } catch (Exception e) {
+            log.error("reset response error", e);
+        }
     }
 
     /**
