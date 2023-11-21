@@ -40,6 +40,14 @@ public interface IUserService<T extends IUserService.UserToken> {
     T getCache();
 
     /**
+     * 清除缓存
+     *
+     * @author chad
+     * @since 1 by chad at 2023/10/22
+     */
+    void clearCache();
+
+    /**
      * 验证token是否过期
      *
      * @return true登录信息有效

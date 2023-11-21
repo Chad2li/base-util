@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 
-public class IPUtils {
+public class IpUtils {
     /**
      * 获取第一个本地地址
      *

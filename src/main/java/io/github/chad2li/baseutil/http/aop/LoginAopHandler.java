@@ -4,7 +4,6 @@ import cn.hutool.core.text.CharSequenceUtil;
 import io.github.chad2li.baseutil.exception.IAppCode;
 import io.github.chad2li.baseutil.exception.util.ErrUtils;
 import io.github.chad2li.baseutil.http.aop.annotation.Login;
-import io.github.chad2li.baseutil.http.aop.service.IHeaderService;
 import io.github.chad2li.baseutil.http.aop.service.IUserService;
 import io.github.chad2li.baseutil.http.filter.FilterProperties;
 import io.github.chad2li.baseutil.util.SpringUtils;
@@ -13,6 +12,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.Signature;
+import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
@@ -25,13 +25,15 @@ import java.util.List;
 
 /**
  * 登录身份检查
+ *
+ * @author chad
  */
 @Slf4j
 @Data
 @Aspect
 @AllArgsConstructor
 @Order(LoginAopHandler.ORDER)
-public class LoginAopHandler<H extends IHeaderService.AHeaderParam> {
+public class LoginAopHandler {
     public static final int ORDER = SignAopHandler.ORDER - 1;
 
     public static final String USER_SERVICE_NAME = "loginHandlerUserServiceImpl";
@@ -127,6 +129,11 @@ public class LoginAopHandler<H extends IHeaderService.AHeaderParam> {
         }
         // 无权访问
         throw ErrUtils.appThrow(userService.illegalPermission());
+    }
+
+    @After("pointcut()")
+    public void after() {
+        userService.clearCache();
     }
 
     /**

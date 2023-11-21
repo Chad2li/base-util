@@ -1,6 +1,7 @@
 package io.github.chad2li.baseutil.exception;
 
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.exceptions.ExceptionUtil;
 import cn.hutool.core.text.CharSequenceUtil;
 import io.github.chad2li.baseutil.exception.impl.AppException;
@@ -28,7 +29,11 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.validation.MessageInterpolator;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
 
@@ -131,6 +136,9 @@ public class ExceptionResolver {
 
     /**
      * 重置 response
+     * <pre>
+     *     重置时保留必要的响应头
+     * </pre>
      *
      * @author chad
      * @since 1 by chad at 2023/9/5
@@ -141,7 +149,19 @@ public class ExceptionResolver {
             return;
         }
         try {
+            // copy响应头
+            Collection<String> headerNames = res.getHeaderNames();
+            Map<String, String> copyHeader = new HashMap<>(CollUtil.size(headerNames));
+            Optional.ofNullable(headerNames).ifPresent(it -> {
+                for (String name : it) {
+                    copyHeader.put(name, res.getHeader(name));
+                }
+            });
             res.reset();
+            for (Map.Entry<String, String> entry : copyHeader.entrySet()) {
+                res.setHeader(entry.getKey(), entry.getValue());
+            }
+            log.info("response reset copy header done, header:{}", copyHeader);
             res.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
         } catch (Exception e) {
             log.error("reset response error", e);

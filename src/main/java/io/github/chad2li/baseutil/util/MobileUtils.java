@@ -1,5 +1,6 @@
 package io.github.chad2li.baseutil.util;
 
+import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -8,22 +9,18 @@ import org.jsoup.select.Elements;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
 /**
  * 利用网络获取解析手机归属地及运营商信息
  * Created by ly on 2015/8/14.
  */
-public class MobileUtils
-{
-    private static Logger log = Logger.getLogger(MobileUtils.class.getName());
-
+@Slf4j
+public class MobileUtils {
     /**
      * 运营商名称
      * 用于统一运营商名称
      */
-    public static class MobileOperater
-    {
+    public static class MobileOperater {
         public static final String CMCC = "移动";
         public static final String CUCC = "联通";
         public static final String CTCC = "电信";
@@ -33,8 +30,7 @@ public class MobileUtils
      * 接口名称
      * 用于选用指定的接口解析手机号信息
      */
-    public static class ApiName
-    {
+    public static class ApiName {
         /**
          * 财付通
          */
@@ -58,8 +54,7 @@ public class MobileUtils
 
     private static final List<String> list;
 
-    static
-    {
+    static {
         // 按优先级顺序添加解析工具
         list = new ArrayList<>(4);
         list.add(ApiName.API_IP_138);
@@ -70,11 +65,11 @@ public class MobileUtils
 
     /**
      * 遍历所有接口，直到成功获取手机信息
+     *
      * @param mobile
-     * @return              未解析成功返回 null
+     * @return 未解析成功返回 null
      */
-    public static MobileInfo sendGetMobileInfo(String mobile)
-    {
+    public static MobileInfo sendGetMobileInfo(String mobile) {
         String name = null;
 
         // 遍历接口
@@ -88,12 +83,12 @@ public class MobileUtils
 
     /**
      * 使用指定API获取并解析手机号信息
-     * @param apiName       指定要使用的API名称，详情见{@link ApiName}
-     * @param mobile        手机号
-     * @return              未解析成功返回 null
+     *
+     * @param apiName 指定要使用的API名称，详情见{@link ApiName}
+     * @param mobile  手机号
+     * @return 未解析成功返回 null
      */
-    public static MobileInfo sendGetMobileInfo(String apiName, String mobile)
-    {
+    public static MobileInfo sendGetMobileInfo(String apiName, String mobile) {
         IMobile mobileUtils = null;
 
         if (ApiName.API_TEN_PAY.equalsIgnoreCase(apiName))
@@ -122,14 +117,13 @@ public class MobileUtils
      * 不可用
      */
     @Deprecated
-    static class ShowJiMobile extends AMobile
-    {
+    static class ShowJiMobile extends AMobile {
         /**
          * 单例
          */
         private static IMobile obj;
-        private ShowJiMobile()
-        {
+
+        private ShowJiMobile() {
             name = "手机在线";
             url = "http://v.showji.com/Locating/showji.com2016234999234.aspx?m=#MOBILE#&output=json&callback=querycallback";
             available = true;
@@ -139,12 +133,11 @@ public class MobileUtils
             cityName = "City";
             operaterName = "TO";
         }
-        public static IMobile newInstance()
-        {
+
+        public static IMobile newInstance() {
             if (null == obj)// 仅在第一次初始化时，需要加锁；生成后不需要走这步，所以提高了性能
             {
-                synchronized (ShowJiMobile.class)
-                {
+                synchronized (ShowJiMobile.class) {
                     if (null == obj) obj = new ShowJiMobile();
                 }
             }
@@ -152,12 +145,10 @@ public class MobileUtils
         }
 
         @Override
-        protected String parseByName(String result, String name)
-        {
+        protected String parseByName(String result, String name) {
             int index = result.indexOf(name + "\":\"");
 
-            if (index > -1)
-            {
+            if (index > -1) {
                 result = result.substring(index + (name + "\":\"").length());
 
                 result = result.substring(0, result.indexOf("\""));
@@ -168,32 +159,28 @@ public class MobileUtils
         }
 
         @Override
-        protected boolean isRespSucc(String result)
-        {
+        protected boolean isRespSucc(String result) {
             return !StringUtils.isNull(result) && result.indexOf("\"QueryResult\":\"True\"") > -1;
         }
     }
 
-    static class XPChaMobile extends AMobile
-    {
+    static class XPChaMobile extends AMobile {
         /**
          * 单例
          */
         private static IMobile obj;
-        private XPChaMobile()
-        {
+
+        private XPChaMobile() {
             name = "XP查";
             url = "http://shouji.xpcha.com/#MOBILE#.html";
             available = true;
             charset = "UTF-8";
         }
 
-        public static IMobile newInstance()
-        {
+        public static IMobile newInstance() {
             if (null == obj)// 仅在第一次初始化时，需要加锁；生成后不需要走这步，所以提高了性能
             {
-                synchronized (XPChaMobile.class)
-                {
+                synchronized (XPChaMobile.class) {
                     if (null == obj) obj = new XPChaMobile();
                 }
             }
@@ -201,13 +188,12 @@ public class MobileUtils
         }
 
         /**
-         * @see AMobile
          * @param mobile
          * @return
+         * @see AMobile
          */
         @Override
-        public MobileInfo req(String mobile)
-        {
+        public MobileInfo req(String mobile) {
             // 暂停
             if (true) return null;
 
@@ -219,10 +205,8 @@ public class MobileUtils
             return parse(result, mobile);
         }
 
-        private MobileInfo parse(String result, String mobile)
-        {
-            try
-            {
+        private MobileInfo parse(String result, String mobile) {
+            try {
                 Document doc = Jsoup.parse(result);
 
                 Elements elts = doc.getElementById("result").getElementsByTag("span");
@@ -239,9 +223,8 @@ public class MobileUtils
                 info.operater = oper;
 
                 return info;
-            } catch (Exception e)
-            {
-                log.warning("[" + name + "] 手机号归属地结果解析失败 err >> " + e.getMessage());
+            } catch (Exception e) {
+                log.warn("[{}] 手机号归属地结果解析失败", name, e);
                 available = false;
             }
 
@@ -249,25 +232,23 @@ public class MobileUtils
         }
     }
 
-    static class IP138Mobile extends AMobile
-    {
+    static class IP138Mobile extends AMobile {
         /**
          * 单例
          */
         private static IMobile obj;
-        private IP138Mobile()
-        {
+
+        private IP138Mobile() {
             name = "IP138";
             url = "https://m.ip138.com/sj.asp?mobile=#MOBILE#";
             available = true;
             charset = "UTF-8";
         }
-        public static IMobile newInstance()
-        {
+
+        public static IMobile newInstance() {
             if (null == obj)// 仅在第一次初始化时，需要加锁；生成后不需要走这步，所以提高了性能
             {
-                synchronized (IP138Mobile.class)
-                {
+                synchronized (IP138Mobile.class) {
                     if (null == obj) obj = new IP138Mobile();
                 }
             }
@@ -275,13 +256,12 @@ public class MobileUtils
         }
 
         /**
-         * @see AMobile
          * @param mobile
          * @return
+         * @see AMobile
          */
         @Override
-        public MobileInfo req(String mobile)
-        {
+        public MobileInfo req(String mobile) {
             String mUlr = urlWithMobile(mobile);
 
             String result = httpReq(mUlr);
@@ -289,10 +269,8 @@ public class MobileUtils
             return parse(result, mobile);
         }
 
-        private MobileInfo parse(String result, String mobile)
-        {
-            try
-            {
+        private MobileInfo parse(String result, String mobile) {
+            try {
                 Document doc = Jsoup.parse(result);
 
                 Element elt = doc.getElementsByTag("tbody").get(0);
@@ -323,9 +301,8 @@ public class MobileUtils
                     return null;
 
                 return info;
-            } catch (Exception e)
-            {
-                log.warning("[" + name + "] 手机号归属地结果解析失败 err >> " + e.getMessage());
+            } catch (Exception e) {
+                log.warn("[{}] 手机号归属地结果解析失败", name, e);
                 available = false;
             }
 
@@ -333,14 +310,13 @@ public class MobileUtils
         }
     }
 
-    static class TenPayMobile extends AMobile
-    {
+    static class TenPayMobile extends AMobile {
         /**
          * 单例
          */
         private static IMobile obj;
-        private TenPayMobile()
-        {
+
+        private TenPayMobile() {
             name = "财付通";
             url = "https://chong.qq.com/tws/extinfo/GetMobileProductInfo?mobile=#MOBILE#&amount=5000&group=12&type=1&callname=&dtag=1476782038358&g_ty=ls";
             available = true;
@@ -349,12 +325,11 @@ public class MobileUtils
             cityName = "cityname";
             operaterName = "isp";
         }
-        public static IMobile newInstance()
-        {
+
+        public static IMobile newInstance() {
             if (null == obj)// 仅在第一次初始化时，需要加锁；生成后不需要走这步，所以提高了性能
             {
-                synchronized (TenPayMobile.class)
-                {
+                synchronized (TenPayMobile.class) {
                     if (null == obj) obj = new TenPayMobile();
                 }
             }
@@ -362,8 +337,7 @@ public class MobileUtils
         }
 
         @Override
-        protected boolean isRespSucc(String result)
-        {
+        protected boolean isRespSucc(String result) {
             if (StringUtils.isNull(result)) return false;
             result = result.replace("(", "").replaceAll("\\);.*", "");
             Map map = JsonUtils.from(Map.class, result);
@@ -373,8 +347,7 @@ public class MobileUtils
         }
 
         @Override
-        protected String parseByName(String result, String name)
-        {
+        protected String parseByName(String result, String name) {
             result = result.replace("(", "").replaceAll("\\);.*", "");
             Map map = JsonUtils.from(Map.class, result);
 
@@ -382,16 +355,14 @@ public class MobileUtils
         }
     }
 
-    public static class MobileInfo
-    {
+    public static class MobileInfo {
         public String mobile;
         public String province;
         public String city;
         public String operater;
 
         @Override
-        public String toString()
-        {
+        public String toString() {
             return "MobileInfo{" +
                     "mobile='" + mobile + '\'' +
                     ", province='" + province + '\'' +
@@ -401,10 +372,10 @@ public class MobileUtils
         }
     }
 
-    interface IMobile
-    {
+    interface IMobile {
         /**
          * 请求解析手机号信息
+         *
          * @param mobile
          * @return
          */
@@ -417,13 +388,13 @@ public class MobileUtils
 
         /**
          * 该接口是否可用
+         *
          * @return
          */
         boolean isAvailable();
     }
 
-    static abstract class AMobile implements IMobile
-    {
+    static abstract class AMobile implements IMobile {
         public String name;
         public String url;
         public boolean available = true;
@@ -433,13 +404,12 @@ public class MobileUtils
         public String operaterName;
 
         /**
-         * @see IMobile
          * @param mobile
          * @return
+         * @see IMobile
          */
         @Override
-        public MobileInfo req(String mobile)
-        {
+        public MobileInfo req(String mobile) {
             String mUrl = urlWithMobile(mobile);
 
             String result = httpReq(mUrl);
@@ -468,28 +438,26 @@ public class MobileUtils
 
         /**
          * 将URL地址绑定手机信息
+         *
          * @param mobile
          * @return
          */
-        protected String urlWithMobile(String mobile)
-        {
+        protected String urlWithMobile(String mobile) {
             return url.replace("#MOBILE#", mobile);
         }
 
         /**
          * 发起 HTTP 请求手机号信息
+         *
          * @param mUrl
          * @return
          */
-        protected String httpReq(String mUrl)
-        {
+        protected String httpReq(String mUrl) {
             String result = null;
-            try
-            {
+            try {
                 result = HttpUtils.sendGet(mUrl, charset);
-            } catch (Exception e)
-            {
-                log.warning("[" + name + "] 手机号归属地结果解析失败 err >> " + e.getClass().getName() + ": " + e.getMessage());
+            } catch (Exception e) {
+                log.warn("[{}] 手机号归属地结果解析失败", name, e);
                 return null;
             }
 
@@ -501,41 +469,41 @@ public class MobileUtils
 
         /**
          * 判断请求响应的结果是否成功
+         *
          * @param result
          * @return
          */
-        protected boolean isRespSucc(String result)
-        {
+        protected boolean isRespSucc(String result) {
             throw new RuntimeException("this api do not implements isRespSucc method");
         }
 
         /**
          * 解析请求响应结果中的 省份信息
-         * @param result        请求响应成功时的结果
+         *
+         * @param result 请求响应成功时的结果
          * @return
          */
-        protected String parseProvince(String result)
-        {
+        protected String parseProvince(String result) {
             return parseByName(result, provinceName);
         }
 
         /**
          * 解析请求响应结果中的 城市信息
-         * @param result        请求响应成功时的结果
+         *
+         * @param result 请求响应成功时的结果
          * @return
          */
-        protected String parseCity(String result)
-        {
+        protected String parseCity(String result) {
             return parseByName(result, cityName);
         }
 
         /**
          * 解析请求响应结果中的 运营商信息
+         *
          * @param result
          * @return
          */
-        protected String parseOperater(String result)
-        {
+        protected String parseOperater(String result) {
             String operater = parseByName(result, operaterName);
 
             return matchOperater(operater);
@@ -543,23 +511,23 @@ public class MobileUtils
 
         /**
          * 根据名称获取手机信息中的值
-         * @param result        请求获取的手机信息
-         * @param name              解析名称
+         *
+         * @param result 请求获取的手机信息
+         * @param name   解析名称
          * @return
          */
-        protected String parseByName(String result, String name)
-        {
+        protected String parseByName(String result, String name) {
             throw new RuntimeException("this api do not implements parseByName method");
         }
 
         /**
          * 匹配运营商，将各网站上不同的字符转化为统一格式
          * 使用 indexOf 来匹配运营商字符串
-         * @param operater      接口解析出的运营商字符
+         *
+         * @param operater 接口解析出的运营商字符
          * @return
          */
-        protected String matchOperater(String operater)
-        {
+        protected String matchOperater(String operater) {
             if (StringUtils.isNull(operater)) return "";
 
             if (operater.indexOf(MobileOperater.CMCC) > -1) return MobileOperater.CMCC;
@@ -570,8 +538,7 @@ public class MobileUtils
         }
 
         @Override
-        public void tidy(MobileInfo info)
-        {
+        public void tidy(MobileInfo info) {
             if (null == info) return;
 
             if (!StringUtils.isNull(info.province))
@@ -583,8 +550,7 @@ public class MobileUtils
         }
 
         @Override
-        public boolean isAvailable()
-        {
+        public boolean isAvailable() {
             return available;
         }
     }
