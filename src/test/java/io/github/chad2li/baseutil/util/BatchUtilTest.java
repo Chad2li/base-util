@@ -136,8 +136,29 @@ public class BatchUtilTest {
         return list;
     }
 
+    @Test
+    public void batchAllByPage() {
+        BatchPageDemo demo = Mockito.mock(BatchPageDemo.class);
+        List<MaxIdDto> list;
+
+        // 1. 10, 10, 0
+        Mockito.when(demo.selectList(1, 10)).thenReturn(list(0L, 10));
+        Mockito.when(demo.selectList(2, 10)).thenReturn(list(10L, 10));
+        Mockito.when(demo.selectList(3, 10)).thenReturn(list(20L, 0));
+        list = BatchUtil.batchAllByPage(demo::selectList, 10);
+        Assert.assertEquals(20, list.size());
+        // 2. 0
+        Mockito.when(demo.selectList(1, 10)).thenReturn(list(0L, 0));
+        list = BatchUtil.batchAllByPage(demo::selectList, 10);
+        Assert.assertEquals(0, list.size());
+    }
+
     public interface BatchMaxIdDemo {
         List<MaxIdDto> selectListByMaxId(Long maxId, Integer batchSize);
+    }
+
+    public interface BatchPageDemo {
+        List<MaxIdDto> selectList(int pn, int ps);
     }
 
     @Data

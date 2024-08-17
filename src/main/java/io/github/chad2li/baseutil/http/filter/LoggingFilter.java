@@ -1,14 +1,16 @@
 package io.github.chad2li.baseutil.http.filter;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.json.JSONUtil;
+import io.github.chad2li.baseutil.consts.DefaultConstant;
 import io.github.chad2li.baseutil.http.filter.log.BufferedRequestWrapper;
 import io.github.chad2li.baseutil.util.HttpUtils;
 import io.github.chad2li.baseutil.util.SpringUtils;
-import io.github.chad2li.baseutil.util.StringUtils;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpHeaders;
+import org.springframework.lang.Nullable;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 
@@ -21,15 +23,17 @@ import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.StringJoiner;
 
 /**
  * 1. 将req封装成可重复读取<br/>
  * 2. 打印日志信息
+ *
+ * @author chad
  */
 @Slf4j
 @Data
@@ -63,63 +67,71 @@ public class LoggingFilter implements Filter {
     private void logRes(Object result, long divide) {
         // 转化响应
         String resultJson = jsonResp(result);
-
-        if (log.isDebugEnabled()) {
-            log.debug("--resp {} [{}]", resultJson, divide);
-            log.debug("=========== REQ-END ===========");
-        } else
-            log.info("RES: {} [{}]", resultJson, divide);
+        log.info("RES: {} [{}]", resultJson, divide);
     }
 
-    private void logReq(ContentCachingRequestWrapper req) throws UnsupportedEncodingException {
+    /**
+     * 打印请求日志
+     *
+     * @param req http servlet request
+     * @author chad
+     * @since 1 by chad at 2024/3/15
+     */
+    private void logReq(ContentCachingRequestWrapper req) {
         // 注意隐藏用户的pwd、token等信息
         // 忽略文件上传内容（易内存溢出）
 
         // 获取请求：
         // 路径信息
         String url = req.getRequestURI();
-//        url = req.getServletPath();
-//        url = req.getContextPath();
         String method = req.getMethod();
         // 头部信息：
         Map<String, String> header = pkgHeader(req);
         // 客户端信息：IP
         String clientIp = SpringUtils.getRemoteIp(req);
-        if (!log.isDebugEnabled()) {
-            log.info("REQ-{}: {}:{}", method, clientIp, url);
-            return;
-        }
-        // header
-        Map.Entry<String, String> entry = null;
 
-        log.debug("=========== REQ-{} ===========", method);
-        log.debug("--info {} {}:{}", req.getMethod(), clientIp, url);
+        // headers
+        StringJoiner headerJoiner = new StringJoiner(DefaultConstant.Norm.COMMA);
+        Map.Entry<String, String> entry;
         for (Iterator<Map.Entry<String, String>> it = header.entrySet().iterator(); it.hasNext(); ) {
             entry = it.next();
-            log.debug("--head {}: {}", entry.getKey(), entry.getValue());
+            headerJoiner.add(entry.getKey() + DefaultConstant.Norm.COLON + entry.getValue());
         }
 
+        // params
         Map<String, String> params = SpringUtils.getParam(req);
-        String body = null;
-        if (!HttpUtils.HTTP_METHOD_GET.equalsIgnoreCase(method)) {
-            body = SpringUtils.reqBody(req);
-        }
-        if (null != params && params.size() > 0) {
+        StringJoiner paramsJoiner = new StringJoiner(DefaultConstant.Norm.COMMA);
+        if (CollUtil.isNotEmpty(params)) {
             for (Iterator<Map.Entry<String, String>> it = params.entrySet().iterator(); it.hasNext(); ) {
                 entry = it.next();
-                log.debug("--para {}: {}", entry.getKey(), entry.getValue());
+                paramsJoiner.add(entry.getKey() + DefaultConstant.Norm.COLON + entry.getValue());
             }
         }
-
-        if (!StringUtils.isNull(body)) {
-            log.debug("--body {}", body);
+        // body
+        String body;
+        if (!HttpUtils.HTTP_METHOD_GET.equalsIgnoreCase(method)) {
+            body = SpringUtils.reqBody(req);
+        } else {
+            body = DefaultConstant.Norm.EMPTY;
         }
 
+        log.info("REQ-{} {}:{}, headers:[{}] params:[{}], body:[{}]", method, clientIp, url,
+                headerJoiner, paramsJoiner, body);
     }
 
-    private String jsonResp(Object result) {
-        // 将结果保存为JSON
-        if (null == result) return "";
+    /**
+     * 返回值转 json
+     *
+     * @param result 返回值
+     * @return json
+     * @author chad
+     * @since 1 by chad at 2024/3/15
+     */
+    private String jsonResp(@Nullable Object result) {
+        // 将结果转为JSON
+        if (ObjectUtil.isEmpty(result)) {
+            return "";
+        }
 
         String resultJson = null;
         try {
@@ -133,10 +145,9 @@ public class LoggingFilter implements Filter {
                 String suf = resultJson.substring(len - sufLe - 1);
                 resultJson = pre + "...(IGNORE " + (len - preLen - sufLe) + ")..." + suf;
             }
-
         } catch (Throwable t) {
             resultJson = "parse response error";
-            log.warn(resultJson, t);
+            log.warn("parse response error, result:{}", result, t);
         }
 
         return resultJson;

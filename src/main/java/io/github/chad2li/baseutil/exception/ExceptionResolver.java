@@ -85,9 +85,7 @@ public class ExceptionResolver {
         resetResponse();
 
         // 封闭异常信息
-        BaseRes resp = res(e);
-
-        return resp;
+        return res(e);
     }
 
     /**
@@ -96,14 +94,15 @@ public class ExceptionResolver {
      * @param e
      * @return
      */
-    public BaseRes<Void> res(Exception e) {
-        BaseRes<Void> base = new BaseRes<>();
+    public BaseRes<Object> res(Exception e) {
+        BaseRes<Object> base = new BaseRes<>();
 
         String msg = null;
         if (e instanceof AppException) {
             // 应用自定义异常
             AppException infoE = (AppException) e;
             base.setCode(infoE.getCode().fullCode());
+            base.setData(infoE.getData());
             msg = infoE.getMsg();
         } else if (isParamErr(e)) {
             base.setCode(BaseCode.PARAM_INVALID.fullCode());
@@ -202,7 +201,7 @@ public class ExceptionResolver {
      * @since 1 by chad at 2023/8/19
      */
     private void writeLogByLevel(AppException e) {
-        String logs = ExceptionUtil.stacktraceToOneLineString(e);
+        String logs = ExceptionUtil.stacktraceToOneLineString(e, 2_0000);
         switch (e.getCode().level()) {
             case TRACE:
                 log.trace(logs);

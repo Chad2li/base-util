@@ -3,6 +3,7 @@ package io.github.chad2li.baseutil.util;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.core.util.ObjectUtil;
 import io.github.chad2li.baseutil.mybatis.enums.ICodeEnum;
 import org.springframework.lang.Nullable;
 
@@ -99,9 +100,54 @@ public class EnumUtils {
      * @return true 相等；否则 false
      * @author chad
      * @since 1 by chad at 2023/11/7
+     * @deprecated 废弃，使用{@link EnumUtils#is(String, ICodeEnum)}
      */
+    @Deprecated
     public static <T extends ICodeEnum> boolean is(T codeEnum, String code) {
+        if (ObjectUtil.hasEmpty(codeEnum, code)) {
+            return false;
+        }
         return codeEnum.code().equalsIgnoreCase(code);
+    }
+
+    /**
+     * 判断code是否为指定枚举值
+     *
+     * @param code     枚举值
+     * @param codeEnum 枚举
+     * @return true 相等；否则 false
+     * @author chad
+     * @since 1 by chad at 2024/8/17
+     */
+    public static <T extends ICodeEnum> boolean is(String code, T codeEnum) {
+        if (ObjectUtil.hasEmpty(codeEnum, code)) {
+            return false;
+        }
+        return codeEnum.code().equalsIgnoreCase(code);
+    }
+
+    /**
+     * codeEnum是否包含code
+     *
+     * @param code     code
+     * @param codeEnum code enum
+     * @return true codeEnum包含code
+     * @author chad
+     * @since 1 by chad at 2024/8/17
+     */
+    @SafeVarargs
+    public static <T extends ICodeEnum> boolean in(String code, T... codeEnum) {
+        if (ObjectUtil.hasEmpty(code, codeEnum)) {
+            return false;
+        }
+
+        for (T t : codeEnum) {
+            if (is(t, code)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private EnumUtils() {

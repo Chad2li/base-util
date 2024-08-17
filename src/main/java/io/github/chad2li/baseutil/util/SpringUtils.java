@@ -1,7 +1,9 @@
 package io.github.chad2li.baseutil.util;
 
+import cn.hutool.core.text.CharSequenceUtil;
 import io.github.chad2li.baseutil.http.filter.log.BufferedRequestWrapper;
 import org.springframework.http.server.ServletServerHttpRequest;
+import org.springframework.lang.Nullable;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
@@ -18,7 +20,11 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * Created by ly on 2015/3/17.
@@ -108,8 +114,13 @@ public class SpringUtils {
      *
      * @return
      */
+    @Nullable
     public static HttpServletRequest getRequest() {
-        return ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+        ServletRequestAttributes att = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (null == att) {
+            return null;
+        }
+        return att.getRequest();
     }
 
     /**
@@ -117,10 +128,34 @@ public class SpringUtils {
      *
      * @return
      */
+    @Nullable
     public static HttpServletResponse getResponse() {
-        HttpServletResponse resp = ((org.springframework.web.context.request.ServletRequestAttributes)
-                RequestContextHolder.getRequestAttributes()).getResponse();
-        return resp;
+        ServletRequestAttributes att =
+                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (null == att) {
+            return null;
+        }
+        return att.getResponse();
+    }
+
+    /**
+     * 获取请求头
+     *
+     * @param name 请求头名称
+     * @return 请求头值，如果 req 不存在或请求头无 name 值，返回null
+     * @author chad
+     * @since 1 by chad at 2024/7/20
+     */
+    @Nullable
+    public static String getHeader(String name) {
+        if (CharSequenceUtil.isEmpty(name)) {
+            return null;
+        }
+        HttpServletRequest req = getRequest();
+        if (null == req) {
+            return null;
+        }
+        return req.getHeader(name);
     }
 
     /**

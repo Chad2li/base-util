@@ -492,6 +492,20 @@ public class RedissonOps {
     }
 
     /**
+     * hash值+1
+     *
+     * @param redisKey redis key
+     * @param hashKey  hash key
+     * @return hash+1后的值
+     * @author chad
+     * @since 1 by chad at 2024/7/18
+     */
+    public int hIncr(final String redisKey, String hashKey) {
+        RMap<String, Integer> map = client.getMap(redisKey);
+        return map.addAndGet(hashKey, 1);
+    }
+
+    /**
      * 往redis set中增加值
      *
      * @param key   键

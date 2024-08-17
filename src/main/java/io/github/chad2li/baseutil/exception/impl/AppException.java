@@ -1,6 +1,5 @@
 package io.github.chad2li.baseutil.exception.impl;
 
-import cn.hutool.core.util.StrUtil;
 import io.github.chad2li.baseutil.exception.IAppCode;
 import io.github.chad2li.baseutil.exception.IAppException;
 import io.github.chad2li.baseutil.util.StringUtils;
@@ -24,10 +23,15 @@ public class AppException extends RuntimeException implements IAppException {
      * 自定义消息
      */
     private String msg;
+    /**
+     * 异常需要返回数据
+     */
+    private Object data;
 
-    public AppException(IAppCode code, String msg, Throwable throwable) {
+    public AppException(IAppCode code, String msg, Throwable throwable, Object data) {
         super(StringUtils.joinIgnoreEmpty("-", code.fullCode(), msg), throwable);
         this.setCode(code);
         this.setMsg(msg);
+        this.setData(data);
     }
 }

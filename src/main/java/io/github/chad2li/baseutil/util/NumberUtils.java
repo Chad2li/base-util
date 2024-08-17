@@ -152,6 +152,27 @@ public class NumberUtils {
         return number1.compareTo(number2) >= 0;
     }
 
+    /**
+     * 是否相等
+     *
+     * @param long1          long 1
+     * @param long2          long 2
+     * @param bothNullResult 如果都为null，返回该值
+     * @return true相等或都为null时bothNullResult为true
+     * @author chad
+     * @since 1 by chad at 2024/8/17
+     */
+    public static boolean isEq(@Nullable Long long1, @Nullable Long long2, boolean bothNullResult) {
+        if (null == long1 && null == long2) {
+            // 全为null，返回指定的结果
+            return bothNullResult;
+        }
+        if (null == long1) {
+            return false;
+        }
+        return long1.equals(long2);
+    }
+
     private NumberUtils() {
         // do nothing
     }

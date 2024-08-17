@@ -5,7 +5,11 @@ import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ReflectUtil;
 import io.github.chad2li.baseutil.consts.DefaultConstant;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -18,6 +22,34 @@ import java.util.function.Function;
  */
 public class BatchUtil {
     public static final int BATCH_SIZE = 200;
+
+    public static <R> List<R> batchAllByPage(BatchPage<R> batchPageFun) {
+        return batchAllByPage(batchPageFun, BATCH_SIZE);
+    }
+
+    /**
+     * 分页方式分批取所有值
+     *
+     * @param batchPageFun 分页取值函数
+     * @param pageSize     每页大小
+     * @return list
+     * @author chad
+     * @since 1 by chad at 2023/8/24
+     */
+    public static <R> List<R> batchAllByPage(BatchPage<R> batchPageFun, int pageSize) {
+        List<R> allList = new ArrayList<>(4 * pageSize);
+        List<R> subList;
+        int pn = 1;
+        while (true) {
+            // 1. 查询
+            subList = batchPageFun.apply(pn++, pageSize);
+            if (CollUtil.isEmpty(subList)) {
+                return allList;
+            }
+            // 3. 存值
+            allList.addAll(subList);
+        }
+    }
 
     /**
      * @author chad
@@ -37,7 +69,7 @@ public class BatchUtil {
      * @since 1 by chad at 2023/8/24
      */
     public static <R> List<R> batchAllByMaxId(BatchMaxId<R> batchMaxIdFun, int batchSize) {
-        List<R> allList = new ArrayList<>(100);
+        List<R> allList = new ArrayList<>(4 * batchSize);
         List<R> subList;
         Long maxId = 0L;
         while (true) {
@@ -71,6 +103,12 @@ public class BatchUtil {
 
     }
 
+    /**
+     * 使用maxId查询所有数据
+     *
+     * @author chad
+     * @since 1 by chad at 2023/8/31
+     */
     @FunctionalInterface
     public interface BatchMaxId<R> {
         /**
@@ -83,6 +121,26 @@ public class BatchUtil {
          * @since 1 by chad at 2023/8/24
          */
         List<R> apply(Long maxId, Integer batchSize);
+    }
+
+    /**
+     * 分页查询所有数据
+     *
+     * @author chad
+     * @since 1 by chad at 2023/12/5
+     */
+    @FunctionalInterface
+    public interface BatchPage<R> {
+        /**
+         * 分页获取所有数据
+         *
+         * @param pageNumber 页号
+         * @param pageSize   页大小
+         * @return 当前页数据
+         * @author chad
+         * @since 1 by chad at 2023/12/5
+         */
+        List<R> apply(Integer pageNumber, Integer pageSize);
     }
 
     /**

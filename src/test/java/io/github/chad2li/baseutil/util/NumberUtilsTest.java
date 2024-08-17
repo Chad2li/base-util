@@ -1,11 +1,9 @@
 package io.github.chad2li.baseutil.util;
 
 import org.junit.Assert;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 import java.math.BigDecimal;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * NumberUtilsTest
@@ -14,10 +12,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * @copyright 2023 chad
  * @since created at 2023/8/20 16:21
  */
-class NumberUtilsTest {
+public class NumberUtilsTest {
 
     @Test
-    void isPositive() {
+    public void isPositive() {
         // 1.1 int
         Integer intVal = null;
         Assert.assertTrue(NumberUtils.isPositive(1));
@@ -45,7 +43,7 @@ class NumberUtilsTest {
     }
 
     @Test
-    void isGt() {
+    public void isGt() {
         // 1.1 int
         Integer int1 = null;
         Integer int2 = null;
@@ -91,7 +89,7 @@ class NumberUtilsTest {
     }
 
     @Test
-    void isGte() {
+    public void isGte() {
         // 1.1 int
         Integer int1 = null;
         Integer int2 = null;
@@ -128,5 +126,25 @@ class NumberUtilsTest {
         Assert.assertFalse(NumberUtils.isGte(big1, new BigDecimal("2")));
         Assert.assertFalse(NumberUtils.isGte(new BigDecimal("1"), big2));
         Assert.assertFalse(NumberUtils.isGte(big1, big2));
+    }
+
+
+    @Test
+    public void isEq() {
+        // 1.1 相等
+        Assert.assertTrue(NumberUtils.isEq(new Long(129L), new Long(129L), false));
+        Assert.assertTrue(NumberUtils.isEq(129L, 129L, false));
+        Assert.assertTrue(NumberUtils.isEq(1L, new Long(1L), false));
+        // 2 全为null
+        Assert.assertTrue(NumberUtils.isEq(null, null, true));
+        Assert.assertFalse(NumberUtils.isEq(null, null, false));
+        // 3.1 不相等-有null
+        Assert.assertFalse(NumberUtils.isEq(new Long(129L), null, true));
+        Assert.assertFalse(NumberUtils.isEq(null, new Long(129L), true));
+        Assert.assertFalse(NumberUtils.isEq(null, 129L, true));
+        // 3.2 不相等
+        Assert.assertFalse(NumberUtils.isEq(new Long(129L), new Long(130L), true));
+        Assert.assertFalse(NumberUtils.isEq(129L, new Long(130L), true));
+        Assert.assertFalse(NumberUtils.isEq(new Long(129L), 130L, true));
     }
 }
